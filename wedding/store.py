@@ -33,6 +33,9 @@ CREATE TABLE IF NOT EXISTS admin_sessions (
     token_hash TEXT PRIMARY KEY, username TEXT NOT NULL REFERENCES administrators(username),
     expires_at INTEGER NOT NULL
 );
+CREATE TABLE IF NOT EXISTS admin_recovery (
+    username TEXT PRIMARY KEY REFERENCES administrators(username), code_hash TEXT NOT NULL
+);
 """
 
 DEFAULT_DETAILS = {
@@ -115,6 +118,21 @@ def revoke(db, guest_id):
     with db:
         db.execute("UPDATE guests SET active=0 WHERE id=?", (guest_id,))
         db.execute("DELETE FROM sessions WHERE guest_id=?", (guest_id,))
+
+
+def recovery_code():
+    code = secrets.token_hex(16)
+    return "-".join(code[i:i+4] for i in range(0, len(code), 4))
+
+
+def issue_admin_recovery(db, username):
+    if not db.execute("SELECT 1 FROM administrators WHERE username=?", (username,)).fetchone():
+        raise ValueError("Unknown administrator")
+    code = recovery_code()
+    with db:
+        db.execute("INSERT INTO admin_recovery VALUES (?, ?) ON CONFLICT(username) DO UPDATE SET code_hash=excluded.code_hash",
+                   (username, generate_password_hash(normalize_code(code))))
+    return code
 
 
 def allow_request(db, buckets, now=None):

@@ -16,7 +16,7 @@
   <header class="site-header">
     <a class="brand" href="{{ url_for('index') }}" aria-label="{{ _('Weronika i Rafał — strona główna') }}"><span class="monogram">W&R</span><span>Weronika <i>&</i> Rafał</span></a>
     <nav aria-label="{{ _('Nawigacja') }}">
-      {% if not (code is defined and request.method == 'POST') %}
+      {% if not ((code is defined or issued_recovery is defined) and request.method == 'POST') %}
       <div class="language-switch" role="group" aria-label="{{ 'Language' if language == 'en' else 'Język' }}">
         <a href="{{ language_urls.pl }}" lang="pl" hreflang="pl" aria-label="Polski" {% if language == 'pl' %}aria-current="true"{% endif %}>PL</a>
         <a href="{{ language_urls.en }}" lang="en" hreflang="en" aria-label="English" {% if language == 'en' %}aria-current="true"{% endif %}>EN</a>

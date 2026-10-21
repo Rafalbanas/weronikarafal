@@ -48,3 +48,16 @@ window.addEventListener('pageshow', (event) => {
     window.location.reload();
   }
 });
+
+// Password visibility is local to this page; passwords are never saved by this control.
+document.querySelectorAll('[data-password-toggle]').forEach((button) => {
+  const field = document.getElementById(button.dataset.passwordToggle);
+  if (!field) return;
+  button.hidden = false;
+  button.addEventListener('click', () => {
+    const visible = field.type === 'password';
+    field.type = visible ? 'text' : 'password';
+    button.setAttribute('aria-pressed', String(visible));
+    button.textContent = visible ? button.dataset.hide : button.dataset.show;
+  });
+});

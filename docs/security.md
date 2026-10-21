@@ -89,3 +89,19 @@ towarzyszącej, wygasanie i odwoływanie sesji, XSS, błędny Host oraz rollback
 [Flask — web security](https://flask.palletsprojects.com/en/stable/web-security/),
 [Flask-WTF — CSRF](https://flask-wtf.readthedocs.io/en/1.2.x/csrf/),
 [OWASP — ograniczanie nadużyć](https://cheatsheetseries.owasp.org/cheatsheets/Denial_of_Service_Cheat_Sheet.html).
+
+
+## Odzyskiwanie konta pary młodej
+
+Reset hasła wymaga osobnego, losowego 128-bitowego kodu odzyskiwania.
+Przechowujemy wyłącznie hash scrypt z losową solą, bez jawnego kodu w bazie,
+sesji lub URL. Kod jest przekazywany w POST chronionym przez CSRF i Origin;
+endpoint ma limity 5 prób na IP i 100 globalnie w 15 minut. Poprawny reset
+wymaga dwukrotnego podania hasła o długości 16–256 znaków, unieważnia wszystkie
+sesje konta oraz poprzedni kod. Atomowe compare-and-swap uniemożliwia dwukrotne
+użycie kodu przy równoległych żądaniach. Odpowiedź wyświetla nowy kod raz,
+z nagłówkami no-store i bez umieszczania go w cookie. Po udanym resecie usuwamy
+blokadę nieudanych logowań dla bieżącego IP, aby właściciel mógł użyć nowego hasła.
+Generowanie kodu w zalogowanym panelu wymaga ponownego podania obecnego hasła.
+Hasła pozostają wrażliwe na wielkość liter; podgląd pola zmienia jedynie jego
+lokalny typ i nie zapisuje wartości.

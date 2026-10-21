@@ -4,19 +4,45 @@
 <section class="login-section">
   <a class="back-link" href="{{ url_for('index') }}">{{ _('← Wróć do strony') }}</a>
   <div class="card login-card">
-    <span class="eyebrow">{{ _('Tylko dla Was') }}</span><h1>{{ _('Panel pary młodej') }}</h1>
-    <p class="muted">{{ _('Wasze zaproszenia, kody i odpowiedzi w jednym miejscu.') }}</p>
+    <span class="eyebrow">{{ _('Tylko dla Was') }}</span>
+    {% if issued_recovery is defined %}
+    <h1>{{ _('Hasło zresetowane') if recovered else _('Kod odzyskiwania') }}</h1>
+    <p class="notice notice-success" role="status">{{ _('Nowe hasło zostało zapisane. Wszystkie sesje tego konta zostały wylogowane.') if recovered else _('Wygenerowano nowy kod odzyskiwania. Poprzedni kod nie będzie już działał.') }}</p>
+    <p>{{ _('Zapisz ten kod w bezpiecznym miejscu. Pokażemy go tylko raz. Umożliwi ustawienie nowego hasła, jeśli zapomnisz obecnego.') }}</p>
+    <label for="new-code">{{ _('Jednorazowy kod odzyskiwania') }}</label><input id="new-code" class="admin-code" value="{{ issued_recovery }}" readonly autocomplete="off">
+    <button id="copy-code" class="button button-small button-outline" type="button" hidden>{{ _('Kopiuj kod') }}</button><p id="copy-status" class="field-help" role="status"></p>
+    <p class="field-help">{{ _('W bazie zapisany jest wyłącznie hash z losową solą. Kod zostanie zastąpiony nowym po użyciu.') }}</p>
+    <a class="button" href="{{ url_for('admin_login') if recovered else url_for('admin') }}">{{ _('Zaloguj się nowym hasłem') if recovered else _('Wróć do panelu') }}</a>
+    {% else %}
+    <h1>{{ _('Reset hasła') if recovery_form else _('Panel pary młodej') }}</h1>
+    <p class="muted">{{ _('Wpisz login i jednorazowy kod odzyskiwania, aby ustawić nowe hasło.') if recovery_form else _('Wasze zaproszenia, kody i odpowiedzi w jednym miejscu.') }}</p>
     {% for message in get_flashed_messages() %}<p class="notice" role="status">{{ _(message) }}</p>{% endfor %}
     {% if error %}<p class="notice notice-error" role="alert">{{ _(error) }}</p>{% endif %}
     <form method="post" class="form-stack">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <label for="username">{{ _('Login') }}</label>
       <input id="username" name="username" autocomplete="username" maxlength="120" required>
+      {% if recovery_form %}
+      <label for="recovery-code">{{ _('Kod odzyskiwania') }}</label>
+      <input id="recovery-code" name="recovery_code" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="64" required>
+      <label for="password">{{ _('Nowe hasło (minimum 16 znaków)') }}</label>
+      <input id="password" name="new_password" type="password" autocomplete="new-password" minlength="16" maxlength="256" required>
+      {% else %}
       <label for="password">{{ _('Hasło') }}</label>
       <input id="password" name="password" type="password" autocomplete="current-password" maxlength="256" required>
-      <button class="button" type="submit">{{ _('Otwórz panel →') }}</button>
+      {% endif %}
+      <button class="button button-small button-outline password-toggle" type="button" data-password-toggle="password" data-show="{{ _('Pokaż hasło') }}" data-hide="{{ _('Ukryj hasło') }}" aria-controls="password" aria-pressed="false" hidden>{{ _('Pokaż hasło') }}</button>
+      <p class="field-help">{{ _('Hasło rozróżnia wielkie i małe litery. Wklej samą wartość hasła, bez loginu i dodatkowych spacji.') }}</p>
+      {% if recovery_form %}
+      <label for="confirm-password">{{ _('Powtórz nowe hasło') }}</label>
+      <input id="confirm-password" name="confirm_password" type="password" autocomplete="new-password" minlength="16" maxlength="256" required>
+      {% endif %}
+      <button class="button" type="submit">{{ _('Ustaw nowe hasło') if recovery_form else _('Otwórz panel →') }}</button>
     </form>
+    <p class="admin-help"><a href="{{ url_for('admin_login') if recovery_form else url_for('admin_recover') }}">{{ _('Wróć do logowania') if recovery_form else _('Nie pamiętam hasła') }}</a></p>
+    {% if recovery_form %}<p class="field-help">{{ _('Kod odzyskiwania otrzymaliście przy konfiguracji konta. Kolejny można wygenerować po zalogowaniu w sekcji Wasze konto. Jeśli nie macie kodu, skontaktujcie się z administratorem strony.') }}</p>{% endif %}
     <p class="field-help admin-help">{{ _('Jesteś gościem?') }} <a href="{{ url_for('login') }}">{{ _('Wpisz kod z zaproszenia') }}</a>.</p>
+    {% endif %}
   </div>
 </section>
 {% endblock %}

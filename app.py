@@ -18,6 +18,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from wedding.store import allow_request, connect, details, digest, initialize, normalize_code, invitation, revoke, authenticate_invitation
 from wedding import translate
+from wedding.store import issue_admin_recovery, recovery_code
 
 ROOT = Path(__file__).resolve().parent
 DIETS = {"standard": "Standardowa", "vegetarian": "Wegetariańska", "vegan": "Wegańska",
@@ -56,8 +57,8 @@ def create_app(config=None):
     def language_context():
         # Language links lead to GET pages and never replay a form submission.
         target = {"admin_add_guest": "admin", "admin_update_guest": "admin",
-                  "admin_password": "admin", "rsvp": "guest", "logout": "index"}.get(request.endpoint, request.endpoint)
-        if target not in {"index", "guest", "login", "admin", "admin_login"}:
+                  "admin_password": "admin", "admin_issue_recovery": "admin", "rsvp": "guest", "logout": "index"}.get(request.endpoint, request.endpoint)
+        if target not in {"index", "guest", "login", "admin", "admin_login", "admin_recover"}:
             target = "index"
         return {"_": translate, "language": g.get("language", "pl"),
                 "language_urls": {lang: url_for(target, lang=lang) for lang in ("pl", "en")}}
@@ -171,6 +172,46 @@ def create_app(config=None):
                 return redirect(url_for("admin"), code=303)
             error = "Niepoprawny login lub hasło."
         return render_template("templates/admin_login.html", error=error), 401 if error else 200
+
+    @app.route("/admin/recover", methods=["GET", "POST"])
+    def admin_recover():
+        error = None
+        if request.method == "POST":
+            limited("admin-recover", [("ip:{ip}", 5, 900), ("global", 100, 900)])
+            username = request.form.get("username", "").strip()[:120]
+            code = normalize_code(request.form.get("recovery_code", ""))
+            password = request.form.get("new_password", "")
+            saved = db().execute("SELECT code_hash FROM admin_recovery WHERE username=?", (username,)).fetchone()
+            valid = check_password_hash(saved["code_hash"] if saved else dummy_password_hash, code[:64])
+            if saved and valid and len(code) == 32 and 16 <= len(password) <= 256 and password == request.form.get("confirm_password"):
+                replacement = recovery_code()
+                replacement_hash = generate_password_hash(normalize_code(replacement))
+                password_hash = generate_password_hash(password)
+                with db():
+                    # Compare-and-swap consumes the code once, even for concurrent requests.
+                    consumed = db().execute("UPDATE admin_recovery SET code_hash=? WHERE username=? AND code_hash=?",
+                        (replacement_hash, username, saved["code_hash"])).rowcount
+                    if consumed:
+                        db().execute("UPDATE administrators SET password_hash=? WHERE username=?", (password_hash, username))
+                        db().execute("DELETE FROM admin_sessions WHERE username=?", (username,))
+                        ip = hmac.new(app.secret_key.encode(), request.remote_addr.encode(), hashlib.sha256).hexdigest()
+                        db().execute("DELETE FROM throttle WHERE bucket=?", ("admin-login:ip:"+ip,))
+                if consumed:
+                    session.clear()
+                    return render_template("templates/admin_login.html", issued_recovery=replacement, recovered=True)
+            error = "Nie udało się zresetować hasła. Sprawdź login i kod odzyskiwania. Nowe hasło musi mieć 16–256 znaków i być wpisane identycznie w obu polach."
+        return render_template("templates/admin_login.html", recovery_form=True, error=error), 401 if error else 200
+
+    @app.post("/admin/recovery")
+    @require_admin
+    def admin_issue_recovery():
+        limited("admin-recovery-issue", [("user:"+g.admin["username"], 5, 900)])
+        account = db().execute("SELECT password_hash FROM administrators WHERE username=?", (g.admin["username"],)).fetchone()
+        password = request.form.get("current_password", "")
+        if len(password) > 256 or not check_password_hash(account["password_hash"], password):
+            flash("Nie wygenerowano kodu odzyskiwania. Sprawdź obecne hasło.")
+            return redirect(url_for("admin", _anchor="konto"), code=303)
+        return render_template("templates/admin_login.html", issued_recovery=issue_admin_recovery(db(), g.admin["username"]), recovered=False)
 
     @app.get("/admin")
     @require_admin
