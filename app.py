@@ -17,6 +17,7 @@ from werkzeug.exceptions import SecurityError
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from wedding.store import allow_request, connect, details, digest, initialize, normalize_code, invitation, revoke, authenticate_invitation
+from wedding import translate
 
 ROOT = Path(__file__).resolve().parent
 DIETS = {"standard": "Standardowa", "vegetarian": "Wegetariańska", "vegan": "Wegańska",
@@ -45,6 +46,22 @@ def create_app(config=None):
     if app.config["TRUST_PROXY"]:
         # Only enabled behind the loopback Nginx listener, which overwrites these headers.
         app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=0, x_port=0, x_prefix=0)
+    @app.url_value_preprocessor
+    def choose_language(_endpoint, _values):
+        selected = request.args.get("lang")
+        saved = request.cookies.get("__Host-wedding-language")
+        g.language = selected if selected in {"pl", "en"} else saved if saved in {"pl", "en"} else "pl"
+
+    @app.context_processor
+    def language_context():
+        # Language links lead to GET pages and never replay a form submission.
+        target = {"admin_add_guest": "admin", "admin_update_guest": "admin",
+                  "admin_password": "admin", "rsvp": "guest", "logout": "index"}.get(request.endpoint, request.endpoint)
+        if target not in {"index", "guest", "login", "admin", "admin_login"}:
+            target = "index"
+        return {"_": translate, "language": g.get("language", "pl"),
+                "language_urls": {lang: url_for(target, lang=lang) for lang in ("pl", "en")}}
+
     CSRFProtect(app)
     initialize(app.config["DATABASE"])
 
@@ -83,6 +100,10 @@ def create_app(config=None):
 
     @app.after_request
     def headers(response):
+        response.headers["Content-Language"] = g.get("language", "pl")
+        if request.method == "GET" and request.args.get("lang") in {"pl", "en"}:
+            response.set_cookie("__Host-wedding-language", request.args["lang"],
+                max_age=365*24*3600, secure=True, httponly=True, samesite="Lax", path="/")
         response.headers.update({
             "Cache-Control": "private, no-store, max-age=0",
             "Pragma": "no-cache", "Vary": "Cookie",
@@ -163,7 +184,8 @@ def create_app(config=None):
                   "no": sum(p["attendance"] == "no" for p in active),
                   "pending": sum(p["attendance"] is None for p in active),
                   "lodging": sum(p["attendance"] == "yes" and p["lodging"] == "yes" for p in active)}
-        return render_template("templates/admin.html", people=people, totals=totals, diets=DIETS)
+        return render_template("templates/admin.html", people=people, totals=totals,
+                               diets={key: translate(label) for key, label in DIETS.items()})
 
     @app.post("/admin/guests")
     @require_admin
@@ -266,7 +288,7 @@ def create_app(config=None):
             LEFT JOIN rsvps ON guests.id=rsvps.guest_id WHERE guests.active=1
             ORDER BY guests.name COLLATE NOCASE""").fetchall()
         return render_template("templates/guest.html", rsvp=rsvp, guests=guests,
-            diets=DIETS, private=details(app.config["DETAILS"]))
+            diets={key: translate(label) for key, label in DIETS.items()}, private=details(app.config["DETAILS"]))
 
     @app.post("/rsvp")
     @require_guest
@@ -332,7 +354,7 @@ def create_app(config=None):
     for status in (400, 403, 404, 405, 413, 429, 500):
         def error_handler(error, status=status):
             if isinstance(error, SecurityError):
-                return "Niepoprawny adres witryny.", 400
+                return translate("Niepoprawny adres witryny."), 400
             response = app.make_response((render_template("templates/error.html", title="Chwila przerwy" if status == 429 else "Nie udało się otworzyć strony",
                 message="Za dużo prób. Odczekaj 15 minut i spróbuj ponownie." if status == 429 else "Wróć do strony głównej. Jeśli problem się powtórzy, skontaktuj się z organizatorami."), status))
             if status == 429:

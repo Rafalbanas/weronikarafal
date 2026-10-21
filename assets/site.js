@@ -8,10 +8,10 @@ if (copyCode && navigator.clipboard) {
     const status = document.getElementById('copy-status');
     try {
       await navigator.clipboard.writeText(input.value);
-      status.textContent = 'Kod skopiowany.';
+      status.textContent = document.documentElement.lang === 'en' ? 'Code copied.' : 'Kod skopiowany.';
     } catch {
       input.select();
-      status.textContent = 'Zaznaczono kod — skopiuj go ręcznie.';
+      status.textContent = document.documentElement.lang === 'en' ? 'Code selected — please copy it manually.' : 'Zaznaczono kod — skopiuj go ręcznie.';
     }
   });
 }
@@ -38,7 +38,7 @@ if (rsvpForm) {
   rsvpForm.addEventListener('submit', () => {
     const button = rsvpForm.querySelector('button[type="submit"]');
     button.disabled = true;
-    button.textContent = 'Zapisywanie…';
+    button.textContent = document.documentElement.lang === 'en' ? 'Saving…' : 'Zapisywanie…';
   });
 }
 window.addEventListener('pageshow', (event) => {

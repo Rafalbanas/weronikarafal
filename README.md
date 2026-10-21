@@ -47,3 +47,11 @@ z opisanej wcześniej wersji statycznej; nie następuje przez samo wysłanie PR.
 
 Instrukcje: [deploy/README.md](deploy/README.md).
 Ochrona dostępu i granice prywatności: [docs/security.md](docs/security.md).
+
+## Język
+
+Przełącznik PL / EN w nagłówku tłumaczy publiczną stronę, strefę gości,
+panel pary młodej i komunikaty formularzy. Wybór jest zapamiętywany w osobnym
+bezpiecznym cookie przez rok, także po wylogowaniu. Domyślny język to polski;
+link `/?lang=en` otwiera wersję angielską. Treści wpisane przez gości oraz dane
+wydarzenia zachowują oryginalną treść.
