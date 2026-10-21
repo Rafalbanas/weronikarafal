@@ -1,0 +1,59 @@
+{% extends 'templates/base.html' %}
+{% block title %}Twoje zaproszenie · Weronika & Rafał{% endblock %}
+{% block content %}
+<div class="guest-shell">
+  <section class="guest-heading">
+    <span class="eyebrow">Dobrze, że jesteście z nami</span><h1>Wasze zaproszenie</h1>
+    <p class="guest-name">{{ g.guest.name }}</p>
+    <p class="muted">Tutaj potwierdzicie obecność i znajdziecie informacje na nasz wspólny dzień.</p>
+  </section>
+  <nav class="section-nav" aria-label="Strefa gości"><a href="#rsvp">Moja odpowiedź</a><a href="#lista">Kto będzie z nami</a><a href="#szczegoly">Szczegóły dnia</a><a href="#kontakt">Kontakt</a></nav>
+  {% for message in get_flashed_messages() %}<p class="notice notice-success" role="status">{{ message }}</p>{% endfor %}
+  <div class="guest-grid">
+    <section id="rsvp" class="card rsvp-card">
+      <span class="eyebrow">Bądźcie z nami</span><h2>Potwierdzenie obecności</h2>
+      <p class="muted">Dajcie nam znać do 1 lipca 2027 r. Odpowiedź możecie później zaktualizować.</p>
+      {% if rsvp %}<p class="status-line">Zapisana odpowiedź: <strong>{{ 'Będziemy z Wami' if rsvp.attendance == 'yes' else 'Niestety nie dotrzemy' }}</strong></p>{% endif %}
+      <form method="post" action="{{ url_for('rsvp') }}" class="form-stack" id="rsvpForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="identity-box"><span>Zaproszenie dla</span><strong>{{ g.guest.name }}</strong></div>
+        <fieldset><legend>Czy będziecie z nami świętować?</legend>
+          <label class="choice"><input type="radio" name="attendance" value="yes" required {% if not rsvp or rsvp.attendance == 'yes' %}checked{% endif %}><span>Z radością przybędziemy</span></label>
+          <label class="choice"><input type="radio" name="attendance" value="no" {% if rsvp and rsvp.attendance == 'no' %}checked{% endif %}><span>Niestety nie dotrzemy</span></label>
+        </fieldset>
+        {% if g.guest.allows_companion %}
+        <label for="companion">Imię i nazwisko osoby towarzyszącej <span class="optional">(opcjonalnie)</span></label>
+        <input id="companion" name="companion_name" maxlength="120" autocomplete="off" value="{{ rsvp.companion_name if rsvp else '' }}">
+        {% endif %}
+        <label for="diet">Dieta i preferencje kulinarne</label>
+        <select id="diet" name="diet">{% for value, label in diets.items() %}<option value="{{ value }}" {% if rsvp and rsvp.diet == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+        <fieldset><legend>Czy potrzebujecie noclegu?</legend>
+          <label class="choice"><input type="radio" name="lodging" value="no" {% if not rsvp or rsvp.lodging == 'no' %}checked{% endif %}><span>Nie, dziękujemy</span></label>
+          <label class="choice"><input type="radio" name="lodging" value="yes" {% if rsvp and rsvp.lodging == 'yes' %}checked{% endif %}><span>Tak, poprosimy</span></label>
+        </fieldset>
+        <label for="notes">Wymarzona piosenka lub uwagi <span class="optional">(opcjonalnie)</span></label>
+        <textarea id="notes" name="notes" rows="4" maxlength="2000" placeholder="Utwór dla DJ-a, alergie lub informacja dla nas…">{{ rsvp.notes if rsvp else '' }}</textarea>
+        <p class="field-help">Szczegóły Waszej odpowiedzi widzicie tylko Wy i organizatorzy. Inni zaproszeni zobaczą imiona i status obecności.</p>
+        <button class="button" type="submit">{{ 'Zaktualizuj odpowiedź' if rsvp else 'Zapisz potwierdzenie' }} <span aria-hidden="true">→</span></button>
+      </form>
+    </section>
+    <div class="guest-side">
+      <section id="lista" class="card">
+        <span class="eyebrow">Wspólne świętowanie</span><h2>Kto będzie z nami</h2>
+        <p class="muted small">Lista jest dostępna tylko zaproszonym gościom.</p>
+        <div class="guest-totals"><div><strong>{{ guests|length }}</strong><span>zaproszeń</span></div><div><strong>{{ guests|selectattr('attendance', 'equalto', 'yes')|list|length }}</strong><span>potwierdzonych</span></div></div>
+        <ul class="guest-list">{% for person in guests %}<li><span>{{ person.name }}</span><span class="badge {{ 'badge-yes' if person.attendance == 'yes' else '' }}">{{ 'Będzie z nami' if person.attendance == 'yes' else 'Nie dotrze' if person.attendance == 'no' else 'Czekamy na odpowiedź' }}</span></li>{% endfor %}</ul>
+      </section>
+      <section id="szczegoly" class="card">
+        <span class="eyebrow">Nasz wspólny dzień</span><h2>Wesele i harmonogram</h2>
+        {% if private.venue.name %}<h3>{{ private.venue.name }}</h3><p class="muted pre-line">{{ private.venue.address }}</p>{% else %}<p class="muted">Szczegóły przyjęcia podamy tutaj wkrótce.</p>{% endif %}
+        {% if private.schedule %}<ol class="timeline">{% for item in private.schedule %}<li><time>{{ item.time }}</time><div><strong>{{ item.title }}</strong><p class="muted small">{{ item.description }}</p></div></li>{% endfor %}</ol>{% endif %}
+      </section>
+      <section id="kontakt" class="card">
+        <span class="eyebrow">Jesteśmy dla Was</span><h2>Kontakt do świadków</h2>
+        {% for contact in private.contacts %}<div class="contact"><span class="eyebrow">{{ contact.role }}</span><h3>{{ contact.name }}</h3><a href="tel:{{ contact.phone|replace(' ', '')|replace('(', '')|replace(')', '')|replace('-', '') }}">{{ contact.phone }}</a></div>{% else %}<p class="muted">Kontakty do świadków pojawią się tutaj przed uroczystością.</p>{% endfor %}
+      </section>
+    </div>
+  </div>
+</div>
+{% endblock %}

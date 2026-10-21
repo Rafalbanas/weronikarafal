@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <meta name="theme-color" content="#faf7f2">
+  <meta name="description" content="Weronika i Rafał — 27 sierpnia 2027. Informacje o ceremonii i strefa gości.">
+  <title>{% block title %}Weronika & Rafał · 27.08.2027{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='site.css') }}">
+  <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+  <script src="{{ url_for('static', filename='site.js') }}" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Przejdź do treści</a>
+  <header class="site-header">
+    <a class="brand" href="{{ url_for('index') }}" aria-label="Weronika i Rafał — strona główna"><span class="monogram">W&R</span><span>Weronika <i>&</i> Rafał</span></a>
+    <nav aria-label="Nawigacja">
+      {% if g.guest %}
+      <a class="nav-link" href="{{ url_for('guest') }}">Strefa gości</a>
+      <form method="post" action="{{ url_for('logout') }}" class="inline-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="button button-small button-outline" type="submit">Wyloguj</button>
+      </form>
+      {% else %}
+      <a class="button button-small button-outline" href="{{ url_for('login') }}">Dla zaproszonych <span aria-hidden="true">↗</span></a>
+      {% endif %}
+    </nav>
+  </header>
+  <main id="main">{% block content %}{% endblock %}</main>
+  <footer class="site-footer"><span class="monogram">W&R</span><p>Z miłością, Weronika i Rafał</p><span>27 · 08 · 2027</span></footer>
+</body>
+</html>

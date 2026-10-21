@@ -1,59 +1,80 @@
-# Bezpieczeństwo i prywatność
+# Dostęp i prywatność
 
-## Stan obecny
+## Dwa poziomy
 
-Strona i repozytorium GitHub są publiczne. Repozytorium może być klonowane,
-więc późniejsze usunięcie danych nie usuwa istniejących kopii ani historii.
-Daty, lokalizacje i dane kontaktowe
-umieszczone w HTML są dostępne każdemu odwiedzającemu.
+Publiczna strona zawiera wyłącznie datę, godzinę, odliczanie i informacje
+ceremonii z sekcji `ceremony` prywatnego pliku ustawień. Widok `/guest` jest
+renderowany na serwerze dopiero po uwierzytelnieniu. Lista gości, kontakty
+i adres wesela nie są dołączane do publicznego HTML, CSS ani JavaScript.
 
-RSVP nie ma jeszcze skonfigurowanego zapisu. Poprzedni kod zawierał
-przykładowy endpoint Formspree i symulował powodzenie. Formularz pozostaje
-wyłączony do czasu uruchomienia i przetestowania chronionej obsługi po
-stronie serwera. Wyłączenie kontrolek w HTML nie jest kontrolą dostępu.
+Kod zaproszenia identyfikuje osobę lub parę. Jest generowany przez organizatora
+z losowych 16 bajtów (128 bitów), nie z nazwiska ani numeru telefonu. Serwer
+przechowuje tylko SHA-256 kodu. Kod pozostaje wielokrotnego użytku do czasu
+odwołania lub rotacji. Osoba mająca kod może go udostępnić — to sekret, który
+należy przekazywać tylko adresatom zaproszenia. Publiczna rejestracja nie istnieje.
 
-Meta `noindex` prosi wyszukiwarki o nieindeksowanie strony; nie ukrywa
-treści i nie usuwa natychmiast wcześniej zindeksowanych informacji.
+Zalogowani goście widzą nazwę zaproszenia i status obecności innych zaproszeń.
+Nie widzą cudzych diet, noclegów, uwag, nazwiska osoby towarzyszącej ani kodów.
+Własne RSVP jest przypisywane z sesji na serwerze; klient nie wskazuje ID gościa.
+Ponowny zapis aktualizuje jedną odpowiedź zamiast tworzyć duplikaty.
 
-## Decyzja o dostępie
+## Sesje i żądania
 
-Do uzgodnienia z właścicielem pozostaje zakres prywatności:
+Sesja ma losowy identyfikator przechowywany w podpisanym cookie; w bazie
+przechowywany jest jego skrót. Cookie `__Host-wedding` ma `Secure`, `HttpOnly`,
+`SameSite=Lax`, ścieżkę `/` i nie ma atrybutu Domain. Sesja wygasa po 8 godzinach.
+Wylogowanie usuwa sesję z bazy. Odwołanie lub rotacja zaproszenia unieważniają
+jego sesje; każda odsłona panelu ponownie sprawdza uprawnienia i aktywność konta.
 
-1. Cała strona dostępna tylko zaproszonym, po uwierzytelnieniu.
-2. Publiczna strona i RSVP wymagające indywidualnego kodu zaproszenia.
-3. Publiczna strona i RSVP z kontrolą antyspamową.
+Flask-WTF weryfikuje CSRF dla wszystkich POST, także logowania i wylogowania.
+Sprawdzany jest również Origin, gdy przeglądarka go podaje. HTTPS i zaufany Host
+są wymagane w produkcji. Tylko Nginx na loopback może przekazywać zaufane nagłówki
+proxy; nadpisuje X-Forwarded-For i X-Forwarded-Proto. CF-Connecting-IP jest
+honorowany wyłącznie od aktualnie zaufanych sieci Cloudflare.
 
-Udostępnienie wspólnego hasła pozwala każdemu jego posiadaczowi przekazać
-dostęp dalej. Indywidualne zaproszenia można odwoływać osobno. CAPTCHA
-utrudnia automatyzację, ale nie weryfikuje, czy ktoś jest zaproszony.
+Limity zapisane w SQLite działają wspólnie dla procesów WSGI: 12 nieudanych prób logowania
+na IP w 15 minut, 1200 globalnie na godzinę, 10 aktualizacji RSVP na zaproszenie
+na minutę i 60 na IP na minutę. Reset cookie nie resetuje limitu IP. IP jest
+przechowywane jako HMAC, nie jawnie. Limity ograniczają nadużycia; warstwa
+Cloudflare nadal odpowiada za ochronę przed dużym ruchem sieciowym. Baza sama
+usuwa wygasłe kubełki limitów i wygasłe sesje przy logowaniu.
 
-## Wymagania dla uruchomienia RSVP
+Wszystkie odpowiedzi aplikacji mają `private, no-store`, CSP bez zewnętrznych
+skryptów i stylów, blokadę ramek oraz noindex. Działanie formularza nie wymaga
+JavaScript. Błędy zapisu nigdy nie są przedstawiane jako sukces. Teksty gości
+są escapowane przez Jinja. Backend sprawdza wartości, długości, duplikaty pól
+oraz uprawnienia do osoby towarzyszącej. Maksymalne żądanie ma 16 KiB.
 
-- Weryfikacja zaproszenia lub antyspamowa po stronie serwera przed zapisem.
-- W przypadku Turnstile: serwerowa weryfikacja tokena przez Siteverify,
-  sprawdzenie hosta i akcji oraz odrzucanie tokenów wygasłych lub użytych.
-- Limity prób i rozmiaru żądania, walidacja typów, długości i dozwolonych
-  wartości oraz kontrola pochodzenia żądań. Limit w HTML nie wystarcza.
-- Brak wielokrotnego dopisywania tej samej odpowiedzi: aktualizacja RSVP
-  przypisanego do zaproszenia albo inna jawna obsługa duplikatów.
-- Odpowiedzi i sekrety poza Git, logami i katalogiem publicznym Nginx.
-- Dostęp do listy odpowiedzi wyłącznie dla uprawnionych organizatorów.
-- Sukces w interfejsie dopiero po potwierdzeniu trwałego zapisu; błędy
-  serwera nie mogą pokazywać podziękowania za zapis.
-- Testy bezpośrednich żądań z pominięciem JavaScript, błędnych zaproszeń,
-  powtórzeń, limitów i niedostępności usług weryfikujących.
+## Dane i administracja
 
-Dokumentacja:
-[Cloudflare: walidacja Turnstile na serwerze](https://developers.cloudflare.com/turnstile/get-started/server-side-validation/),
-[OWASP: zapobieganie przeciążeniom](https://cheatsheetseries.owasp.org/cheatsheets/Denial_of_Service_Cheat_Sheet.html).
+Baza, plik `details.json`, pliki SQLite WAL/SHM oraz kopie zapasowe znajdują się
+poza katalogiem Nginx, wydaniami i Git. Użytkownik aplikacji ma prawo zapisu
+wyłącznie do prywatnego katalogu danych. Aktualizacje aplikacji nie kasują bazy.
+Sekret podpisujący sesje pochodzi z pliku systemowego i nie zmienia się przy
+kolejnych wdrożeniach. Należy tworzyć prywatne kopie bazy i ustawień oraz ustalić
+z organizatorami termin usunięcia odpowiedzi po wydarzeniu.
 
-## Praca nad zmianami
+Organizator dodaje, odwołuje i rotuje zaproszenia przez `manage.py` na serwerze.
+Dostęp do szczegółowego eksportu odpowiedzi również jest lokalny, bez publicznego
+panelu administratora. Eksport zabezpiecza komórki przed formułami arkuszy.
+Nie dodawaj rzeczywistych danych ani wygenerowanych kodów do repozytorium,
+komentarzy PR, workflow i zrzutów z testów. Repozytorium jest publiczne; zmiana
+nazwiska w nowym commicie nie usuwa go ze starej historii lub istniejących kopii.
 
-Zmiany bezpieczeństwa powstają na gałęzi `security/rsvp-protection` i w PR.
-Push do tej gałęzi i PR uruchamiają testy bez wdrażania na produkcję.
-Automatyczne wdrożenie następuje po scaleniu do `main`.
+Nazwy i kontakty w poprzedniej wersji strony były oznaczone jako przykładowe.
+Nowa wersja nie traktuje ich jako prawdziwych danych i wymaga uzupełnienia ustawień.
 
-Gałąź `main` wymaga PR i poprawnego testu `test` z GitHub Actions dla
-aktualnej podstawy gałęzi. Ochrona obejmuje administratorów; wymuszone
-pushe i usuwanie gałęzi są wyłączone. Scalenie nie wymaga drugiego
-recenzenta, aby właściciel mógł pracować samodzielnie.
+## Proces i weryfikacja
+
+Zmiany powstają w PR. `main` wymaga PR i poprawnego testu `test`, także od
+administratora. Gałąź funkcjonalna nie wdraża się na produkcję. Pierwsza migracja
+na backend jest osobnym, jawnym krokiem opisanym w instrukcji wdrożenia.
+
+Testy sprawdzają anonimowy dostęp, brak danych w publicznym widoku, własność
+RSVP, izolację cudzych odpowiedzi, CSRF, limity, uprawnienia do osoby
+towarzyszącej, wygasanie i odwoływanie sesji, XSS, błędny Host oraz rollback.
+
+Źródła:
+[Flask — web security](https://flask.palletsprojects.com/en/stable/web-security/),
+[Flask-WTF — CSRF](https://flask-wtf.readthedocs.io/en/1.2.x/csrf/),
+[OWASP — ograniczanie nadużyć](https://cheatsheetseries.owasp.org/cheatsheets/Denial_of_Service_Cheat_Sheet.html).

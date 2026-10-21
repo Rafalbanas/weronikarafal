@@ -1,6 +1,7 @@
 import hashlib
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 import io
+import json
 from pathlib import Path
 import tempfile
 import threading
@@ -18,6 +19,18 @@ class QuietHandler(SimpleHTTPRequestHandler):
     def log_message(self, *_):
         pass
 
+    def do_GET(self):
+        if self.path == "/healthz":
+            release = Path(self.directory).parent
+            body = json.dumps({"status": "ok", "revision": (release / "public/revision.txt").read_text().strip(),
+                "index_sha256": hashlib.sha256((release / "index.html").read_bytes()).hexdigest()}).encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(body)
+        else:
+            super().do_GET()
+
 
 class DeploymentTests(unittest.TestCase):
     def setUp(self):
@@ -33,6 +46,7 @@ class DeploymentTests(unittest.TestCase):
         self.addCleanup(self.server.shutdown)
         threading.Thread(target=self.server.serve_forever, daemon=True).start()
         self.config["health_url"] = f"http://127.0.0.1:{self.server.server_port}"
+        self.config["application_health_url"] = self.config["health_url"]+"/healthz"
 
     def payload(self, revision):
         output = io.BytesIO()
@@ -48,8 +62,10 @@ class DeploymentTests(unittest.TestCase):
         self.send(revision, payload)
         self.send(revision, payload)
         public = Path(self.config["state_dir"]) / "current/public"
-        self.assertEqual((public / "index.html").read_bytes(), (ROOT / "index.html").read_bytes())
-        self.assertEqual({p.name for p in public.iterdir()}, {"index.html", "revision.txt"})
+        self.assertEqual((public.parent / "index.html").read_bytes(), (ROOT / "index.html").read_bytes())
+        self.assertEqual({p.name for p in public.iterdir()}, {"assets", "revision.txt"})
+        self.assertFalse((public / "app.py").exists())
+        self.assertFalse((public / "templates").exists())
         self.assertTrue(public.stat().st_mode & 0o005 == 0o005)
 
     def test_redeploy_preserves_original_rollback_target(self):
@@ -97,7 +113,7 @@ class DeploymentTests(unittest.TestCase):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", UserWarning)
             with zipfile.ZipFile(output, "a") as archive:
-                archive.writestr("public/index.html", "replacement")
+                archive.writestr("index.html", "replacement")
         with self.assertRaisesRegex(ValueError, "entries"):
             self.send("a" * 40, output.getvalue())
 
@@ -105,6 +121,24 @@ class DeploymentTests(unittest.TestCase):
         with patch("deploy.deploy.healthy", return_value=False):
             with self.assertRaisesRegex(RuntimeError, "health"):
                 self.send("a" * 40, self.payload("a" * 40))
+        self.assertFalse((Path(self.config["state_dir"]) / "current").exists())
+
+    def test_rollbacks_restart_application_and_do_not_touch_guest_database(self):
+        data = self.root / "private.sqlite3"
+        data.write_bytes(b"existing guests and responses")
+        with patch("deploy.deploy.restart") as restart:
+            self.send("a" * 40, self.payload("a" * 40))
+            with patch("deploy.deploy.healthy", side_effect=lambda config, sha, digest:
+                       sha != "b" * 40 and healthy(config, sha, digest)):
+                with self.assertRaisesRegex(RuntimeError, "health"):
+                    self.send("b" * 40, self.payload("b" * 40))
+            self.assertEqual(restart.call_count, 3)
+        self.assertEqual(data.read_bytes(), b"existing guests and responses")
+
+    def test_changed_runtime_dependencies_are_rejected_before_switch(self):
+        self.config["requirements_sha256"] = "0"*64
+        with self.assertRaisesRegex(ValueError, "Dependencies changed"):
+            self.send("a"*40, self.payload("a"*40))
         self.assertFalse((Path(self.config["state_dir"]) / "current").exists())
 
 

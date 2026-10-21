@@ -1,0 +1,8 @@
+{% extends 'templates/base.html' %}
+{% block content %}
+<section class="login-section"><div class="card login-card">
+  <span class="eyebrow">Weronika & Rafał</span><h1>{{ title }}</h1>
+  <p class="muted" role="alert">{{ message }}</p>
+  <a class="button" href="{{ url_for('guest') if g.guest else url_for('index') }}">Wróć do strony</a>
+</div></section>
+{% endblock %}

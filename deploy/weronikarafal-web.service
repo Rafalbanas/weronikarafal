@@ -1,0 +1,27 @@
+[Unit]
+Description=Weronika and Rafal guest application
+After=network.target
+
+[Service]
+User=weronikarafal-web
+Group=weronikarafal-web
+EnvironmentFile=/etc/weronikarafal/web.env
+WorkingDirectory=/var/lib/weronikarafal/current
+ExecStart=/opt/weronikarafal/venv/bin/gunicorn --bind 127.0.0.1:18083 --workers 2 --threads 2 --timeout 30 --access-logfile /dev/null --error-logfile - app:create_app()
+Restart=on-failure
+RestartSec=3
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/weronikarafal-data
+CapabilityBoundingSet=
+RestrictSUIDSGID=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+[Install]
+WantedBy=multi-user.target

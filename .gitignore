@@ -9,3 +9,11 @@
 __pycache__/
 *.pyc
 release.zip
+*.sqlite3
+*.sqlite3-*
+*.db
+*.csv
+details.json
+instance/
+.venv/
+private-data/
