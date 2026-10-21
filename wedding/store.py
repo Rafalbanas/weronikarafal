@@ -6,6 +6,7 @@ import secrets
 import sqlite3
 import time
 import re
+import fcntl
 from werkzeug.security import generate_password_hash, check_password_hash
 
 SCHEMA = """
@@ -33,6 +34,9 @@ CREATE TABLE IF NOT EXISTS admin_sessions (
     token_hash TEXT PRIMARY KEY, username TEXT NOT NULL REFERENCES administrators(username),
     expires_at INTEGER NOT NULL
 );
+CREATE TABLE IF NOT EXISTS admin_recovery (
+    username TEXT PRIMARY KEY REFERENCES administrators(username), code_hash TEXT NOT NULL
+);
 """
 
 DEFAULT_DETAILS = {
@@ -53,16 +57,23 @@ def connect(path):
 def initialize(path):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
-    with connect(path) as db:
-        db.execute("PRAGMA journal_mode = WAL")
-        db.executescript(SCHEMA)
-        # Serialize the additive migration across Gunicorn workers.
-        db.execute("BEGIN IMMEDIATE")
-        if "code_id" not in {row[1] for row in db.execute("PRAGMA table_info(guests)")}:
-            db.execute("ALTER TABLE guests ADD COLUMN code_id TEXT")
-        db.execute("CREATE UNIQUE INDEX IF NOT EXISTS guests_code_id ON guests(code_id)")
-    db.close()
-    path.chmod(0o600)
+    # SQLite's journal-mode transition can return BUSY without waiting. Protect
+    # the whole initialization, including WAL setup, across worker processes.
+    with path.with_name(path.name + ".init.lock").open("a") as lock:
+        Path(lock.name).chmod(0o600)
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        db = connect(path)
+        try:
+            with db:
+                db.execute("PRAGMA journal_mode = WAL")
+                db.executescript(SCHEMA)
+                db.execute("BEGIN IMMEDIATE")
+                if "code_id" not in {row[1] for row in db.execute("PRAGMA table_info(guests)")}:
+                    db.execute("ALTER TABLE guests ADD COLUMN code_id TEXT")
+                db.execute("CREATE UNIQUE INDEX IF NOT EXISTS guests_code_id ON guests(code_id)")
+        finally:
+            db.close()
+        path.chmod(0o600)
 
 
 def digest(value):
@@ -115,6 +126,21 @@ def revoke(db, guest_id):
     with db:
         db.execute("UPDATE guests SET active=0 WHERE id=?", (guest_id,))
         db.execute("DELETE FROM sessions WHERE guest_id=?", (guest_id,))
+
+
+def recovery_code():
+    code = secrets.token_hex(16)
+    return "-".join(code[i:i+4] for i in range(0, len(code), 4))
+
+
+def issue_admin_recovery(db, username):
+    if not db.execute("SELECT 1 FROM administrators WHERE username=?", (username,)).fetchone():
+        raise ValueError("Unknown administrator")
+    code = recovery_code()
+    with db:
+        db.execute("INSERT INTO admin_recovery VALUES (?, ?) ON CONFLICT(username) DO UPDATE SET code_hash=excluded.code_hash",
+                   (username, generate_password_hash(normalize_code(code))))
+    return code
 
 
 def allow_request(db, buckets, now=None):

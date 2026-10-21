@@ -133,6 +133,30 @@ EN = {
 'Bezglutenowa': 'Gluten-free', 'Inna / alergie': 'Other / allergies',
 }
 
+EN.update({
+    'Reset hasła': 'Reset password',
+    'Nie pamiętam hasła': 'Forgot password',
+    'Kod odzyskiwania': 'Recovery code',
+    'Hasło zresetowane': 'Password reset',
+    'Jednorazowy kod odzyskiwania': 'Single-use recovery code',
+    'Nowe hasło zostało zapisane. Wszystkie sesje tego konta zostały wylogowane.': 'Your new password has been saved. All sessions for this account have been signed out.',
+    'Wygenerowano nowy kod odzyskiwania. Poprzedni kod nie będzie już działał.': 'A new recovery code has been generated. The previous code no longer works.',
+    'Zapisz ten kod w bezpiecznym miejscu. Pokażemy go tylko raz. Umożliwi ustawienie nowego hasła, jeśli zapomnisz obecnego.': 'Keep this code somewhere safe. It is shown only once. It lets you set a new password if you forget your current one.',
+    'W bazie zapisany jest wyłącznie hash z losową solą. Kod zostanie zastąpiony nowym po użyciu.': 'Only a hash with a random salt is stored. The code will be replaced after use.',
+    'Zaloguj się nowym hasłem': 'Sign in with your new password',
+    'Wróć do panelu': 'Back to dashboard',
+    'Wpisz login i jednorazowy kod odzyskiwania, aby ustawić nowe hasło.': 'Enter your username and single-use recovery code to set a new password.',
+    'Pokaż hasło': 'Show password', 'Ukryj hasło': 'Hide password',
+    'Hasło rozróżnia wielkie i małe litery. Wklej samą wartość hasła, bez loginu i dodatkowych spacji.': 'Passwords are case-sensitive. Paste only the password, without your username or extra spaces.',
+    'Ustaw nowe hasło': 'Set new password', 'Wróć do logowania': 'Back to sign-in',
+    'Kod odzyskiwania otrzymaliście przy konfiguracji konta. Kolejny można wygenerować po zalogowaniu w sekcji Wasze konto. Jeśli nie macie kodu, skontaktujcie się z administratorem strony.': 'Your recovery code was provided when your account was set up. You can generate another in Your account after signing in. If you do not have a code, contact the website administrator.',
+    'Odzyskiwanie konta': 'Account recovery',
+    'Kod odzyskiwania pozwoli ustawić nowe hasło bez znajomości starego. Wygenerowanie kolejnego unieważni poprzedni kod.': 'A recovery code lets you set a new password without knowing your current one. Generating a new code invalidates the previous one.',
+    'Wygeneruj kod odzyskiwania': 'Generate recovery code',
+    'Nie wygenerowano kodu odzyskiwania. Sprawdź obecne hasło.': 'Recovery code not generated. Check your current password.',
+    'Nie udało się zresetować hasła. Sprawdź login i kod odzyskiwania. Nowe hasło musi mieć 16–256 znaków i być wpisane identycznie w obu polach.': 'Unable to reset your password. Check your username and recovery code. The new password must be 16–256 characters and match in both fields.',
+})
+
 
 def translate(text):
     return EN.get(text, text) if g.get('language', 'pl') == 'en' else text

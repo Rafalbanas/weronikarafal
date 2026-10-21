@@ -139,3 +139,23 @@ zachowując kopię starego odbiornika. Wykonaj prywatną kopię bazy przed migra
 Nowe tabele i kolumna `code_id` są dodawane automatycznie, bez usuwania danych.
 Stare kody zachowują ważność i otrzymują hash z solą przy poprawnym logowaniu.
 Zależności, sekret sesji i konfiguracja Nginx pozostają zgodne z backendem.
+
+
+## Odzyskiwanie hasła administratora
+
+Na `/admin/login` jest odnośnik do `/admin/recover`. Reset wymaga loginu,
+jednorazowego kodu odzyskiwania i nowego hasła (16–256 znaków). Po użyciu
+kod jest atomowo zastępowany nowym i wyświetlany tylko raz. Stare hasło oraz
+wszystkie sesje konta tracą ważność. Kod można odnowić w sekcji Wasze konto,
+potwierdzając obecne hasło. Nie ma resetu na podstawie samego loginu.
+
+Pierwszy kod lub kod awaryjny wydaje administrator serwera:
+
+```sh
+sudo -u weronikarafal-web /opt/weronikarafal/venv/bin/python /var/lib/weronikarafal/current/manage.py admin-recovery LOGIN
+```
+
+Wydanie kolejnego kodu unieważnia poprzedni. Zachowaj go poza repozytorium.
+Kody przechowywane są wyłącznie jako hashe scrypt z losową solą, w nowej
+addytywnej tabeli `admin_recovery`. Lokalny reset hasła przez `manage.py admin`
+unieważnia także istniejący kod odzyskiwania. Przed wdrożeniem wykonaj kopię bazy.
