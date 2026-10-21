@@ -2,6 +2,7 @@
 from flask import g
 
 EN = {
+'Realizacja:': 'Built by:',
 'Zaczynamy naszą wspólną historię': 'Our story starts here',
 '27 sierpnia 2027': '27 August 2027',
 'Do naszego ślubu zostało': 'Counting down to our wedding',
