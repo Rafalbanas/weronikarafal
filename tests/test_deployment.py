@@ -2,6 +2,7 @@ import hashlib
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 import io
 import json
+import os
 from pathlib import Path
 import tempfile
 import threading
@@ -10,7 +11,7 @@ from unittest.mock import patch
 import zipfile
 
 from deploy.deploy import deploy, healthy
-from scripts.package import package
+from scripts.package import package, SOURCE_FILES, ASSET_FILES
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -33,6 +34,21 @@ class QuietHandler(SimpleHTTPRequestHandler):
 
 
 class DeploymentTests(unittest.TestCase):
+    def test_archive_is_independent_of_checkout_and_packaging_timestamps(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for name in SOURCE_FILES + ASSET_FILES:
+                target = root / name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes((ROOT / name).read_bytes())
+            first, second = io.BytesIO(), io.BytesIO()
+            package(root, first, "a" * 40)
+            for name in SOURCE_FILES + ASSET_FILES:
+                os.utime(root / name, (946684800, 946684800))
+            with patch("zipfile.time.localtime", return_value=(2030, 1, 2, 3, 4, 6, 0, 0, 0)):
+                package(root, second, "a" * 40)
+            self.assertEqual(first.getvalue(), second.getvalue())
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
