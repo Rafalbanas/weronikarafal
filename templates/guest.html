@@ -4,7 +4,7 @@
 <div class="guest-shell">
   <section class="guest-heading">
     <span class="eyebrow">{{ _('Dobrze, że jesteście z nami') }}</span><h1>{{ _('Wasze zaproszenie') }}</h1>
-    <p class="guest-name">{{ g.guest.name }}</p>
+    <p class="guest-name">{{ g.guest.name }}{% if g.guest.partner_name %} &amp; {{ g.guest.partner_name }}{% elif g.guest.allows_companion %} {{ _('z osobą towarzyszącą') }}{% endif %}</p>
     <p class="muted">{{ _('Tutaj potwierdzicie obecność i znajdziecie informacje na nasz wspólny dzień.') }}</p>
   </section>
   <nav class="section-nav" aria-label="{{ _('Strefa gości') }}"><a href="#rsvp">{{ _('Moja odpowiedź') }}</a><a href="#lista">{{ _('Kto będzie z nami') }}</a><a href="#szczegoly">{{ _('Szczegóły dnia') }}</a><a href="#kontakt">{{ _('Kontakt') }}</a></nav>
@@ -16,7 +16,9 @@
       {% if rsvp %}<p class="status-line">{{ _('Zapisana odpowiedź:') }} <strong>{{ _('Będziemy z Wami') if rsvp.attendance == 'yes' else _('Niestety nie dotrzemy') }}</strong></p>{% endif %}
       <form method="post" action="{{ url_for('rsvp') }}" class="form-stack" id="rsvpForm">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <div class="identity-box"><span>{{ _('Zaproszenie dla') }}</span><strong>{{ g.guest.name }}</strong></div>
+        <div class="identity-box"><span>{{ _('Zaproszenie dla') }}</span><strong>{{ g.guest.name }}{% if g.guest.partner_name %} &amp; {{ g.guest.partner_name }}{% elif g.guest.allows_companion %} {{ _('z osobą towarzyszącą') }}{% endif %}</strong></div>
+        {% if invited_children %}<div class="identity-box"><span>{{ _('Dzieci na zaproszeniu') }}</span><ul>{% for child in invited_children %}<li>{{ child or (_('Dziecko') ~ ' ' ~ loop.index) }}</li>{% endfor %}</ul></div>{% endif %}
+        <p class="field-help">{{ _('Jedna odpowiedź RSVP dotyczy wszystkich osób na tym zaproszeniu.') }}</p>
         <fieldset><legend>{{ _('Czy będziecie z nami świętować?') }}</legend>
           <label class="choice"><input type="radio" name="attendance" value="yes" required {% if not rsvp or rsvp.attendance == 'yes' %}checked{% endif %}><span>{{ _('Z radością przybędziemy') }}</span></label>
           <label class="choice"><input type="radio" name="attendance" value="no" {% if rsvp and rsvp.attendance == 'no' %}checked{% endif %}><span>{{ _('Niestety nie dotrzemy') }}</span></label>

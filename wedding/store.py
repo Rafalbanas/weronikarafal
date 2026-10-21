@@ -70,6 +70,11 @@ def initialize(path):
                 db.execute("BEGIN IMMEDIATE")
                 if "code_id" not in {row[1] for row in db.execute("PRAGMA table_info(guests)")}:
                     db.execute("ALTER TABLE guests ADD COLUMN code_id TEXT")
+                columns = {row[1] for row in db.execute("PRAGMA table_info(guests)")}
+                if "partner_name" not in columns:
+                    db.execute("ALTER TABLE guests ADD COLUMN partner_name TEXT NOT NULL DEFAULT ''")
+                if "children" not in columns:
+                    db.execute("ALTER TABLE guests ADD COLUMN children TEXT NOT NULL DEFAULT '[]'")
                 db.execute("CREATE UNIQUE INDEX IF NOT EXISTS guests_code_id ON guests(code_id)")
         finally:
             db.close()
@@ -84,19 +89,28 @@ def normalize_code(code):
     return "".join(code.split()).replace("-", "").lower()
 
 
-def invitation(db, name, companion=False, guest_id=None, code=None):
-    name = name.strip()
-    if not name or len(name) > 120 or any(ord(c) < 32 for c in name):
-        raise ValueError("Imię i nazwisko musi mieć od 1 do 120 znaków.")
+def validate_household(name, partner_name="", children=None):
+    children = [] if children is None else children
+    if not isinstance(children, list) or len(children) > 20:
+        raise ValueError("Invalid children")
+    values = [name.strip(), partner_name.strip()] + [child.strip() for child in children]
+    if not values[0] or any(len(value) > 120 or any(ord(c) < 32 for c in value) for value in values):
+        raise ValueError("Invalid household names")
+    return values[0], values[1], values[2:]
+
+
+def invitation(db, name, companion=False, guest_id=None, code=None, partner_name="", children=None):
+    name, partner_name, children = validate_household(name, partner_name, children)
     code = normalize_code(code) if code else secrets.token_hex(24)
     if not re.fullmatch(r"[a-f0-9]{48}", code):
         raise ValueError("Kod musi zawierać 48 znaków 0–9 / a–f; myślniki są opcjonalne.")
     guest_id = guest_id or secrets.token_hex(16)
     with db:
-        db.execute("""INSERT INTO guests(id, name, code_hash, allows_companion, active, code_id)
-            VALUES (?, ?, ?, ?, 1, ?) ON CONFLICT(id) DO UPDATE SET
+        db.execute("""INSERT INTO guests(id, name, code_hash, allows_companion, active, code_id, partner_name, children)
+            VALUES (?, ?, ?, ?, 1, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET
             code_hash=excluded.code_hash, code_id=excluded.code_id, active=1""",
-            (guest_id, name, generate_password_hash(code), int(companion), code[:16]))
+            (guest_id, name, generate_password_hash(code), int(companion), code[:16], partner_name,
+             json.dumps(children, ensure_ascii=False)))
         db.execute("DELETE FROM sessions WHERE guest_id=?", (guest_id,))
     return guest_id, "-".join(code[i:i+4] for i in range(0, len(code), 4))
 

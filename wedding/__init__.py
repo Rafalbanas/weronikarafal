@@ -2,6 +2,7 @@
 from flask import g
 
 EN = {
+'Realizacja:': 'Built by:',
 'Zaczynamy naszą wspólną historię': 'Our story starts here',
 '27 sierpnia 2027': '27 August 2027',
 'Do naszego ślubu zostało': 'Counting down to our wedding',
@@ -155,6 +156,24 @@ EN.update({
     'Wygeneruj kod odzyskiwania': 'Generate recovery code',
     'Nie wygenerowano kodu odzyskiwania. Sprawdź obecne hasło.': 'Recovery code not generated. Check your current password.',
     'Nie udało się zresetować hasła. Sprawdź login i kod odzyskiwania. Nowe hasło musi mieć 16–256 znaków i być wpisane identycznie w obu polach.': 'Unable to reset your password. Check your username and recovery code. The new password must be 16–256 characters and match in both fields.',
+})
+
+EN.update({
+    'Imię i nazwisko': 'Full name', 'Kogo obejmuje zaproszenie?': 'Who is this invitation for?',
+    'Jedna osoba': 'One person', 'Para — wpisuję obie osoby': 'Couple — enter both names',
+    'Osoba z osobą towarzyszącą — bez danych drugiej osoby': 'Person with a plus-one — no second name needed',
+    'Imię i nazwisko drugiej osoby': 'Full name of the second person',
+    'Wypełnij tylko dla pary. Osoba towarzysząca nie wymaga podawania imienia i nazwiska.': 'Complete this for a named couple only. A plus-one does not need a name.',
+    'Dziecko': 'Child', 'imię opcjonalne': 'optional name', 'Usuń dziecko': 'Remove child',
+    'Dzieci na zaproszeniu': 'Children on the invitation', 'Odejmij dziecko': 'Remove one child',
+    '+ Dodaj dziecko': '+ Add a child',
+    'Imiona dzieci są opcjonalne. Możesz dodać dzieci do każdego rodzaju zaproszenia.': 'Children’s names are optional. You can add children to any invitation type.',
+    'Jedno zaproszenie i jeden kod dla osoby, pary lub rodziny. Wybierz wariant i dodaj dzieci przyciskiem +.': 'One invitation and one code for a person, couple or family. Choose a type and use + to add children.',
+    'Miejsca dla dorosłych:': 'Adult places:', 'Dzieci:': 'Children:',
+    'z osobą towarzyszącą': 'with a plus-one',
+    'Jedna odpowiedź RSVP dotyczy wszystkich osób na tym zaproszeniu.': 'One RSVP applies to everyone on this invitation.',
+    'Nie zapisano zaproszenia. Sprawdź dane osób i liczbę dzieci (0–20). Para wymaga danych obu osób; osoba towarzysząca nie wymaga danych. Własny kod musi mieć 48 znaków 0–9 / a–f i być unikalny.': 'Invitation not saved. Check the names and child count (0–20). A named couple needs both names; a plus-one needs no second name. Custom codes must be unique and contain 48 characters using 0–9 and a–f.',
+    'Sprawdź dane osób (do 120 znaków) i liczbę dzieci (0–20). Dla pary wpisz dane obu osób.': 'Check the names (up to 120 characters) and child count (0–20). Enter both names for a named couple.',
 })
 
 

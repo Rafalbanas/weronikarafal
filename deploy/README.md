@@ -159,3 +159,23 @@ Wydanie kolejnego kodu unieważnia poprzedni. Zachowaj go poza repozytorium.
 Kody przechowywane są wyłącznie jako hashe scrypt z losową solą, w nowej
 addytywnej tabeli `admin_recovery`. Lokalny reset hasła przez `manage.py admin`
 unieważnia także istniejący kod odzyskiwania. Przed wdrożeniem wykonaj kopię bazy.
+
+
+## Pary i dzieci na zaproszeniu
+
+Formularz administratora obsługuje jedną osobę, parę z dwoma nazwiskami lub
+osobę z bezimienną osobą towarzyszącą. W ostatnim wariancie pole drugiej osoby
+jest ukrywane i ignorowane na serwerze. Dzieci dodaje się przyciskami +/−;
+imiona są opcjonalne, limit to 20 dzieci na zaproszenie. Bez JavaScript działa
+numeryczna liczba dzieci, a imiona można później uzupełnić w edycji.
+
+Każda rodzina ma jeden kod i jedno RSVP obejmujące całe zaproszenie. Dane
+pary i dzieci można edytować bez zmiany kodu. Rotacja zachowuje skład rodziny
+oraz zapisane RSVP. Imiona dzieci są widoczne tylko właścicielom zaproszenia
+i administratorom; wspólna lista gości pokazuje tylko dorosłych.
+
+Migracja dodaje kolumny guests.partner_name oraz guests.children (JSON),
+z pustymi wartościami dla istniejących zaproszeń. Inicjalizacja WAL i schematu
+jest chroniona prywatnym plikiem guests.sqlite3.init.lock, aby równoległy start
+workerów nie powodował SQLITE_BUSY. Wdrożenie wymaga kopii bazy, nie wymaga
+zmiany zależności ani odbiornika ZIP.
