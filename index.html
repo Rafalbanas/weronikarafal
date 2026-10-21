@@ -7,7 +7,7 @@
   
   <!-- SEO & Open Graph Meta Tags -->
   <meta name="description" content="Oficjalna strona ślubna Weroniki i Rafała. Poznaj harmonogram dnia, lokalizację ceremonii i wesela oraz potwierdź swoją obecność na naszym ślubie 27 sierpnia 2027 r.">
-  <meta name="robots" content="index, follow">
+  <meta name="robots" content="noindex, nofollow, noarchive">
   <meta name="theme-color" content="#FAF7F2">
 
   <!-- Open Graph / Facebook / Messenger / iMessage -->
@@ -537,16 +537,19 @@
       <!-- Karta Formularza -->
       <div class="bg-white rounded-3xl p-6 sm:p-10 border border-sage-100 shadow-card relative">
         
-        <!-- Formularz HTML skonfigurowany pod Formspree / dowolny webhook POST -->
-        <!-- Wskazówka: Aby odbierać maile na skrzynkę, załóż darmowe konto na https://formspree.io i wklej swój endpoint w action="" -->
-        <form id="weddingRsvpForm" action="https://formspree.io/f/TWOJ_FORM_ID" method="POST" class="space-y-6">
+        <p id="rsvpAvailability" role="status" class="text-sm text-graphite-muted mb-6">
+          Potwierdzenie obecności online jest chwilowo niedostępne. Spróbuj ponownie później.
+        </p>
+        <noscript><p>Do obsługi formularza potrzebna będzie włączona obsługa JavaScript.</p></noscript>
+        <form id="weddingRsvpForm" method="POST" aria-describedby="rsvpAvailability">
+          <fieldset disabled class="space-y-6 opacity-60">
           
           <!-- Imię i Nazwisko -->
           <div>
             <label for="fullName" class="block text-xs uppercase tracking-wider font-semibold text-graphite mb-2">
               Twoje Imię i Nazwisko <span class="text-rose-500">*</span>
             </label>
-            <input type="text" id="fullName" name="imie_nazwisko" required placeholder="np. Anna Nowak" class="w-full px-4 py-3 rounded-xl bg-ecru border border-sage-200 focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/20 text-sm transition-colors text-graphite placeholder:text-graphite-light">
+            <input type="text" id="fullName" name="imie_nazwisko" maxlength="120" required placeholder="np. Anna Nowak" class="w-full px-4 py-3 rounded-xl bg-ecru border border-sage-200 focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/20 text-sm transition-colors text-graphite placeholder:text-graphite-light">
           </div>
 
           <!-- Status Obecności -->
@@ -578,7 +581,7 @@
               <label for="companionName" class="block text-xs uppercase tracking-wider font-semibold text-graphite mb-2">
                 Imię i nazwisko osoby towarzyszącej
               </label>
-              <input type="text" id="companionName" name="osoba_towarzyszaca" placeholder="np. Jan Kowalski" class="w-full px-4 py-3 rounded-xl bg-white border border-sage-200 focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/20 text-sm transition-colors text-graphite">
+              <input type="text" id="companionName" name="osoba_towarzyszaca" maxlength="120" placeholder="np. Jan Kowalski" class="w-full px-4 py-3 rounded-xl bg-white border border-sage-200 focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/20 text-sm transition-colors text-graphite">
             </div>
           </div>
 
@@ -618,33 +621,18 @@
             <label for="notes" class="block text-xs uppercase tracking-wider font-semibold text-graphite mb-2">
               Wymarzona piosenka dla DJ-a lub uwagi
             </label>
-            <textarea id="notes" name="uwagi_i_muzyka" rows="3" placeholder="Wpisz utwór, przy którym na pewno wejdziesz na parkiet, lub dodatkowe informacje dla nas..." class="w-full px-4 py-3 rounded-xl bg-ecru border border-sage-200 focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/20 text-sm transition-colors text-graphite placeholder:text-graphite-light"></textarea>
+            <textarea id="notes" name="uwagi_i_muzyka" maxlength="2000" rows="3" placeholder="Wpisz utwór, przy którym na pewno wejdziesz na parkiet, lub dodatkowe informacje dla nas..." class="w-full px-4 py-3 rounded-xl bg-ecru border border-sage-200 focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/20 text-sm transition-colors text-graphite placeholder:text-graphite-light"></textarea>
           </div>
 
           <!-- Przycisk Submit -->
           <button type="submit" id="submitBtn" class="w-full py-4 px-6 rounded-full bg-sage hover:bg-sage-600 text-white font-medium text-xs uppercase tracking-widest transition-all duration-300 shadow-soft hover:shadow-lg flex items-center justify-center gap-2">
-            <span>Wyślij potwierdzenie</span>
+            <span>Formularz chwilowo niedostępny</span>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
             </svg>
           </button>
+          </fieldset>
         </form>
-
-        <!-- Komunikat Sukcesu (domyślnie ukryty) -->
-        <div id="rsvpSuccessMessage" class="hidden text-center py-12 px-6">
-          <div class="w-16 h-16 bg-sage-100 text-sage rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-            </svg>
-          </div>
-          <h3 class="font-cormorant text-3xl font-medium text-graphite mb-2">Dziękujemy za odpowiedź!</h3>
-          <p class="text-sm text-graphite-muted max-w-sm mx-auto mb-6">
-            Twoje zgłoszenie zostało zapisane. Nie możemy się doczekać, aż spotkamy się 27 sierpnia 2027 r.!
-          </p>
-          <button type="button" onclick="resetRsvpForm()" class="text-xs uppercase tracking-widest text-sage font-semibold underline underline-offset-4 hover:text-sage-700">
-            Wyślij kolejną odpowiedź
-          </button>
-        </div>
 
       </div>
 
@@ -881,63 +869,13 @@
     }
 
     // -------------------------------------------------------------
-    // 3. OBSŁUGA WYSYŁANIA FORMULARZA RSVP (Asynchroniczny POST)
+    // 3. RSVP pozostaje wyłączone do uruchomienia chronionego zapisu na serwerze.
     // -------------------------------------------------------------
     const rsvpForm = document.getElementById('weddingRsvpForm');
-    const successMsg = document.getElementById('rsvpSuccessMessage');
-    const submitBtn = document.getElementById('submitBtn');
-
     if (rsvpForm) {
-      rsvpForm.addEventListener('submit', async function(e) {
+      rsvpForm.addEventListener('submit', function(e) {
         e.preventDefault();
-
-        // Stan ładowania przycisku
-        const originalBtnHtml = submitBtn.innerHTML;
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = `
-          <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-          Wysyłanie...
-        `;
-
-        const formData = new FormData(rsvpForm);
-
-        try {
-          // Jeśli endpoint jest domyślny Formspree (placeholder), natychmiast pokazujemy sukces dla podglądu
-          const actionUrl = rsvpForm.getAttribute('action');
-          if (actionUrl && !actionUrl.includes('TWOJ_FORM_ID')) {
-            await fetch(actionUrl, {
-              method: 'POST',
-              body: formData,
-              headers: { 'Accept': 'application/json' }
-            });
-          } else {
-            // Symulacja opóźnienia sieciowego dla efektu UX
-            await new Promise(r => setTimeout(r, 600));
-          }
-
-          // Sukces
-          rsvpForm.classList.add('hidden');
-          successMsg.classList.remove('hidden');
-        } catch (err) {
-          console.error('Błąd wysyłania RSVP:', err);
-          alert('Wystąpił drobny problem z wysłaniem formularza. Skontaktuj się z nami bezpośrednio!');
-        } finally {
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = originalBtnHtml;
-        }
       });
-    }
-
-    function resetRsvpForm() {
-      if (rsvpForm && successMsg) {
-        rsvpForm.reset();
-        if (companionContainer) companionContainer.classList.add('hidden');
-        successMsg.classList.add('hidden');
-        rsvpForm.classList.remove('hidden');
-      }
     }
 
     // -------------------------------------------------------------
