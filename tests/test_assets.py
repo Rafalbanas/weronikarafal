@@ -20,9 +20,9 @@ class AssetCacheTests(unittest.TestCase):
             version = hashlib.sha256(content).hexdigest()[:16]
             url = f'/assets/{name}?v={version}'
             self.assertIn(url, page.text)
-            response = self.get(url)
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.data, content)
+            with self.get(url) as response:
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.data, content)
         self.assertNotRegex(page.text, r'(?:src|href)="/assets/[^"?]+"')
 
     def test_changed_javascript_gets_a_new_url_for_cached_clients(self):
@@ -41,4 +41,5 @@ class AssetCacheTests(unittest.TestCase):
         old_url = re.search(r'src="([^"]*site.js[^"]*)"', first.text).group(1)
         new_url = re.search(r'src="([^"]*site.js[^"]*)"', second.text).group(1)
         self.assertNotEqual(old_url, new_url)
-        self.assertIn(b'Changed release for cache regression', client.get(new_url, base_url='https://localhost').data)
+        with client.get(new_url, base_url='https://localhost') as response:
+            self.assertIn(b'Changed release for cache regression', response.data)
