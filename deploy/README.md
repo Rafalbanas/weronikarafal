@@ -14,7 +14,7 @@ Po przeglądzie i scaleniu PR, z czystego checkoutu scalonego `main` na serwerze
 cd /var/www/weronikarafal
 git switch main
 git pull --ff-only origin main
-sudo python3 deploy/install.py --apply
+sudo python3 -m deploy.install --apply
 ```
 
 Instalator zakłada istniejące konto SSH CI/CD, certyfikaty domeny i układ
@@ -116,3 +116,26 @@ sprawdza. SQLite znajduje się poza wydaniami. Nie usuwaj bieżącego ani
 poprzedniego wydania. Normalne cofnięcie zmian rób przez `git revert` i PR.
 Aktualizuj zaufane sieci Cloudflare w `nginx-cloudflare-realip.conf` ze źródeł
 Cloudflare; nie ufaj nagłówkom IP przychodzącym od dowolnego klienta.
+
+
+## Panel pary młodej
+
+Panel `/admin` ma osobne konta, niezależne od kodów zaproszeń. Pierwsze konto
+utwórz lokalnie (hasło wprowadzane przez ukryty prompt, minimum 16 znaków):
+
+```sh
+sudo -u weronikarafal-web /opt/weronikarafal/venv/bin/python /var/lib/weronikarafal/current/manage.py admin LOGIN
+```
+
+Można utworzyć osobne konta dla każdej osoby. Każde widzi wszystkie RSVP,
+zarządza zaproszeniami i zmienia własne hasło. Kody pokazują się tylko raz;
+reset w panelu unieważnia poprzedni kod i sesje gościa, zachowując RSVP.
+Przechowujemy wyłącznie hashe scrypt z losową solą, nigdy jawne kody/hasła.
+
+Wydanie panelu rozszerza listę plików o trzy szablony administratora. Przed
+pierwszym deployem tego wydania zaktualizuj root-owned odbiornik z przejrzanego
+commita (`deploy/deploy.py` → `/usr/local/sbin/weronikarafal-deploy`, tryb 755),
+zachowując kopię starego odbiornika. Wykonaj prywatną kopię bazy przed migracją.
+Nowe tabele i kolumna `code_id` są dodawane automatycznie, bez usuwania danych.
+Stare kody zachowują ważność i otrzymują hash z solą przy poprawnym logowaniu.
+Zależności, sekret sesji i konfiguracja Nginx pozostają zgodne z backendem.

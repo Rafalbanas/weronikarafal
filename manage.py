@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-"""Local administrator commands; no public registration or administrative routes."""
+"""Local administrator commands and private account provisioning."""
 import argparse
 import csv
 import json
 import os
 from pathlib import Path
 import sqlite3
+import getpass
+from werkzeug.security import generate_password_hash
 
 from wedding.store import connect, details, initialize, invitation, revoke, validate_details
 
@@ -14,6 +16,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--data-dir", type=Path, default=Path(os.environ.get("WEDDING_DATA_DIR", "/var/lib/weronikarafal-data")))
     commands = parser.add_subparsers(dest="command", required=True)
+    admin = commands.add_parser("admin", help="Create or reset an administrator; password is read privately.")
+    admin.add_argument("username")
     invite = commands.add_parser("invite", help="Add an invitation; prints its code once.")
     invite.add_argument("name")
     invite.add_argument("--companion", action="store_true")
@@ -29,7 +33,15 @@ def main():
     database = args.data_dir / "guests.sqlite3"
     initialize(database)
     with connect(database) as db:
-        if args.command == "invite":
+        if args.command == "admin":
+            password = getpass.getpass("Nowe hasło administratora (minimum 16 znaków): ")
+            if len(password) < 16 or len(password) > 256 or not args.username.strip():
+                parser.error("Podaj login i hasło o długości 16–256 znaków.")
+            db.execute("INSERT INTO administrators VALUES (?, ?) ON CONFLICT(username) DO UPDATE SET password_hash=excluded.password_hash",
+                       (args.username.strip(), generate_password_hash(password)))
+            db.execute("DELETE FROM admin_sessions WHERE username=?", (args.username.strip(),))
+            print("Administrator configured; previous sessions invalidated.")
+        elif args.command == "invite":
             guest_id, code = invitation(db, args.name, args.companion)
             print("Invitation ID:", guest_id)
             print("Private code (share only with this guest):", code)

@@ -5,6 +5,8 @@ from pathlib import Path
 import secrets
 import sqlite3
 import time
+import re
+from werkzeug.security import generate_password_hash, check_password_hash
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS guests (
@@ -23,6 +25,13 @@ CREATE TABLE IF NOT EXISTS rsvps (
 );
 CREATE TABLE IF NOT EXISTS throttle (
     bucket TEXT PRIMARY KEY, attempts INTEGER NOT NULL, resets_at INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS administrators (
+    username TEXT PRIMARY KEY, password_hash TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS admin_sessions (
+    token_hash TEXT PRIMARY KEY, username TEXT NOT NULL REFERENCES administrators(username),
+    expires_at INTEGER NOT NULL
 );
 """
 
@@ -47,6 +56,11 @@ def initialize(path):
     with connect(path) as db:
         db.execute("PRAGMA journal_mode = WAL")
         db.executescript(SCHEMA)
+        # Serialize the additive migration across Gunicorn workers.
+        db.execute("BEGIN IMMEDIATE")
+        if "code_id" not in {row[1] for row in db.execute("PRAGMA table_info(guests)")}:
+            db.execute("ALTER TABLE guests ADD COLUMN code_id TEXT")
+        db.execute("CREATE UNIQUE INDEX IF NOT EXISTS guests_code_id ON guests(code_id)")
     db.close()
     path.chmod(0o600)
 
@@ -59,19 +73,42 @@ def normalize_code(code):
     return "".join(code.split()).replace("-", "").lower()
 
 
-def invitation(db, name, companion=False, guest_id=None):
+def invitation(db, name, companion=False, guest_id=None, code=None):
     name = name.strip()
     if not name or len(name) > 120 or any(ord(c) < 32 for c in name):
         raise ValueError("Imię i nazwisko musi mieć od 1 do 120 znaków.")
-    code = secrets.token_hex(16)
+    code = normalize_code(code) if code else secrets.token_hex(24)
+    if not re.fullmatch(r"[a-f0-9]{48}", code):
+        raise ValueError("Kod musi zawierać 48 znaków 0–9 / a–f; myślniki są opcjonalne.")
     guest_id = guest_id or secrets.token_hex(16)
     with db:
-        db.execute("""INSERT INTO guests(id, name, code_hash, allows_companion, active)
-            VALUES (?, ?, ?, ?, 1) ON CONFLICT(id) DO UPDATE SET
-            code_hash=excluded.code_hash, active=1""",
-            (guest_id, name, digest(code), int(companion)))
+        db.execute("""INSERT INTO guests(id, name, code_hash, allows_companion, active, code_id)
+            VALUES (?, ?, ?, ?, 1, ?) ON CONFLICT(id) DO UPDATE SET
+            code_hash=excluded.code_hash, code_id=excluded.code_id, active=1""",
+            (guest_id, name, generate_password_hash(code), int(companion), code[:16]))
         db.execute("DELETE FROM sessions WHERE guest_id=?", (guest_id,))
     return guest_id, "-".join(code[i:i+4] for i in range(0, len(code), 4))
+
+
+def authenticate_invitation(db, code):
+    code = normalize_code(code)
+    if re.fullmatch(r"[a-f0-9]{48}", code):
+        person = db.execute("SELECT * FROM guests WHERE code_id=? AND active=1", (code[:16],)).fetchone()
+        if person and check_password_hash(person["code_hash"], code):
+            return person
+    elif re.fullmatch(r"[a-f0-9]{32}", code):
+        # Only the pre-existing 128-bit codes use the legacy digest. A successful
+        # login upgrades to a salted hash; the first eight characters become its ID.
+        person = db.execute("SELECT * FROM guests WHERE code_id=? AND active=1", (code[:8],)).fetchone()
+        if person and check_password_hash(person["code_hash"], code):
+            return person
+        person = db.execute("SELECT * FROM guests WHERE code_id IS NULL AND code_hash=? AND active=1", (digest(code),)).fetchone()
+        if person:
+            with db:
+                db.execute("UPDATE guests SET code_hash=?, code_id=? WHERE id=?",
+                           (generate_password_hash(code), code[:8], person["id"]))
+            return person
+    return None
 
 
 def revoke(db, guest_id):

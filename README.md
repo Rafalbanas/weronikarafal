@@ -1,8 +1,9 @@
 # Weronika i Rafał
 
-Strona ślubna z dwoma poziomami dostępu:
+Strona ślubna z trzema poziomami dostępu:
 
 - **Publicznie:** data, odliczanie, godzina ceremonii i kościół po uzupełnieniu danych.
+- **Panel pary młodej (`/admin`):** osobny login i hasło, zarządzanie gośćmi, pełne RSVP i reset kodów.
 - **Po zalogowaniu kodem zaproszenia:** własne RSVP, lista zaproszeń ze statusami,
   miejsce przyjęcia, harmonogram oraz kontakt do świadków.
 
@@ -10,8 +11,9 @@ Dieta, nocleg, osoba towarzysząca i uwagi są widoczne tylko autorowi odpowiedz
 oraz organizatorom. Nie ma publicznej rejestracji. Kody, nazwiska gości,
 odpowiedzi i rzeczywiste kontakty są przechowywane poza repozytorium.
 
-Aplikacja korzysta z Flask, SQLite i lokalnych zasobów CSS/JS. Kod zaproszenia
-jest losowym sekretem 128-bitowym; w bazie zapisywany jest jego skrót. Dostęp
+Aplikacja korzysta z Flask, SQLite i lokalnych zasobów CSS/JS. Nowy kod zaproszenia
+zawiera publiczny identyfikator oraz losowy sekret 128-bitowy; w bazie zapisujemy
+wyłącznie hash scrypt z losową solą. Kod jest wyświetlany raz. Dostęp
 wymaga sesji sprawdzanej przez serwer, a zapisy RSVP mają ochronę CSRF i limity.
 
 ## Uruchomienie lokalne

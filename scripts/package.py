@@ -8,6 +8,7 @@ SOURCE_FILES = (
     "app.py", "manage.py", "requirements.txt", "index.html",
     "wedding/__init__.py", "wedding/store.py",
     "templates/base.html", "templates/login.html", "templates/guest.html", "templates/error.html",
+    "templates/admin.html", "templates/admin_login.html", "templates/admin_code.html",
 )
 ASSET_FILES = ("assets/site.css", "assets/site.js", "assets/favicon.svg")
 

@@ -5,7 +5,6 @@ import hashlib
 import hmac
 import os
 from pathlib import Path
-import re
 import secrets
 import sqlite3
 import time
@@ -15,8 +14,9 @@ from flask import Flask, abort, flash, g, redirect, render_template, request, se
 from flask_wtf.csrf import CSRFError, CSRFProtect
 from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.exceptions import SecurityError
+from werkzeug.security import check_password_hash, generate_password_hash
 
-from wedding.store import allow_request, connect, details, digest, initialize, normalize_code
+from wedding.store import allow_request, connect, details, digest, initialize, normalize_code, invitation, revoke, authenticate_invitation
 
 ROOT = Path(__file__).resolve().parent
 DIETS = {"standard": "Standardowa", "vegetarian": "Wegetariańska", "vegan": "Wegańska",
@@ -36,6 +36,7 @@ def create_app(config=None):
         MAX_CONTENT_LENGTH=16*1024, MAX_FORM_MEMORY_SIZE=16*1024, MAX_FORM_PARTS=20,
         TRUSTED_HOSTS=["weronikarafal.com", "www.weronikarafal.com", "127.0.0.1", "localhost"],
         LOGIN_LIMIT=12, TRUST_PROXY=os.environ.get("WEDDING_TRUST_PROXY") == "1",
+        ADMIN_LOGIN_LIMIT=5,
     )
     if config:
         app.config.update(config)
@@ -60,6 +61,14 @@ def create_app(config=None):
     @app.before_request
     def load_guest():
         g.guest = None
+        g.admin = None
+        admin_sid = session.get("admin_sid")
+        if isinstance(admin_sid, str):
+            g.admin = db().execute("""SELECT administrators.username FROM admin_sessions
+                JOIN administrators USING(username) WHERE token_hash=? AND expires_at>?""",
+                (digest(admin_sid), int(time.time()))).fetchone()
+            if not g.admin:
+                session.pop("admin_sid", None)
         sid = session.get("sid")
         if isinstance(sid, str):
             g.guest = db().execute("""SELECT guests.* FROM sessions JOIN guests
@@ -105,6 +114,117 @@ def create_app(config=None):
             abort(429)
         return limits
 
+    def require_admin(view):
+        @wraps(view)
+        def protected(*args, **kwargs):
+            if not g.admin:
+                return redirect(url_for("admin_login"), code=303)
+            return view(*args, **kwargs)
+        return protected
+
+    # A real hash keeps failed password checks equally expensive for unknown users.
+    dummy_password_hash = generate_password_hash(secrets.token_urlsafe(32))
+
+    @app.route("/admin/login", methods=["GET", "POST"])
+    def admin_login():
+        if g.admin:
+            return redirect(url_for("admin"), code=303)
+        error = None
+        if request.method == "POST":
+            limited("admin-login", [("ip:{ip}", app.config["ADMIN_LOGIN_LIMIT"], 900), ("global", 100, 900)])
+            username = request.form.get("username", "").strip()[:120]
+            password = request.form.get("password", "")
+            account = db().execute("SELECT * FROM administrators WHERE username=?", (username,)).fetchone()
+            valid = check_password_hash(account["password_hash"] if account else dummy_password_hash, password[:256])
+            if account and valid and len(password) <= 256:
+                sid = secrets.token_urlsafe(32)
+                now = int(time.time())
+                with db():
+                    if isinstance(session.get("sid"), str):
+                        db().execute("DELETE FROM sessions WHERE token_hash=?", (digest(session["sid"]),))
+                    db().execute("DELETE FROM admin_sessions WHERE expires_at<=?", (now,))
+                    db().execute("INSERT INTO admin_sessions VALUES (?, ?, ?)", (digest(sid), username, now+8*3600))
+                session.clear()
+                session.permanent = True
+                session["admin_sid"] = sid
+                return redirect(url_for("admin"), code=303)
+            error = "Niepoprawny login lub hasło."
+        return render_template("templates/admin_login.html", error=error), 401 if error else 200
+
+    @app.get("/admin")
+    @require_admin
+    def admin():
+        people = db().execute("""SELECT guests.*, rsvps.attendance,
+            rsvps.companion_name, rsvps.diet, rsvps.lodging, rsvps.notes, rsvps.updated_at
+            FROM guests
+            LEFT JOIN rsvps ON guests.id=rsvps.guest_id ORDER BY guests.name COLLATE NOCASE""").fetchall()
+        active = [person for person in people if person["active"]]
+        totals = {"invitations": len(active), "yes": sum(p["attendance"] == "yes" for p in active),
+                  "no": sum(p["attendance"] == "no" for p in active),
+                  "pending": sum(p["attendance"] is None for p in active),
+                  "lodging": sum(p["attendance"] == "yes" and p["lodging"] == "yes" for p in active)}
+        return render_template("templates/admin.html", people=people, totals=totals, diets=DIETS)
+
+    @app.post("/admin/guests")
+    @require_admin
+    def admin_add_guest():
+        limited("admin-write", [("user:"+g.admin["username"], 60, 60)])
+        try:
+            guest_id, code = invitation(db(), request.form.get("name", ""), request.form.get("companion") == "yes",
+                       code=request.form.get("code", "").strip() or None)
+        except (ValueError, sqlite3.IntegrityError):
+            flash("Nie zapisano zaproszenia. Podaj imię i nazwisko (do 120 znaków). Własny kod musi mieć 48 znaków 0–9 / a–f i być unikalny; zostaw pole puste, aby go wygenerować.")
+        else:
+            return render_template("templates/admin_code.html", code=code, name=request.form.get("name", ""))
+        return redirect(url_for("admin"), code=303)
+
+    @app.post("/admin/guests/<guest_id>")
+    @require_admin
+    def admin_update_guest(guest_id):
+        person = db().execute("SELECT * FROM guests WHERE id=?", (guest_id,)).fetchone()
+        if not person:
+            abort(404)
+        action = request.form.get("action")
+        try:
+            if action == "rotate":
+                _, code = invitation(db(), person["name"], person["allows_companion"], guest_id)
+                return render_template("templates/admin_code.html", code=code, name=person["name"])
+            elif action == "revoke":
+                revoke(db(), guest_id)
+                flash("Zaproszenie wyłączone. Odpowiedź została zachowana.")
+            elif action == "edit":
+                name = request.form.get("name", "").strip()
+                if not name or len(name) > 120 or any(ord(c) < 32 for c in name):
+                    raise ValueError("Invalid name")
+                with db():
+                    db().execute("UPDATE guests SET name=?, allows_companion=? WHERE id=?",
+                                 (name, int(request.form.get("companion") == "yes"), guest_id))
+                flash("Dane zaproszenia zapisane.")
+            else:
+                abort(400)
+        except ValueError:
+            flash("Podaj poprawne imię i nazwisko, do 120 znaków.")
+        return redirect(url_for("admin", _anchor="guest-"+guest_id), code=303)
+
+    @app.post("/admin/password")
+    @require_admin
+    def admin_password():
+        limited("admin-password", [("user:"+g.admin["username"], 5, 900)])
+        account = db().execute("SELECT * FROM administrators WHERE username=?", (g.admin["username"],)).fetchone()
+        current = request.form.get("current_password", "")
+        password = request.form.get("new_password", "")
+        if (len(current) > 256 or not check_password_hash(account["password_hash"], current)
+                or not 16 <= len(password) <= 256 or password != request.form.get("confirm_password")):
+            flash("Nie zmieniono hasła. Sprawdź obecne hasło i podaj dwa razy nowe hasło o długości 16–256 znaków.")
+            return redirect(url_for("admin", _anchor="konto"), code=303)
+        with db():
+            db().execute("UPDATE administrators SET password_hash=? WHERE username=?",
+                         (generate_password_hash(password), g.admin["username"]))
+            db().execute("DELETE FROM admin_sessions WHERE username=?", (g.admin["username"],))
+        session.clear()
+        flash("Hasło zmienione. Zaloguj się ponownie; pozostałe sesje tego konta zostały wylogowane.")
+        return redirect(url_for("admin_login"), code=303)
+
     @app.get("/")
     def index():
         ceremony = details(app.config["DETAILS"])["ceremony"]
@@ -119,9 +239,8 @@ def create_app(config=None):
         if request.method == "POST":
             limits = limited("login", [("ip:{ip}", app.config["LOGIN_LIMIT"], 900), ("global", 1200, 3600)])
             code = normalize_code(request.form.get("code", ""))
-            valid = re.fullmatch(r"[a-f0-9]{32}", code) is not None
-            person = db().execute("SELECT * FROM guests WHERE code_hash=? AND active=1", (digest(code),)).fetchone()
-            if valid and person:
+            person = authenticate_invitation(db(), code)
+            if person:
                 sid = secrets.token_urlsafe(32)
                 now = int(time.time())
                 with db():
@@ -129,6 +248,8 @@ def create_app(config=None):
                     # each other's failed-login budget. The global cap remains.
                     db().execute("UPDATE throttle SET attempts=max(0, attempts-1) WHERE bucket=?", (limits[0][0],))
                     db().execute("DELETE FROM sessions WHERE expires_at<=?", (now,))
+                    if isinstance(session.get("admin_sid"), str):
+                        db().execute("DELETE FROM admin_sessions WHERE token_hash=?", (digest(session["admin_sid"]),))
                     db().execute("INSERT INTO sessions VALUES (?, ?, ?)", (digest(sid), person["id"], now+8*3600))
                 session.clear()
                 session.permanent = True
@@ -178,6 +299,9 @@ def create_app(config=None):
 
     @app.post("/logout")
     def logout():
+        if isinstance(session.get("admin_sid"), str):
+            with db():
+                db().execute("DELETE FROM admin_sessions WHERE token_hash=?", (digest(session["admin_sid"]),))
         if isinstance(session.get("sid"), str):
             with db():
                 db().execute("DELETE FROM sessions WHERE token_hash=?", (digest(session["sid"]),))
