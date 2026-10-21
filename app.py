@@ -30,6 +30,13 @@ DIETS = {"standard": "Standardowa", "vegetarian": "Wegetariańska", "vegan": "We
 def create_app(config=None):
     assets = ROOT / "public/assets" if (ROOT / "public/assets").exists() else ROOT / "assets"
     app = Flask(__name__, template_folder=str(ROOT), static_folder=str(assets), static_url_path="/assets")
+    asset_versions = {name: hashlib.sha256((assets / name).read_bytes()).hexdigest()[:16]
+                      for name in ("site.css", "site.js", "favicon.svg")}
+
+    @app.template_global()
+    def asset_url(filename):
+        return url_for("static", filename=filename, v=asset_versions[filename])
+
     data = Path(os.environ.get("WEDDING_DATA_DIR", "/var/lib/weronikarafal-data"))
     app.config.update(
         SECRET_KEY=os.environ.get("WEDDING_SECRET_KEY"),

@@ -7,9 +7,9 @@
   <meta name="theme-color" content="#faf7f2">
   <meta name="description" content="{{ _('Weronika i Rafał — 27 sierpnia 2027. Informacje o ceremonii i strefa gości.') }}">
   <title>{% block title %}Weronika & Rafał · 27.08.2027{% endblock %}</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='site.css') }}">
-  <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
-  <script src="{{ url_for('static', filename='site.js') }}" defer></script>
+  <link rel="stylesheet" href="{{ asset_url('site.css') }}">
+  <link rel="icon" href="{{ asset_url('favicon.svg') }}" type="image/svg+xml">
+  <script src="{{ asset_url('site.js') }}" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">{{ _('Przejdź do treści') }}</a>
