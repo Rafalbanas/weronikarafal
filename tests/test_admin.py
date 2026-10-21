@@ -109,8 +109,8 @@ class AdminTests(unittest.TestCase):
         with sqlite3.connect(path) as db:
             db.execute("CREATE TABLE guests (id TEXT PRIMARY KEY, name TEXT NOT NULL, code_hash TEXT NOT NULL UNIQUE, allows_companion INTEGER NOT NULL DEFAULT 0, active INTEGER NOT NULL DEFAULT 1)")
             db.execute("INSERT INTO guests VALUES (?, ?, ?, 0, 1)", ("legacy", "Istniejący gość", digest("a"*32)))
-        with ThreadPoolExecutor(max_workers=2) as workers:
-            list(workers.map(initialize, [path, path]))
+        with ThreadPoolExecutor(max_workers=4) as workers:
+            list(workers.map(initialize, [path] * 8))
         with connect(path) as db:
             person = db.execute("SELECT * FROM guests").fetchone()
             self.assertEqual(person["name"], "Istniejący gość")

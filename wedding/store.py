@@ -6,6 +6,7 @@ import secrets
 import sqlite3
 import time
 import re
+import fcntl
 from werkzeug.security import generate_password_hash, check_password_hash
 
 SCHEMA = """
@@ -56,16 +57,23 @@ def connect(path):
 def initialize(path):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
-    with connect(path) as db:
-        db.execute("PRAGMA journal_mode = WAL")
-        db.executescript(SCHEMA)
-        # Serialize the additive migration across Gunicorn workers.
-        db.execute("BEGIN IMMEDIATE")
-        if "code_id" not in {row[1] for row in db.execute("PRAGMA table_info(guests)")}:
-            db.execute("ALTER TABLE guests ADD COLUMN code_id TEXT")
-        db.execute("CREATE UNIQUE INDEX IF NOT EXISTS guests_code_id ON guests(code_id)")
-    db.close()
-    path.chmod(0o600)
+    # SQLite's journal-mode transition can return BUSY without waiting. Protect
+    # the whole initialization, including WAL setup, across worker processes.
+    with path.with_name(path.name + ".init.lock").open("a") as lock:
+        Path(lock.name).chmod(0o600)
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        db = connect(path)
+        try:
+            with db:
+                db.execute("PRAGMA journal_mode = WAL")
+                db.executescript(SCHEMA)
+                db.execute("BEGIN IMMEDIATE")
+                if "code_id" not in {row[1] for row in db.execute("PRAGMA table_info(guests)")}:
+                    db.execute("ALTER TABLE guests ADD COLUMN code_id TEXT")
+                db.execute("CREATE UNIQUE INDEX IF NOT EXISTS guests_code_id ON guests(code_id)")
+        finally:
+            db.close()
+        path.chmod(0o600)
 
 
 def digest(value):
