@@ -1,0 +1,13 @@
+{% extends 'templates/base.html' %}
+{% block title %}Nowy kod zaproszenia · Weronika & Rafał{% endblock %}
+{% block content %}
+<section class="guest-shell"><div class="card admin-add">
+  <span class="eyebrow">Gotowe do przekazania</span><h1>Nowy kod</h1><p class="guest-name">{{ name }}</p>
+  <p>Kod zobaczysz tylko teraz. Skopiuj go i wyślij gościowi razem z adresem <strong>https://weronikarafal.com/login</strong>.</p>
+  <label for="new-code">Kod zaproszenia</label><input id="new-code" class="admin-code" value="{{ code }}" readonly autocomplete="off">
+  <button class="button button-small button-outline" type="button" id="copy-code" hidden>Kopiuj kod</button><p id="copy-status" class="field-help" role="status"></p>
+  <p class="notice notice-success">Poprzedni kod i sesje gościa zostały unieważnione. W bazie zapisaliśmy wyłącznie hash z losową solą. Odpowiedź RSVP została zachowana.</p>
+  <p class="field-help">Po zamknięciu tej strony nie da się odczytać kodu. W każdej chwili możesz wygenerować kolejny w panelu.</p>
+  <a class="button" href="{{ url_for('admin') }}">Skopiowane — wróć do panelu</a>
+</div></section>
+{% endblock %}

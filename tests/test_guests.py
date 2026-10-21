@@ -6,6 +6,8 @@ import tempfile
 import time
 import unittest
 
+from werkzeug.security import check_password_hash
+
 from app import create_app
 from wedding.store import connect, digest, invitation, normalize_code, revoke
 
@@ -176,7 +178,8 @@ class GuestTests(unittest.TestCase):
         with connect(self.app.config["DATABASE"]) as db:
             code_hash = db.execute("SELECT code_hash FROM guests WHERE id=?", (self.alice,)).fetchone()[0]
             session_hash = db.execute("SELECT token_hash FROM sessions").fetchone()[0]
-        self.assertEqual(code_hash, digest(normalize_code(self.alice_code)))
+        self.assertTrue(check_password_hash(code_hash, normalize_code(self.alice_code)))
+        self.assertTrue(code_hash.startswith("scrypt:"))
         self.assertEqual(session_hash, digest(sid))
         self.assertNotEqual(session_hash, sid)
 

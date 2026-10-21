@@ -1,0 +1,66 @@
+{% extends 'templates/base.html' %}
+{% block title %}Panel pary młodej · Weronika & Rafał{% endblock %}
+{% block content %}
+<div class="guest-shell admin-shell">
+  <section class="guest-heading"><span class="eyebrow">Wasz dzień, Wasze miejsce</span><h1>Wszystko pod kontrolą</h1><p class="muted">Goście, zaproszenia i odpowiedzi — tylko dla Was.</p></section>
+  <nav class="section-nav" aria-label="Panel administratora"><a href="#nowe">Dodaj gości</a><a href="#zaproszenia">Zaproszenia i RSVP</a><a href="#konto">Wasze konto</a></nav>
+  {% for message in get_flashed_messages() %}<p class="notice notice-success" role="status">{{ message }}</p>{% endfor %}
+  <div class="admin-totals">
+    {% for value, label in [(totals.invitations, 'aktywnych zaproszeń'), (totals.yes, 'potwierdzonych'), (totals.pending, 'bez odpowiedzi'), (totals.no, 'odmów'), (totals.lodging, 'zaproszeń z noclegiem')] %}
+    <div class="card"><strong>{{ value }}</strong><span>{{ label }}</span></div>
+    {% endfor %}
+  </div>
+  <section id="nowe" class="card admin-add">
+    <span class="eyebrow">Jeszcze jedno miejsce przy stole</span><h2>Dodaj zaproszenie</h2>
+    <p class="muted">Jedno zaproszenie może obejmować osobę lub parę. Kod powstanie automatycznie.</p>
+    <form method="post" action="{{ url_for('admin_add_guest') }}" class="form-stack">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label for="name">Imię i nazwisko / nazwa pary</label><input id="name" name="name" maxlength="120" required placeholder="np. Anna i Jan Kowalscy">
+      <label class="choice"><input type="checkbox" name="companion" value="yes"><span>Może zgłosić osobę towarzyszącą</span></label>
+      <details><summary>Chcę wpisać własny kod</summary><label for="custom-code">Kod zaproszenia</label><input id="custom-code" name="code" maxlength="64" autocomplete="off" autocapitalize="none" spellcheck="false"><p class="field-help">48 znaków 0–9 i a–f; myślniki są opcjonalne. Puste pole = nowy losowy kod.</p></details>
+      <button class="button" type="submit">Dodaj gości i utwórz kod +</button>
+    </form>
+  </section>
+  <section id="zaproszenia" class="admin-invitations">
+    <span class="eyebrow">Wasza lista</span><h2>Zaproszenia i odpowiedzi</h2>
+    <p class="muted">Kod pojawia się tylko raz, po utworzeniu lub zresetowaniu zaproszenia. Przekażcie go adresatom wraz z adresem weronikarafal.com/login. Zgubiony kod można łatwo zastąpić nowym. Liczniki dotyczą zaproszeń, nie liczby osób.</p>
+    {% for person in people %}
+    <article id="guest-{{ person.id }}" class="card admin-person">
+      <div class="admin-person-heading"><h3>{{ person.name }}</h3><span class="badge {{ 'badge-yes' if person.active and person.attendance == 'yes' else '' }}">{{ 'Wyłączone' if not person.active else 'Potwierdzone' if person.attendance == 'yes' else 'Nie dotrą' if person.attendance == 'no' else 'Bez odpowiedzi' }}</span></div>
+      <p class="field-help">Kod jest zapisany jako hash z solą. Aby wydać nowy kod, użyj przycisku poniżej.</p>
+      <dl class="admin-response">
+        <div><dt>Osoba towarzysząca</dt><dd>{{ person.companion_name or ('Może zgłosić' if person.allows_companion else 'Nie dotyczy') }}</dd></div>
+        <div><dt>Dieta</dt><dd>{{ diets.get(person.diet, '—') }}</dd></div>
+        <div><dt>Nocleg</dt><dd>{{ 'Tak' if person.lodging == 'yes' else 'Nie' if person.lodging == 'no' else '—' }}</dd></div>
+        <div class="admin-notes"><dt>Uwagi / piosenka</dt><dd class="pre-line">{{ person.notes or '—' }}</dd></div>
+      </dl>
+      <details><summary>Edytuj zaproszenie</summary>
+        <form class="form-stack" method="post" action="{{ url_for('admin_update_guest', guest_id=person.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="edit">
+          <label for="name-{{ person.id }}">Nazwa zaproszenia</label><input id="name-{{ person.id }}" name="name" value="{{ person.name }}" maxlength="120" required>
+          <label class="choice"><input type="checkbox" name="companion" value="yes" {% if person.allows_companion %}checked{% endif %}><span>Może zgłosić osobę towarzyszącą</span></label>
+          <button type="submit" class="button button-small">Zapisz dane</button>
+        </form>
+      </details>
+      <div class="admin-actions">
+        <p class="field-help">Nowy kod unieważni poprzedni i wyloguje gościa. Odpowiedź RSVP zostanie zachowana.</p>
+        <form method="post" action="{{ url_for('admin_update_guest', guest_id=person.id) }}" class="admin-action-buttons">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="button button-small" name="action" value="rotate">{{ 'Wygeneruj nowy kod' if person.active else 'Przywróć i wygeneruj kod' }}</button>
+        </form>
+        {% if person.active %}<details><summary>Wyłącz dostęp gościa</summary><p class="field-help">Gość straci dostęp. Możesz później przywrócić zaproszenie nowym kodem.</p><form method="post" action="{{ url_for('admin_update_guest', guest_id=person.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="button button-small button-outline" name="action" value="revoke">Wyłącz zaproszenie</button></form></details>{% endif %}
+      </div>
+    </article>
+    {% else %}<div class="card"><h3>Zacznijcie od pierwszych gości</h3><p class="muted">Dodajcie zaproszenie powyżej. Tutaj pojawi się kod i odpowiedź.</p></div>{% endfor %}
+  </section>
+  <section id="konto" class="card admin-add"><span class="eyebrow">Wasze konto · {{ g.admin.username }}</span><h2>Zmień hasło</h2><p class="muted">Po zmianie hasła wszystkie sesje tego konta zostaną wylogowane.</p>
+    <form method="post" action="{{ url_for('admin_password') }}" class="form-stack">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label for="current-password">Obecne hasło</label><input id="current-password" name="current_password" type="password" autocomplete="current-password" required maxlength="256">
+      <label for="new-password">Nowe hasło (minimum 16 znaków)</label><input id="new-password" name="new_password" type="password" autocomplete="new-password" required minlength="16" maxlength="256">
+      <label for="confirm-password">Powtórz nowe hasło</label><input id="confirm-password" name="confirm_password" type="password" autocomplete="new-password" required minlength="16" maxlength="256">
+      <button class="button" type="submit">Zmień hasło</button>
+    </form>
+  </section>
+</div>
+{% endblock %}

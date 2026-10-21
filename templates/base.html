@@ -16,7 +16,10 @@
   <header class="site-header">
     <a class="brand" href="{{ url_for('index') }}" aria-label="Weronika i Rafał — strona główna"><span class="monogram">W&R</span><span>Weronika <i>&</i> Rafał</span></a>
     <nav aria-label="Nawigacja">
-      {% if g.guest %}
+      {% if g.admin %}
+      <a class="nav-link" href="{{ url_for('admin') }}">Panel pary młodej</a>
+      <form method="post" action="{{ url_for('logout') }}" class="inline-form"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="button button-small button-outline" type="submit">Wyloguj</button></form>
+      {% elif g.guest %}
       <a class="nav-link" href="{{ url_for('guest') }}">Strefa gości</a>
       <form method="post" action="{{ url_for('logout') }}" class="inline-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

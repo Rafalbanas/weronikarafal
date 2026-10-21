@@ -1,6 +1,6 @@
 # Dostęp i prywatność
 
-## Dwa poziomy
+## Trzy poziomy
 
 Publiczna strona zawiera wyłącznie datę, godzinę, odliczanie i informacje
 ceremonii z sekcji `ceremony` prywatnego pliku ustawień. Widok `/guest` jest
@@ -8,8 +8,11 @@ renderowany na serwerze dopiero po uwierzytelnieniu. Lista gości, kontakty
 i adres wesela nie są dołączane do publicznego HTML, CSS ani JavaScript.
 
 Kod zaproszenia identyfikuje osobę lub parę. Jest generowany przez organizatora
-z losowych 16 bajtów (128 bitów), nie z nazwiska ani numeru telefonu. Serwer
-przechowuje tylko SHA-256 kodu. Kod pozostaje wielokrotnego użytku do czasu
+z losowych 24 bajtów: 8 bajtów publicznego identyfikatora i 16 bajtów sekretu
+(128 bitów), nie z nazwiska ani numeru telefonu. Serwer przechowuje identyfikator
+i hash scrypt z losową solą (Werkzeug), bez odwracalnej kopii kodu. Stare kody
+SHA-256 są akceptowane i przy poprawnym logowaniu otrzymują hash scrypt; rotacja
+zastępuje je nowym formatem. Kod pozostaje wielokrotnego użytku do czasu
 odwołania lub rotacji. Osoba mająca kod może go udostępnić — to sekret, który
 należy przekazywać tylko adresatom zaproszenia. Publiczna rejestracja nie istnieje.
 
@@ -54,9 +57,17 @@ Sekret podpisujący sesje pochodzi z pliku systemowego i nie zmienia się przy
 kolejnych wdrożeniach. Należy tworzyć prywatne kopie bazy i ustawień oraz ustalić
 z organizatorami termin usunięcia odpowiedzi po wydarzeniu.
 
-Organizator dodaje, odwołuje i rotuje zaproszenia przez `manage.py` na serwerze.
-Dostęp do szczegółowego eksportu odpowiedzi również jest lokalny, bez publicznego
-panelu administratora. Eksport zabezpiecza komórki przed formułami arkuszy.
+Organizator korzysta z `/admin`: osobne logowanie hasłem, serwerowe sesje
+i autoryzacja administratora na każdym odczycie i zapisie. Gość nie ma dostępu
+do panelu nawet z poprawnym kodem. Hasła mają hash scrypt z losową solą;
+pierwsze konto tworzy administrator serwera poleceniem `manage.py admin LOGIN`,
+bez publicznej rejestracji. Hasło można zmienić w panelu (minimum 16 znaków),
+co unieważnia wszystkie sesje danego konta. Logowanie ma limit 5 prób na IP
+w 15 minut i 100 globalnie. Panel pokazuje pełne RSVP i umożliwia dodawanie,
+edytowanie, odwoływanie oraz resetowanie zaproszeń. Nowy kod jest zwracany
+wyłącznie w odpowiedzi na autoryzowany POST, raz, bez zapisu w cookie, logach
+ani bazie. Zwykły widok panelu nie zawiera kodów. Reset unieważnia poprzedni kod
+i sesje gościa, zachowując RSVP. Eksport odpowiedzi pozostaje lokalny. Eksport zabezpiecza komórki przed formułami arkuszy.
 Nie dodawaj rzeczywistych danych ani wygenerowanych kodów do repozytorium,
 komentarzy PR, workflow i zrzutów z testów. Repozytorium jest publiczne; zmiana
 nazwiska w nowym commicie nie usuwa go ze starej historii lub istniejących kopii.

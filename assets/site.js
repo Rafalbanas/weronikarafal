@@ -1,5 +1,21 @@
 'use strict';
 
+const copyCode = document.getElementById('copy-code');
+if (copyCode && navigator.clipboard) {
+  copyCode.hidden = false;
+  copyCode.addEventListener('click', async () => {
+    const input = document.getElementById('new-code');
+    const status = document.getElementById('copy-status');
+    try {
+      await navigator.clipboard.writeText(input.value);
+      status.textContent = 'Kod skopiowany.';
+    } catch {
+      input.select();
+      status.textContent = 'Zaznaczono kod — skopiuj go ręcznie.';
+    }
+  });
+}
+
 const countdown = document.querySelector('[data-countdown]');
 if (countdown) {
   const target = new Date(countdown.dataset.countdown).getTime();
