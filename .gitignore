@@ -1,0 +1,8 @@
+.env
+.env.*
+!.env.example
+.aws/
+.codex/
+.agents/
+*.key
+*.pem

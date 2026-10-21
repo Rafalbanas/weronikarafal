@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="pl" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weronika & Rafał – Ślub i Wesele | 27.08.2027</title>
+  
+  <!-- SEO & Open Graph Meta Tags -->
+  <meta name="description" content="Oficjalna strona ślubna Weroniki i Rafała. Poznaj harmonogram dnia, lokalizację ceremonii i wesela oraz potwierdź swoją obecność na naszym ślubie 27 sierpnia 2027 r.">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#FAF7F2">
+
+  <!-- Open Graph / Facebook / Messenger / iMessage -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://weronikarafal.com/">
+  <meta property="og:title" content="Weronika & Rafał – Pobieramy się! 27.08.2027">
+  <meta property="og:description" content="Będzie nam niezmiernie miło świętować ten wyjątkowy dzień razem z Wami. Sprawdź szczegóły i potwierdź obecność.">
+  <!-- Wskazówka: Zastąp poniższy link URL własnym zdjęciem pary wrzuconym np. do katalogu /img/og-photo.jpg -->
+  <meta property="og:image" content="https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&h=630&q=80">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:locale" content="pl_PL">
+
+  <!-- Twitter Cards -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://weronikarafal.com/">
+  <meta name="twitter:title" content="Weronika & Rafał – Ślub i Wesele | 27.08.2027">
+  <meta name="twitter:description" content="Dołącz do nas 27 sierpnia 2027 r. w tym wyjątkowym dniu. Potwierdź obecność online!">
+  <meta name="twitter:image" content="https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&h=630&q=80">
+
+  <!-- Favicon SVG (Elegancki monogram W&R) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='46' fill='%23FAF7F2' stroke='%237A8B7B' stroke-width='2.5'/%3E%3Ccircle cx='50' cy='50' r='42' fill='none' stroke='%23C5A059' stroke-width='1' stroke-dasharray='3 3'/%3E%3Ctext x='50' y='57' font-family='serif' font-size='24' font-weight='500' fill='%232C302E' text-anchor='middle'%3EW%26R%3C/text%3E%3C/svg%3E">
+
+  <!-- Google Fonts: Cormorant Garamond & Montserrat -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ecru: '#FAF7F2',
+            'ecru-light': '#FFFFFF',
+            'ecru-dark': '#F3ECE3',
+            sage: {
+              50: '#F4F7F4',
+              100: '#E6ECE6',
+              200: '#D0DBD0',
+              400: '#8C9C86',
+              DEFAULT: '#7A8B7B',
+              600: '#5F6F60',
+              700: '#4A574B'
+            },
+            gold: {
+              light: '#EAD7A6',
+              DEFAULT: '#C5A059',
+              dark: '#A6823C'
+            },
+            graphite: {
+              DEFAULT: '#2C302E',
+              muted: '#585E5A',
+              light: '#848C87'
+            }
+          },
+          fontFamily: {
+            serif: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+            sans: ['"Montserrat"', 'system-ui', 'sans-serif']
+          },
+          boxShadow: {
+            'soft': '0 10px 30px -10px rgba(122, 139, 123, 0.12)',
+            'card': '0 20px 40px -15px rgba(44, 48, 46, 0.07)'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Subtelne tło ze strukturą papieru i płynnymi przejściami */
+    body {
+      background-color: #FAF7F2;
+      color: #2C302E;
+      font-family: 'Montserrat', sans-serif;
+      overflow-x: hidden;
+      background-image: radial-gradient(rgba(122, 139, 123, 0.05) 1px, transparent 0);
+      background-size: 28px 28px;
+    }
+
+    .font-cormorant {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+    }
+
+    /* Ozdobne obramowanie */
+    .boho-border {
+      border: 1px solid rgba(197, 160, 89, 0.35);
+      position: relative;
+    }
+    .boho-border::before {
+      content: '';
+      position: absolute;
+      inset: 4px;
+      border: 1px dashed rgba(122, 139, 123, 0.25);
+      pointer-events: none;
+      border-radius: inherit;
+    }
+
+    /* Płynne otwieranie akordeonu */
+    .faq-answer {
+      transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, margin 0.3s ease;
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+    }
+    .faq-item.active .faq-answer {
+      max-height: 500px;
+      opacity: 1;
+      margin-top: 1rem;
+    }
+    .faq-item.active .faq-icon {
+      transform: rotate(180deg);
+    }
+
+    /* Subtelna animacja tła i unoszenia */
+    @keyframes gentleFloat {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-6px) rotate(1deg); }
+    }
+    .floating-leaf {
+      animation: gentleFloat 6s ease-in-out infinite;
+    }
+
+    /* Personalizacja scrollbara */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #FAF7F2;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #8C9C86;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #7A8B7B;
+    }
+  </style>
+</head>
+<body class="selection:bg-sage-200 selection:text-graphite">
+
+  <!-- ============================================================== -->
+  <!-- NAWIGACJA (Sticky Header) -->
+  <!-- ============================================================== -->
+  <header class="fixed top-0 left-0 right-0 z-50 bg-ecru/90 backdrop-blur-md border-b border-sage-100 transition-all duration-300">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-18 py-3 flex items-center justify-between">
+      <!-- Logo Monogram -->
+      <a href="#hero" class="group flex items-center gap-2">
+        <span class="w-10 h-10 rounded-full border border-gold flex items-center justify-center font-cormorant text-xl text-graphite group-hover:bg-sage-50 transition-colors">
+          W&R
+        </span>
+        <span class="font-cormorant text-2xl tracking-wide font-medium text-graphite hidden sm:inline">
+          Weronika & Rafał
+        </span>
+      </a>
+
+      <!-- Menu Główne Desktop -->
+      <nav class="hidden md:flex items-center gap-8 text-xs tracking-widest uppercase font-medium text-graphite-muted">
+        <a href="#harmonogram" class="hover:text-sage transition-colors">Harmonogram</a>
+        <a href="#lokalizacja" class="hover:text-sage transition-colors">Lokalizacja</a>
+        <a href="#rsvp" class="hover:text-sage transition-colors">RSVP</a>
+        <a href="#faq" class="hover:text-sage transition-colors">Informacje</a>
+        <a href="#kontakt" class="hover:text-sage transition-colors">Kontakt</a>
+      </nav>
+
+      <!-- Przycisk CTA w nawigacji -->
+      <div class="flex items-center gap-4">
+        <a href="#rsvp" class="hidden sm:inline-flex items-center justify-center px-5 py-2.5 rounded-full text-xs uppercase tracking-widest font-semibold bg-sage text-white hover:bg-sage-600 transition-all shadow-sm hover:shadow">
+          Potwierdź obecność
+        </a>
+
+        <!-- Hamburger Mobile -->
+        <button id="mobileMenuBtn" aria-label="Otwórz menu mobilne" class="md:hidden p-2 rounded-lg text-graphite hover:bg-sage-100 transition-colors">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 6h16M4 12h16m-7 6h7"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Menu Rozwijane Mobile -->
+    <div id="mobileMenu" class="hidden md:hidden bg-ecru/98 border-b border-sage-200 px-6 py-6 transition-all">
+      <div class="flex flex-col gap-4 text-sm font-medium tracking-wider uppercase text-graphite">
+        <a href="#harmonogram" class="py-2 border-b border-sage-100 mobile-nav-link">Harmonogram Dnia</a>
+        <a href="#lokalizacja" class="py-2 border-b border-sage-100 mobile-nav-link">Lokalizacja</a>
+        <a href="#rsvp" class="py-2 border-b border-sage-100 mobile-nav-link">Potwierdź obecność (RSVP)</a>
+        <a href="#faq" class="py-2 border-b border-sage-100 mobile-nav-link">Informacje praktyczne</a>
+        <a href="#kontakt" class="py-2 mobile-nav-link">Kontakt do świadków</a>
+        <a href="#rsvp" class="mt-2 text-center py-3 rounded-full bg-sage text-white text-xs tracking-widest uppercase font-semibold">
+          Potwierdź obecność
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============================================================== -->
+  <!-- SEKCJA HERO -->
+  <!-- ============================================================== -->
+  <section id="hero" class="relative min-h-screen pt-28 pb-16 flex flex-col justify-center items-center text-center px-4 overflow-hidden">
+    
+    <!-- Botaniczne Ozdoby SVG w tle -->
+    <div class="absolute -top-12 -left-12 w-64 h-64 text-sage-200/40 pointer-events-none floating-leaf">
+      <svg viewBox="0 0 200 200" fill="currentColor">
+        <path d="M40,160 C70,130 90,80 130,40 C140,70 120,120 70,160 Z"/>
+        <path d="M60,140 C85,115 105,75 145,55 C150,85 130,125 90,155 Z" opacity="0.6"/>
+      </svg>
+    </div>
+    <div class="absolute -bottom-16 -right-16 w-80 h-80 text-sage-200/40 pointer-events-none floating-leaf" style="animation-delay: 2s;">
+      <svg viewBox="0 0 200 200" fill="currentColor">
+        <path d="M160,40 C130,70 80,90 40,130 C70,140 120,120 160,70 Z"/>
+        <path d="M140,60 C115,85 75,105 55,145 C85,150 125,130 155,90 Z" opacity="0.6"/>
+      </svg>
+    </div>
+
+    <div class="max-w-3xl mx-auto relative z-10 flex flex-col items-center">
+      
+      <!-- Subtelny Monogram i Etykieta -->
+      <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-sage-100/70 border border-sage-200 text-sage-700 text-xs tracking-widest uppercase font-medium mb-6">
+        <svg class="w-3.5 h-3.5 text-gold" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+        </svg>
+        Pobieramy się!
+      </div>
+
+      <!-- Imiona Pary Młodej -->
+      <h1 class="font-cormorant text-5xl sm:text-7xl md:text-8xl font-light tracking-tight text-graphite mb-4 leading-none">
+        Weronika <span class="font-cormorant italic text-gold text-4xl sm:text-6xl md:text-7xl">&amp;</span> Rafał
+      </h1>
+
+      <!-- Elegancka gałązka / separator -->
+      <div class="flex items-center justify-center gap-3 w-48 my-3 text-gold">
+        <div class="h-px bg-gold/40 flex-1"></div>
+        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
+          <path d="M12 2L15 8L21 9L17 14L18 20L12 17L6 20L7 14L3 9L9 8L12 2Z"/>
+        </svg>
+        <div class="h-px bg-gold/40 flex-1"></div>
+      </div>
+
+      <!-- Data Ślubu -->
+      <p class="font-cormorant text-2xl sm:text-3xl text-graphite-muted tracking-widest uppercase mt-2 mb-10 font-normal">
+        27 sierpnia 2027 r.
+      </p>
+
+      <!-- DYNAMICZNY LICZNIK CZASU (Countdown) -->
+      <div class="w-full max-w-xl bg-white/70 backdrop-blur-sm p-6 sm:p-8 rounded-3xl border border-sage-100 shadow-card mb-10">
+        <p class="text-xs uppercase tracking-widest text-sage-600 font-semibold mb-4">
+          Do naszego ślubu pozostało:
+        </p>
+        
+        <div class="grid grid-cols-4 gap-2 sm:gap-4">
+          <!-- Dni -->
+          <div class="flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl bg-ecru border border-sage-100/80 shadow-sm">
+            <span id="days" class="font-cormorant text-3xl sm:text-5xl font-semibold text-graphite tracking-tight">000</span>
+            <span class="text-[10px] sm:text-xs uppercase tracking-wider text-graphite-muted mt-1 font-medium">Dni</span>
+          </div>
+          <!-- Godziny -->
+          <div class="flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl bg-ecru border border-sage-100/80 shadow-sm">
+            <span id="hours" class="font-cormorant text-3xl sm:text-5xl font-semibold text-graphite tracking-tight">00</span>
+            <span class="text-[10px] sm:text-xs uppercase tracking-wider text-graphite-muted mt-1 font-medium">Godzin</span>
+          </div>
+          <!-- Minuty -->
+          <div class="flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl bg-ecru border border-sage-100/80 shadow-sm">
+            <span id="minutes" class="font-cormorant text-3xl sm:text-5xl font-semibold text-graphite tracking-tight">00</span>
+            <span class="text-[10px] sm:text-xs uppercase tracking-wider text-graphite-muted mt-1 font-medium">Minut</span>
+          </div>
+          <!-- Sekundy -->
+          <div class="flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl bg-ecru border border-sage-100/80 shadow-sm">
+            <span id="seconds" class="font-cormorant text-3xl sm:text-5xl font-semibold text-sage-600 tracking-tight">00</span>
+            <span class="text-[10px] sm:text-xs uppercase tracking-wider text-graphite-muted mt-1 font-medium">Sekund</span>
+          </div>
+        </div>
+
+        <p class="text-[11px] text-graphite-light mt-4 italic">
+          Odliczamy dokładnie do godziny 15:00
+        </p>
+      </div>
+
+      <!-- Przyciski Akcji (CTA) -->
+      <div class="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+        <a href="#rsvp" class="w-full sm:w-auto px-8 py-4 rounded-full bg-sage hover:bg-sage-600 text-white font-medium text-xs uppercase tracking-widest transition-all duration-300 shadow-soft hover:shadow-lg hover:-translate-y-0.5">
+          Potwierdź obecność
+        </a>
+        <a href="#harmonogram" class="w-full sm:w-auto px-8 py-4 rounded-full bg-white hover:bg-ecru border border-sage-200 text-graphite font-medium text-xs uppercase tracking-widest transition-all duration-300">
+          Zobacz harmonogram
+        </a>
+      </div>
+
+    </div>
+
+    <!-- Scroll down indicator -->
+    <a href="#harmonogram" aria-label="Przewiń niżej" class="absolute bottom-4 left-1/2 -translate-x-1/2 p-2 text-sage-400 hover:text-sage transition-colors animate-bounce">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+      </svg>
+    </a>
+  </section>
+
+  <!-- ============================================================== -->
+  <!-- SEKCJA 1: HARMONOGRAM DNIA (Timeline) -->
+  <!-- ============================================================== -->
+  <section id="harmonogram" class="py-24 px-4 sm:px-6 bg-white/60 relative">
+    <div class="max-w-4xl mx-auto">
+      
+      <!-- Nagłówek sekcji -->
+      <div class="text-center mb-16">
+        <span class="text-xs uppercase tracking-widest text-gold font-semibold">Plan Uroczystości</span>
+        <h2 class="font-cormorant text-4xl sm:text-5xl font-light text-graphite mt-2 mb-4">
+          Harmonogram Dnia
+        </h2>
+        <p class="text-sm text-graphite-muted max-w-lg mx-auto font-light">
+          Wspólnie przeżyjmy te wyjątkowe chwile. Poniżej znajduje się orientacyjny plan naszego wielkiego dnia.
+        </p>
+      </div>
+
+      <!-- Oś Czasu (Timeline) -->
+      <div class="relative border-l-2 border-sage-200 ml-4 sm:ml-32 md:ml-40 space-y-12">
+        
+        <!-- Punkt 1: 15:00 Ślub -->
+        <div class="relative pl-8 sm:pl-10 group">
+          <!-- Kropka na osi -->
+          <div class="absolute -left-[17px] top-1.5 w-8 h-8 rounded-full bg-ecru border-2 border-sage flex items-center justify-center text-sage group-hover:scale-110 group-hover:bg-sage group-hover:text-white transition-all shadow-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+            </svg>
+          </div>
+          
+          <!-- Czas po lewej (desktop) -->
+          <div class="hidden sm:block absolute -left-36 top-1 text-right w-24">
+            <span class="font-cormorant text-3xl font-semibold text-sage">15:00</span>
+          </div>
+
+          <!-- Karta treści -->
+          <div class="bg-ecru p-6 rounded-2xl border border-sage-100 shadow-sm hover:shadow-soft transition-all">
+            <span class="sm:hidden inline-block text-xs font-semibold px-2.5 py-1 rounded-full bg-sage-100 text-sage-700 mb-2">15:00</span>
+            <h3 class="font-cormorant text-2xl font-medium text-graphite mb-1">Uroczystość Zaślubin</h3>
+            <p class="text-xs uppercase tracking-wider text-gold font-medium mb-2">Ceremonia w kościele / USC</p>
+            <p class="text-sm text-graphite-muted leading-relaxed">
+              Złożenie przysięgi małżeńskiej w otoczeniu najbliższej rodziny i przyjaciół. Prosimy o punktualne przybycie na miejsce ceremonii.
+            </p>
+          </div>
+        </div>
+
+        <!-- Punkt 2: 17:00 Przyjęcie i Toast -->
+        <div class="relative pl-8 sm:pl-10 group">
+          <div class="absolute -left-[17px] top-1.5 w-8 h-8 rounded-full bg-ecru border-2 border-sage flex items-center justify-center text-sage group-hover:scale-110 group-hover:bg-sage group-hover:text-white transition-all shadow-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+            </svg>
+          </div>
+          <div class="hidden sm:block absolute -left-36 top-1 text-right w-24">
+            <span class="font-cormorant text-3xl font-semibold text-sage">17:00</span>
+          </div>
+          <div class="bg-ecru p-6 rounded-2xl border border-sage-100 shadow-sm hover:shadow-soft transition-all">
+            <span class="sm:hidden inline-block text-xs font-semibold px-2.5 py-1 rounded-full bg-sage-100 text-sage-700 mb-2">17:00</span>
+            <h3 class="font-cormorant text-2xl font-medium text-graphite mb-1">Przyjęcie Weselne &amp; Toast</h3>
+            <p class="text-xs uppercase tracking-wider text-gold font-medium mb-2">Powitanie Młodej Pary</p>
+            <p class="text-sm text-graphite-muted leading-relaxed">
+              Tradycyjne powitanie chlebem i solą przez rodziców, wzniesienie pierwszego toastu szampanem oraz życzenia od gości.
+            </p>
+          </div>
+        </div>
+
+        <!-- Punkt 3: 19:00 Uroczysty Obiad -->
+        <div class="relative pl-8 sm:pl-10 group">
+          <div class="absolute -left-[17px] top-1.5 w-8 h-8 rounded-full bg-ecru border-2 border-sage flex items-center justify-center text-sage group-hover:scale-110 group-hover:bg-sage group-hover:text-white transition-all shadow-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <div class="hidden sm:block absolute -left-36 top-1 text-right w-24">
+            <span class="font-cormorant text-3xl font-semibold text-sage">19:00</span>
+          </div>
+          <div class="bg-ecru p-6 rounded-2xl border border-sage-100 shadow-sm hover:shadow-soft transition-all">
+            <span class="sm:hidden inline-block text-xs font-semibold px-2.5 py-1 rounded-full bg-sage-100 text-sage-700 mb-2">19:00</span>
+            <h3 class="font-cormorant text-2xl font-medium text-graphite mb-1">Uroczysty Obiad &amp; Pierwszy Taniec</h3>
+            <p class="text-xs uppercase tracking-wider text-gold font-medium mb-2">Kolacja i otwarcie parkietu</p>
+            <p class="text-sm text-graphite-muted leading-relaxed">
+              Wykwintny obiad serwowany, po którym nastąpi uroczysty pierwszy taniec i oficjalny start wspólnej zabawy weselnej.
+            </p>
+          </div>
+        </div>
+
+        <!-- Punkt 4: 00:00 Tort i Oczepiny -->
+        <div class="relative pl-8 sm:pl-10 group">
+          <div class="absolute -left-[17px] top-1.5 w-8 h-8 rounded-full bg-ecru border-2 border-sage flex items-center justify-center text-sage group-hover:scale-110 group-hover:bg-sage group-hover:text-white transition-all shadow-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+            </svg>
+          </div>
+          <div class="hidden sm:block absolute -left-36 top-1 text-right w-24">
+            <span class="font-cormorant text-3xl font-semibold text-sage">00:00</span>
+          </div>
+          <div class="bg-ecru p-6 rounded-2xl border border-sage-100 shadow-sm hover:shadow-soft transition-all">
+            <span class="sm:hidden inline-block text-xs font-semibold px-2.5 py-1 rounded-full bg-sage-100 text-sage-700 mb-2">00:00</span>
+            <h3 class="font-cormorant text-2xl font-medium text-graphite mb-1">Tort Weselny &amp; Oczepiny</h3>
+            <p class="text-xs uppercase tracking-wider text-gold font-medium mb-2">Słodka północ</p>
+            <p class="text-sm text-graphite-muted leading-relaxed">
+              Uroczyste krojenie tortu weselnego, podziękowania dla gości, rzut bukietem i muchą oraz zabawa taneczna do białego rana!
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============================================================== -->
+  <!-- SEKCJA 2: LOKALIZACJA (Miejsca) -->
+  <!-- ============================================================== -->
+  <section id="lokalizacja" class="py-24 px-4 sm:px-6">
+    <div class="max-w-5xl mx-auto">
+      
+      <div class="text-center mb-16">
+        <span class="text-xs uppercase tracking-widest text-gold font-semibold">Gdzie i kiedy</span>
+        <h2 class="font-cormorant text-4xl sm:text-5xl font-light text-graphite mt-2 mb-4">
+          Lokalizacje
+        </h2>
+        <p class="text-sm text-graphite-muted max-w-lg mx-auto font-light">
+          Uroczystość oraz przyjęcie odbędą się w wyjątkowych miejscach. Kliknij poniżej, aby otworzyć bezpośrednią nawigację w Google Maps.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        
+        <!-- KARTA 1: Ceremonia -->
+        <div class="bg-white rounded-3xl p-8 border border-sage-100 shadow-card flex flex-col justify-between hover:-translate-y-1 transition-all duration-300">
+          <div>
+            <div class="w-12 h-12 rounded-2xl bg-sage-50 text-sage flex items-center justify-center mb-6">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"/>
+              </svg>
+            </div>
+            
+            <span class="inline-block text-xs uppercase tracking-wider font-semibold text-gold mb-2">Godzina 15:00</span>
+            <h3 class="font-cormorant text-3xl font-medium text-graphite mb-2">Ceremonia Zaślubin</h3>
+            
+            <!-- Placeholder na nazwę kościoła / miejsca -->
+            <p class="text-base font-semibold text-sage-700 mb-1">
+              Kościół pw. św. Wojciecha
+            </p>
+            <p class="text-sm text-graphite-muted mb-4">
+              ul. Rynek Kościelny 1<br>
+              00-001 Warszawa
+            </p>
+            
+            <div class="p-4 rounded-2xl bg-ecru text-xs text-graphite-muted space-y-1 mb-6 border border-sage-100">
+              <p class="font-medium text-graphite">Wskazówki dojazdu:</p>
+              <p>Dla gości dostępny jest bezpłatny parking na tyłach kościoła (wjazd od ul. Ogrodowej). Prosimy o przybycie ok. 15 minut przed rozpoczęciem.</p>
+            </div>
+          </div>
+
+          <!-- Przycisk Google Maps -->
+          <!-- Wskazówka: Zastąp poniższy link URL własnym linkiem do Google Maps -->
+          <a href="https://maps.google.com/?q=Warszawa" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 w-full py-3.5 px-6 rounded-full bg-sage hover:bg-sage-600 text-white text-xs uppercase tracking-widest font-semibold transition-all">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            Otwórz w Google Maps
+          </a>
+        </div>
+
+        <!-- KARTA 2: Wesele -->
+        <div class="bg-white rounded-3xl p-8 border border-sage-100 shadow-card flex flex-col justify-between hover:-translate-y-1 transition-all duration-300">
+          <div>
+            <div class="w-12 h-12 rounded-2xl bg-sage-50 text-sage flex items-center justify-center mb-6">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M21 15.546c-.523 0-1.046.151-1.5.454a2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.701 2.701 0 00-1.5-.454M9 6v2m3-2v2m3-2v2M9 3h.01M12 3h.01M15 3h.01M3 21h18M3 11h18v7a3 3 0 01-3 3H6a3 3 0 01-3-3v-7z"/>
+              </svg>
+            </div>
+            
+            <span class="inline-block text-xs uppercase tracking-wider font-semibold text-gold mb-2">Od godziny 17:00</span>
+            <h3 class="font-cormorant text-3xl font-medium text-graphite mb-2">Przyjęcie Weselne</h3>
+            
+            <!-- Placeholder na nazwę sali / lokalu -->
+            <p class="text-base font-semibold text-sage-700 mb-1">
+              Dworek w Ogrodach Boho
+            </p>
+            <p class="text-sm text-graphite-muted mb-4">
+              ul. Leśna Polana 24<br>
+              05-000 Okolice Warszawy
+            </p>
+            
+            <div class="p-4 rounded-2xl bg-ecru text-xs text-graphite-muted space-y-1 mb-6 border border-sage-100">
+              <p class="font-medium text-graphite">Wskazówki dojazdu:</p>
+              <p>Dojazd z kościoła zajmuje ok. 25 minut. Na miejscu jest duży, monitorowany parking oraz strefa relaksu w ogrodzie.</p>
+            </div>
+          </div>
+
+          <!-- Przycisk Google Maps -->
+          <!-- Wskazówka: Zastąp poniższy link URL własnym linkiem do sali weselnej -->
+          <a href="https://maps.google.com/?q=Warszawa" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 w-full py-3.5 px-6 rounded-full bg-sage hover:bg-sage-600 text-white text-xs uppercase tracking-widest font-semibold transition-all">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            Otwórz w Google Maps
+          </a>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============================================================== -->
+  <!-- SEKCJA 3: FORMULARZ RSVP (Potwierdzenie obecności) -->
+  <!-- ============================================================== -->
+  <section id="rsvp" class="py-24 px-4 sm:px-6 bg-sage-50/70 relative">
+    <div class="max-w-2xl mx-auto">
+      
+      <div class="text-center mb-12">
+        <span class="text-xs uppercase tracking-widest text-gold font-semibold">Bądź z nami</span>
+        <h2 class="font-cormorant text-4xl sm:text-5xl font-light text-graphite mt-2 mb-4">
+          Potwierdzenie Obecności
+        </h2>
+        <p class="text-sm text-graphite-muted max-w-md mx-auto">
+          Będzie nam niezmiernie miło spędzić ten dzień razem z Wami. 
+          <br>
+          <strong class="text-graphite font-semibold">Prosimy o potwierdzenie obecności do 1 lipca 2027 r.</strong>
+        </p>
+      </div>
+
+      <!-- Karta Formularza -->
+      <div class="bg-white rounded-3xl p-6 sm:p-10 border border-sage-100 shadow-card relative">
+        
+        <!-- Formularz HTML skonfigurowany pod Formspree / dowolny webhook POST -->
+        <!-- Wskazówka: Aby odbierać maile na skrzynkę, załóż darmowe konto na https://formspree.io i wklej swój endpoint w action="" -->
+        <form id="weddingRsvpForm" action="https://formspree.io/f/TWOJ_FORM_ID" method="POST" class="space-y-6">
+          
+          <!-- Imię i Nazwisko -->
+          <div>
+            <label for="fullName" class="block text-xs uppercase tracking-wider font-semibold text-graphite mb-2">
+              Twoje Imię i Nazwisko <span class="text-rose-500">*</span>
+            </label>
+            <input type="text" id="fullName" name="imie_nazwisko" required placeholder="np. Anna Nowak" class="w-full px-4 py-3 rounded-xl bg-ecru border border-sage-200 focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/20 text-sm transition-colors text-graphite placeholder:text-graphite-light">
+          </div>
+
+          <!-- Status Obecności -->
+          <div>
+            <label class="block text-xs uppercase tracking-wider font-semibold text-graphite mb-2">
+              Czy będziesz z nami świętować? <span class="text-rose-500">*</span>
+            </label>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <label class="relative flex items-center p-3.5 rounded-xl border border-sage-200 cursor-pointer hover:bg-sage-50 transition-all has-[:checked]:border-sage has-[:checked]:bg-sage-50/80">
+                <input type="radio" name="status_obecnosci" value="Tak, z radością przybędę" checked class="text-sage focus:ring-sage w-4 h-4 mr-3">
+                <span class="text-sm font-medium text-graphite">Z radością przybędę! ✨</span>
+              </label>
+
+              <label class="relative flex items-center p-3.5 rounded-xl border border-sage-200 cursor-pointer hover:bg-sage-50 transition-all has-[:checked]:border-sage has-[:checked]:bg-sage-50/80">
+                <input type="radio" name="status_obecnosci" value="Niestety nie dotrę" class="text-sage focus:ring-sage w-4 h-4 mr-3">
+                <span class="text-sm font-medium text-graphite">Niestety nie dotrę</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Osoba Towarzysząca (Checkbox + rozwijane pole) -->
+          <div class="p-4 rounded-2xl bg-ecru border border-sage-100">
+            <label class="flex items-center gap-3 cursor-pointer">
+              <input type="checkbox" id="hasCompanion" name="czy_osoba_towarzyszaca" class="rounded text-sage focus:ring-sage w-4 h-4">
+              <span class="text-sm font-medium text-graphite">Przyjdę z osobą towarzyszącą</span>
+            </label>
+
+            <div id="companionNameContainer" class="hidden mt-4 pt-4 border-t border-sage-200">
+              <label for="companionName" class="block text-xs uppercase tracking-wider font-semibold text-graphite mb-2">
+                Imię i nazwisko osoby towarzyszącej
+              </label>
+              <input type="text" id="companionName" name="osoba_towarzyszaca" placeholder="np. Jan Kowalski" class="w-full px-4 py-3 rounded-xl bg-white border border-sage-200 focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/20 text-sm transition-colors text-graphite">
+            </div>
+          </div>
+
+          <!-- Preferencje dietetyczne -->
+          <div>
+            <label for="diet" class="block text-xs uppercase tracking-wider font-semibold text-graphite mb-2">
+              Dieta i preferencje kulinarne
+            </label>
+            <select id="diet" name="dieta" class="w-full px-4 py-3 rounded-xl bg-ecru border border-sage-200 focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/20 text-sm transition-colors text-graphite">
+              <option value="Standardowa">Standardowa (brak ograniczeń)</option>
+              <option value="Wegetariańska">Wegetariańska</option>
+              <option value="Wegańska">Wegańska</option>
+              <option value="Bezglutenowa">Bezglutenowa</option>
+              <option value="Alergie/Inne">Inne / Alergie pokarmowe</option>
+            </select>
+          </div>
+
+          <!-- Nocleg -->
+          <div>
+            <label class="block text-xs uppercase tracking-wider font-semibold text-graphite mb-2">
+              Czy potrzebujesz noclegu na miejscu?
+            </label>
+            <div class="grid grid-cols-2 gap-3">
+              <label class="flex items-center p-3 rounded-xl border border-sage-200 cursor-pointer hover:bg-sage-50 transition-colors has-[:checked]:border-sage has-[:checked]:bg-sage-50/80">
+                <input type="radio" name="potrzebuje_noclegu" value="Nie" checked class="text-sage focus:ring-sage w-4 h-4 mr-2.5">
+                <span class="text-xs sm:text-sm text-graphite">Nie, dziękuję</span>
+              </label>
+              <label class="flex items-center p-3 rounded-xl border border-sage-200 cursor-pointer hover:bg-sage-50 transition-colors has-[:checked]:border-sage has-[:checked]:bg-sage-50/80">
+                <input type="radio" name="potrzebuje_noclegu" value="Tak" class="text-sage focus:ring-sage w-4 h-4 mr-2.5">
+                <span class="text-xs sm:text-sm text-graphite">Tak, poproszę</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Uwagi / Piosenka dla DJ-a -->
+          <div>
+            <label for="notes" class="block text-xs uppercase tracking-wider font-semibold text-graphite mb-2">
+              Wymarzona piosenka dla DJ-a lub uwagi
+            </label>
+            <textarea id="notes" name="uwagi_i_muzyka" rows="3" placeholder="Wpisz utwór, przy którym na pewno wejdziesz na parkiet, lub dodatkowe informacje dla nas..." class="w-full px-4 py-3 rounded-xl bg-ecru border border-sage-200 focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/20 text-sm transition-colors text-graphite placeholder:text-graphite-light"></textarea>
+          </div>
+
+          <!-- Przycisk Submit -->
+          <button type="submit" id="submitBtn" class="w-full py-4 px-6 rounded-full bg-sage hover:bg-sage-600 text-white font-medium text-xs uppercase tracking-widest transition-all duration-300 shadow-soft hover:shadow-lg flex items-center justify-center gap-2">
+            <span>Wyślij potwierdzenie</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+            </svg>
+          </button>
+        </form>
+
+        <!-- Komunikat Sukcesu (domyślnie ukryty) -->
+        <div id="rsvpSuccessMessage" class="hidden text-center py-12 px-6">
+          <div class="w-16 h-16 bg-sage-100 text-sage rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+          </div>
+          <h3 class="font-cormorant text-3xl font-medium text-graphite mb-2">Dziękujemy za odpowiedź!</h3>
+          <p class="text-sm text-graphite-muted max-w-sm mx-auto mb-6">
+            Twoje zgłoszenie zostało zapisane. Nie możemy się doczekać, aż spotkamy się 27 sierpnia 2027 r.!
+          </p>
+          <button type="button" onclick="resetRsvpForm()" class="text-xs uppercase tracking-widest text-sage font-semibold underline underline-offset-4 hover:text-sage-700">
+            Wyślij kolejną odpowiedź
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============================================================== -->
+  <!-- SEKCJA 4: INFORMACJE PRAKTYCZNE (FAQ) -->
+  <!-- ============================================================== -->
+  <section id="faq" class="py-24 px-4 sm:px-6">
+    <div class="max-w-3xl mx-auto">
+      
+      <div class="text-center mb-16">
+        <span class="text-xs uppercase tracking-widest text-gold font-semibold">Warto wiedzieć</span>
+        <h2 class="font-cormorant text-4xl sm:text-5xl font-light text-graphite mt-2 mb-4">
+          Informacje Praktyczne
+        </h2>
+        <p class="text-sm text-graphite-muted max-w-md mx-auto font-light">
+          Odpowiedzi na najczęściej zadawane pytania, które pomogą Wam przygotować się do wspólnego świętowania.
+        </p>
+      </div>
+
+      <!-- Akordeon FAQ -->
+      <div class="space-y-4">
+        
+        <!-- Pytanie 1: Dress code -->
+        <div class="faq-item bg-white rounded-2xl p-6 border border-sage-100 shadow-sm transition-all duration-300">
+          <button class="faq-toggle w-full flex items-center justify-between text-left gap-4 font-medium text-graphite focus:outline-none">
+            <span class="font-cormorant text-xl sm:text-2xl font-medium">Jaki obowiązuje dress code?</span>
+            <div class="w-8 h-8 rounded-full bg-ecru flex items-center justify-center text-sage flex-shrink-0">
+              <svg class="faq-icon w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </div>
+          </button>
+          <div class="faq-answer text-sm text-graphite-muted leading-relaxed">
+            Nasz styl wesela to <strong>Boho Elegance / Smart Casual</strong>. Zależy nam przede wszystkim na Waszej wygodzie i swobodnej zabawie! Panie zachęcamy do zwiewnych sukienek w pastelowych, naturalnych lub ziemistych odcieniach, a panów do garniturów (krawat czy mucha są całkowicie opcjonalne).
+          </div>
+        </div>
+
+        <!-- Pytanie 2: Prezenty i kwiaty -->
+        <div class="faq-item bg-white rounded-2xl p-6 border border-sage-100 shadow-sm transition-all duration-300">
+          <button class="faq-toggle w-full flex items-center justify-between text-left gap-4 font-medium text-graphite focus:outline-none">
+            <span class="font-cormorant text-xl sm:text-2xl font-medium">Co zamiast tradycyjnych kwiatów?</span>
+            <div class="w-8 h-8 rounded-full bg-ecru flex items-center justify-center text-sage flex-shrink-0">
+              <svg class="faq-icon w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </div>
+          </button>
+          <div class="faq-answer text-sm text-graphite-muted leading-relaxed">
+            Największym prezentem dla nas jest Wasza obecność! Jeśli jednak chcielibyście nas obdarować, będziemy wdzięczni, jeśli zamiast tradycyjnych kwiatów, które szybko więdną, podarujecie nam:
+            <ul class="list-disc list-inside mt-2 space-y-1 text-graphite">
+              <li>Butelkę Waszego ulubionego wina,</li>
+              <li>Ciekawą książkę z dedykacją od serca,</li>
+              <li>Wsparcie naszych marzeń o podróży poślubnej w tradycyjnej kopercie.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Pytanie 3: Nocleg i powrót -->
+        <div class="faq-item bg-white rounded-2xl p-6 border border-sage-100 shadow-sm transition-all duration-300">
+          <button class="faq-toggle w-full flex items-center justify-between text-left gap-4 font-medium text-graphite focus:outline-none">
+            <span class="font-cormorant text-xl sm:text-2xl font-medium">Jak wygląda kwestia noclegu i powrotu?</span>
+            <div class="w-8 h-8 rounded-full bg-ecru flex items-center justify-center text-sage flex-shrink-0">
+              <svg class="faq-icon w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </div>
+          </button>
+          <div class="faq-answer text-sm text-graphite-muted leading-relaxed">
+            Dla gości przyjezdnych przygotowaliśmy możliwość rezerwacji pokoi w hotelu przy sali weselnej (zaznacz tę opcję w formularzu RSVP). Dodatkowo, w nocy od godziny <strong>01:00 do 05:00</strong> będzie kursował dedykowany bus rozwożący gości do centrum Warszawy.
+          </div>
+        </div>
+
+        <!-- Pytanie 4: Dzieci -->
+        <div class="faq-item bg-white rounded-2xl p-6 border border-sage-100 shadow-sm transition-all duration-300">
+          <button class="faq-toggle w-full flex items-center justify-between text-left gap-4 font-medium text-graphite focus:outline-none">
+            <span class="font-cormorant text-xl sm:text-2xl font-medium">Czy przyjęcie jest z dziećmi?</span>
+            <div class="w-8 h-8 rounded-full bg-ecru flex items-center justify-center text-sage flex-shrink-0">
+              <svg class="faq-icon w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </div>
+          </button>
+          <div class="faq-answer text-sm text-graphite-muted leading-relaxed">
+            Bardzo kochamy wszystkie dzieci, jednak pragniemy, aby nasz ślub i wesele były dla Was okazją do pełnego relaksu i beztroskiej zabawy do białego rana. Przyjęcie organizujemy w gronie osób dorosłych (z wyjątkiem dzieci z najbliższej rodziny Pary Młodej).
+          </div>
+        </div>
+
+        <!-- Pytanie 5: Poprawiny -->
+        <div class="faq-item bg-white rounded-2xl p-6 border border-sage-100 shadow-sm transition-all duration-300">
+          <button class="faq-toggle w-full flex items-center justify-between text-left gap-4 font-medium text-graphite focus:outline-none">
+            <span class="font-cormorant text-xl sm:text-2xl font-medium">Czy odbędą się poprawiny?</span>
+            <div class="w-8 h-8 rounded-full bg-ecru flex items-center justify-center text-sage flex-shrink-0">
+              <svg class="faq-icon w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </div>
+          </button>
+          <div class="faq-answer text-sm text-graphite-muted leading-relaxed">
+            Tak! Następnego dnia (sobota, 28 sierpnia) zapraszamy wszystkich chętnych na luźne poprawiny przy kawie i grillu w ogrodzie sali weselnej od godziny <strong>13:00</strong>.
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============================================================== -->
+  <!-- SEKCJA 5: STOPKA & KONTAKT DO ŚWIADKÓW -->
+  <!-- ============================================================== -->
+  <footer id="kontakt" class="bg-ecru-dark/80 pt-20 pb-12 border-t border-sage-200">
+    <div class="max-w-4xl mx-auto px-4 text-center">
+      
+      <!-- Podziękowanie -->
+      <span class="w-14 h-14 rounded-full border border-gold flex items-center justify-center font-cormorant text-2xl text-graphite mx-auto mb-6 bg-ecru shadow-sm">
+        W&R
+      </span>
+      
+      <h3 class="font-cormorant text-3xl sm:text-4xl font-light text-graphite mb-2">
+        Do zobaczenia 27 sierpnia 2027!
+      </h3>
+      <p class="text-sm text-graphite-muted max-w-md mx-auto mb-12 font-light">
+        Dziękujemy, że jesteście z nami i tworzycie najpiękniejsze wspomnienia naszego życia.
+      </p>
+
+      <!-- Karty Kontaktowe do Świadków (Placeholdery) -->
+      <div class="bg-white/80 rounded-3xl p-8 border border-sage-100 shadow-sm mb-12 max-w-xl mx-auto">
+        <p class="text-xs uppercase tracking-widest text-gold font-semibold mb-4">
+          W razie pytań w dniu ślubu zapraszamy do kontaktu ze świadkami:
+        </p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
+          <!-- Świadkowa -->
+          <div class="p-4 rounded-2xl bg-ecru border border-sage-100">
+            <span class="text-[11px] uppercase tracking-wider text-sage font-semibold block mb-1">Świadkowa</span>
+            <!-- Placeholder na imię i telefon -->
+            <p class="font-medium text-graphite text-sm">Katarzyna Kowalska</p>
+            <a href="tel:+48123456789" class="text-xs text-graphite-muted hover:text-sage transition-colors flex items-center gap-1.5 mt-1">
+              <svg class="w-3.5 h-3.5 text-sage" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+              </svg>
+              +48 123 456 789
+            </a>
+          </div>
+
+          <!-- Świadek -->
+          <div class="p-4 rounded-2xl bg-ecru border border-sage-100">
+            <span class="text-[11px] uppercase tracking-wider text-sage font-semibold block mb-1">Świadek</span>
+            <!-- Placeholder na imię i telefon -->
+            <p class="font-medium text-graphite text-sm">Michał Nowak</p>
+            <a href="tel:+48987654321" class="text-xs text-graphite-muted hover:text-sage transition-colors flex items-center gap-1.5 mt-1">
+              <svg class="w-3.5 h-3.5 text-sage" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+              </svg>
+              +48 987 654 321
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Copyright & Linki -->
+      <div class="text-xs text-graphite-light border-t border-sage-200/60 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <p>weronikarafal.com &copy; 2027 &bull; Wszelkie prawa zastrzeżone</p>
+        <p class="italic font-cormorant text-base text-graphite-muted">Z miłością, Weronika &amp; Rafał</p>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- ============================================================== -->
+  <!-- JAVASCRIPT: Licznik, Akordeon, Obsługa Formularza, Menu -->
+  <!-- ============================================================== -->
+  <script>
+    // -------------------------------------------------------------
+    // 1. DYNAMICZNY LICZNIK CZASU (Target: 27 sierpnia 2027, 15:00)
+    // -------------------------------------------------------------
+    function initCountdown() {
+      // Data ślubu: 27 sierpnia 2027, godzina 15:00:00 (czas lokalny w Polsce UTC+2)
+      const weddingDate = new Date('2027-08-27T15:00:00+02:00').getTime();
+
+      const daysEl = document.getElementById('days');
+      const hoursEl = document.getElementById('hours');
+      const minutesEl = document.getElementById('minutes');
+      const secondsEl = document.getElementById('seconds');
+
+      function updateTimer() {
+        const now = new Date().getTime();
+        const difference = weddingDate - now;
+
+        if (difference <= 0) {
+          daysEl.innerText = "00";
+          hoursEl.innerText = "00";
+          minutesEl.innerText = "00";
+          secondsEl.innerText = "00";
+          return;
+        }
+
+        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+        // Formatowanie z zerami wiodącymi
+        daysEl.innerText = String(days).padStart(2, '0');
+        hoursEl.innerText = String(hours).padStart(2, '0');
+        minutesEl.innerText = String(minutes).padStart(2, '0');
+        secondsEl.innerText = String(seconds).padStart(2, '0');
+      }
+
+      updateTimer();
+      setInterval(updateTimer, 1000);
+    }
+
+    // -------------------------------------------------------------
+    // 2. TOGGLE OSOBY TOWARZYSZĄCEJ W RSVP
+    // -------------------------------------------------------------
+    const hasCompanionCheckbox = document.getElementById('hasCompanion');
+    const companionContainer = document.getElementById('companionNameContainer');
+    const companionInput = document.getElementById('companionName');
+
+    if (hasCompanionCheckbox && companionContainer) {
+      hasCompanionCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+          companionContainer.classList.remove('hidden');
+          companionInput.focus();
+        } else {
+          companionContainer.classList.add('hidden');
+          companionInput.value = '';
+        }
+      });
+    }
+
+    // -------------------------------------------------------------
+    // 3. OBSŁUGA WYSYŁANIA FORMULARZA RSVP (Asynchroniczny POST)
+    // -------------------------------------------------------------
+    const rsvpForm = document.getElementById('weddingRsvpForm');
+    const successMsg = document.getElementById('rsvpSuccessMessage');
+    const submitBtn = document.getElementById('submitBtn');
+
+    if (rsvpForm) {
+      rsvpForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        // Stan ładowania przycisku
+        const originalBtnHtml = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `
+          <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          Wysyłanie...
+        `;
+
+        const formData = new FormData(rsvpForm);
+
+        try {
+          // Jeśli endpoint jest domyślny Formspree (placeholder), natychmiast pokazujemy sukces dla podglądu
+          const actionUrl = rsvpForm.getAttribute('action');
+          if (actionUrl && !actionUrl.includes('TWOJ_FORM_ID')) {
+            await fetch(actionUrl, {
+              method: 'POST',
+              body: formData,
+              headers: { 'Accept': 'application/json' }
+            });
+          } else {
+            // Symulacja opóźnienia sieciowego dla efektu UX
+            await new Promise(r => setTimeout(r, 600));
+          }
+
+          // Sukces
+          rsvpForm.classList.add('hidden');
+          successMsg.classList.remove('hidden');
+        } catch (err) {
+          console.error('Błąd wysyłania RSVP:', err);
+          alert('Wystąpił drobny problem z wysłaniem formularza. Skontaktuj się z nami bezpośrednio!');
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalBtnHtml;
+        }
+      });
+    }
+
+    function resetRsvpForm() {
+      if (rsvpForm && successMsg) {
+        rsvpForm.reset();
+        if (companionContainer) companionContainer.classList.add('hidden');
+        successMsg.classList.add('hidden');
+        rsvpForm.classList.remove('hidden');
+      }
+    }
+
+    // -------------------------------------------------------------
+    // 4. AKORDEON FAQ (Płynne rozwijanie i zamykanie)
+    // -------------------------------------------------------------
+    document.querySelectorAll('.faq-toggle').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const item = btn.closest('.faq-item');
+        const isActive = item.classList.contains('active');
+
+        // Zamknięcie pozostałych
+        document.querySelectorAll('.faq-item').forEach(other => {
+          if (other !== item) other.classList.remove('active');
+        });
+
+        // Przełączenie klikniętego
+        if (!isActive) {
+          item.classList.add('active');
+        } else {
+          item.classList.remove('active');
+        }
+      });
+    });
+
+    // -------------------------------------------------------------
+    // 5. OBSŁUGA MENU MOBILNEGO
+    // -------------------------------------------------------------
+    const mobileBtn = document.getElementById('mobileMenuBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+
+    if (mobileBtn && mobileMenu) {
+      mobileBtn.addEventListener('click', () => {
+        mobileMenu.classList.toggle('hidden');
+      });
+
+      // Zamykanie menu po kliknięciu w link
+      document.querySelectorAll('.mobile-nav-link').forEach(link => {
+        link.addEventListener('click', () => {
+          mobileMenu.classList.add('hidden');
+        });
+      });
+    }
+
+    // Inicjalizacja po załadowaniu drzewa DOM
+    document.addEventListener('DOMContentLoaded', () => {
+      initCountdown();
+    });
+  </script>
+</body>
+</html>
