@@ -1,0 +1,4 @@
+{
+  "state_dir": "/var/lib/weronikarafal",
+  "health_url": "http://127.0.0.1:18082"
+}

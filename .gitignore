@@ -6,3 +6,6 @@
 .agents/
 *.key
 *.pem
+__pycache__/
+*.pyc
+release.zip

@@ -1,0 +1,80 @@
+name: CI and deploy weronikarafal.com
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - name: Check Python and SSH wrapper syntax
+        run: |
+          python -m compileall -q scripts deploy tests
+          bash -n deploy/ssh-command.sh
+      - name: Validate site assets, anchors and inline JavaScript
+        run: python scripts/check_site.py
+      - name: Test release validation and automatic rollback
+        run: python -m unittest discover -s tests -v
+      - name: Package tested source
+        run: python scripts/package.py "$GITHUB_SHA" release.zip
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: release-${{ github.sha }}
+          path: release.zip
+          retention-days: 7
+          if-no-files-found: error
+  deploy:
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    environment:
+      name: production
+      url: https://weronikarafal.com
+    concurrency:
+      group: weronikarafal-production
+      cancel-in-progress: false
+    env:
+      VPS_HOST: ${{ secrets.VPS_HOST }}
+      VPS_PORT: ${{ secrets.VPS_PORT }}
+      VPS_USER: ${{ secrets.VPS_USER }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: release-${{ github.sha }}
+      - name: Configure restricted SSH identity
+        env:
+          SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          test -n "$VPS_HOST" && test -n "$VPS_PORT" && test -n "$VPS_USER"
+          test -n "$SSH_KEY" && test -n "$KNOWN_HOSTS"
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/id_ed25519 ~/.ssh/known_hosts
+      - name: Reject stale release and deploy exact tested archive
+        run: |
+          set -euo pipefail
+          ssh_args=(-o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15 -p "$VPS_PORT")
+          live=$(ssh "${ssh_args[@]}" "$VPS_USER@$VPS_HOST" status)
+          [[ "$live" =~ ^[a-f0-9]{40}$ ]]
+          git merge-base --is-ancestor "$live" "$GITHUB_SHA"
+          digest=$(sha256sum release.zip | cut -d ' ' -f 1)
+          ssh "${ssh_args[@]}" "$VPS_USER@$VPS_HOST" "deploy $GITHUB_SHA $digest" < release.zip
+          deployed=$(ssh "${ssh_args[@]}" "$VPS_USER@$VPS_HOST" status)
+          test "$deployed" = "$GITHUB_SHA"
+      - name: Remove SSH key
+        if: always()
+        run: rm -f ~/.ssh/id_ed25519
