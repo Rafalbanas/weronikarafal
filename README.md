@@ -1,12 +1,47 @@
 # Weronika i Rafał
 
-Statyczna strona ślubna: https://weronikarafal.com.
+Strona ślubna z dwoma poziomami dostępu:
 
-## CI/CD
+- **Publicznie:** data, odliczanie, godzina ceremonii i kościół po uzupełnieniu danych.
+- **Po zalogowaniu kodem zaproszenia:** własne RSVP, lista zaproszeń ze statusami,
+  miejsce przyjęcia, harmonogram oraz kontakt do świadków.
 
-GitHub Actions sprawdza każdy push i pull request: lokalne zasoby i odnośniki
-HTML, składnię JavaScript oraz wdrażanie i automatyczne przywracanie wersji.
-Po udanych testach push do `main` automatycznie wdraża dokładnie sprawdzoną
-paczkę na VPS. Workflow można też uruchomić ręcznie na `main`.
+Dieta, nocleg, osoba towarzysząca i uwagi są widoczne tylko autorowi odpowiedzi
+oraz organizatorom. Nie ma publicznej rejestracji. Kody, nazwiska gości,
+odpowiedzi i rzeczywiste kontakty są przechowywane poza repozytorium.
 
-Szczegóły serwera i odzyskiwania: [deploy/README.md](deploy/README.md).
+Aplikacja korzysta z Flask, SQLite i lokalnych zasobów CSS/JS. Kod zaproszenia
+jest losowym sekretem 128-bitowym; w bazie zapisywany jest jego skrót. Dostęp
+wymaga sesji sprawdzanej przez serwer, a zapisy RSVP mają ochronę CSRF i limity.
+
+## Uruchomienie lokalne
+
+```sh
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+export WEDDING_DATA_DIR=/tmp/wedding-dev
+export WEDDING_SECRET_KEY="$(python3 -c 'import secrets; print(secrets.token_urlsafe(48))')"
+.venv/bin/python manage.py invite 'Gość testowy'
+```
+
+Kod jest wyświetlany raz. Uruchom aplikację przez WSGI z lokalną konfiguracją
+zaufanego hosta. Sesyjne cookies wymagają HTTPS również w podglądzie. Nie
+uruchamiaj serwera developerskiego jako publicznego serwera produkcyjnego.
+
+## Testy
+
+```sh
+.venv/bin/python -m unittest discover -s tests -v
+.venv/bin/python scripts/check_site.py  # Node.js na PATH
+.venv/bin/python -m compileall -q app.py manage.py wedding scripts deploy tests
+bash -n deploy/ssh-command.sh
+```
+
+## CI/CD i pierwsza migracja
+
+GitHub Actions testuje push i PR. Po udanych testach zmiany na `main` wdrażają
+sprawdzoną paczkę. Instalacja serwera aplikacji wymaga **jednorazowej migracji**
+z opisanej wcześniej wersji statycznej; nie następuje przez samo wysłanie PR.
+
+Instrukcje: [deploy/README.md](deploy/README.md).
+Ochrona dostępu i granice prywatności: [docs/security.md](docs/security.md).

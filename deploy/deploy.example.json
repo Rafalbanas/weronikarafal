@@ -1,4 +1,6 @@
 {
   "state_dir": "/var/lib/weronikarafal",
-  "health_url": "http://127.0.0.1:18082"
+  "health_url": "http://127.0.0.1:18082",
+  "application_health_url": "http://127.0.0.1:18083/healthz",
+  "restart_service": true
 }

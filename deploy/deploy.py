@@ -1,5 +1,6 @@
 #!/usr/bin/python3
-"""Root-owned receiver for bounded static releases over forced-command SSH."""
+"""Root-owned receiver; app source only executes in an unprivileged service."""
+import ast
 import fcntl
 import hashlib
 import io
@@ -7,6 +8,7 @@ import json
 from pathlib import Path
 import re
 import shutil
+import subprocess
 import sys
 import tempfile
 import time
@@ -14,7 +16,10 @@ from urllib.request import urlopen
 import zipfile
 
 MAX_BYTES = 16 * 1024 * 1024
-FILES = {"public/index.html", "public/revision.txt"}
+FILES = {"public/revision.txt", "app.py", "manage.py", "requirements.txt", "index.html",
+         "wedding/__init__.py", "wedding/store.py", "templates/base.html",
+         "templates/login.html", "templates/guest.html", "templates/error.html",
+         "public/assets/site.css", "public/assets/site.js", "public/assets/favicon.svg"}
 
 
 def switch(current, destination):
@@ -30,9 +35,11 @@ def healthy(config, revision, index_digest):
         with urlopen(base + "/revision.txt", timeout=3) as response:
             if response.read(100).decode().strip() != revision:
                 return False
-        with urlopen(base + "/index.html", timeout=3) as response:
-            return hashlib.sha256(response.read(MAX_BYTES)).hexdigest() == index_digest
-    except (OSError, ValueError):
+        with urlopen(config["application_health_url"], timeout=3) as response:
+            health = json.loads(response.read(4096))
+            return (health.get("status") == "ok" and health.get("revision") == revision
+                    and health.get("index_sha256") == index_digest)
+    except (OSError, ValueError, AttributeError):
         return False
 
 
@@ -64,10 +71,18 @@ def deploy(config, revision, digest, stream):
                     target.chmod(0o644)
             if (staging / "public/revision.txt").read_text().strip() != revision:
                 raise ValueError("Archive revision mismatch")
-            if not (staging / "public/index.html").read_text().strip():
+            if not (staging / "index.html").read_text().strip():
                 raise ValueError("Empty index.html")
+            if (config.get("requirements_sha256") and
+                    hashlib.sha256((staging / "requirements.txt").read_bytes()).hexdigest() != config["requirements_sha256"]):
+                raise ValueError("Dependencies changed: install the reviewed runtime before deploying")
+            for name in FILES:
+                if name.endswith(".py"):
+                    ast.parse((staging / name).read_text())
             staging.chmod(0o755)
-            (staging / "public").chmod(0o755)
+            for directory in staging.rglob("*"):
+                if directory.is_dir():
+                    directory.chmod(0o755)
             release = releases / (revision + "-" + digest[:16])
             if release.exists():
                 shutil.rmtree(staging)
@@ -75,9 +90,10 @@ def deploy(config, revision, digest, stream):
                 staging.rename(release)
             current = state / "current"
             previous = current.resolve(strict=True) if current.is_symlink() else None
-            index_digest = hashlib.sha256((release / "public/index.html").read_bytes()).hexdigest()
+            index_digest = hashlib.sha256((release / "index.html").read_bytes()).hexdigest()
             switch(current, release)
             try:
+                restart(config)
                 for _ in range(config.get("health_attempts", 10)):
                     if healthy(config, revision, index_digest):
                         break
@@ -90,7 +106,8 @@ def deploy(config, revision, digest, stream):
                 if previous:
                     switch(current, previous)
                     old_revision = (previous / "public/revision.txt").read_text().strip()
-                    old_digest = hashlib.sha256((previous / "public/index.html").read_bytes()).hexdigest()
+                    restart(config)
+                    old_digest = hashlib.sha256((previous / "index.html").read_bytes()).hexdigest()
                     if not healthy(config, old_revision, old_digest):
                         print("ROLLBACK HEALTH CHECK FAILED", file=sys.stderr)
                 else:
@@ -100,6 +117,12 @@ def deploy(config, revision, digest, stream):
             if staging.exists():
                 shutil.rmtree(staging)
     print(f"Deployed {revision}")
+
+
+def restart(config):
+    if config.get("restart_service"):
+        # Fixed command, never derived from the archive or SSH arguments.
+        subprocess.run(["systemctl", "restart", "weronikarafal-web.service"], check=True, timeout=45)
 
 
 def main():
