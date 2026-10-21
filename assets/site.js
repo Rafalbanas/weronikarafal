@@ -61,3 +61,70 @@ document.querySelectorAll('[data-password-toggle]').forEach((button) => {
     button.textContent = visible ? button.dataset.hide : button.dataset.show;
   });
 });
+
+// Household controls enhance ordinary form fields; the server validates them all.
+document.querySelectorAll('[data-household]').forEach((group) => {
+  const kind = group.querySelector('[data-household-kind]');
+  const partner = group.querySelector('[data-partner-fields]');
+  const partnerInput = partner.querySelector('input');
+  const updateKind = () => {
+    const namedCouple = kind.value === 'couple';
+    partner.hidden = !namedCouple;
+    partnerInput.disabled = !namedCouple;
+    partnerInput.required = namedCouple;
+  };
+  kind.addEventListener('change', updateKind);
+  updateKind();
+  const editor = group.querySelector('[data-children-editor]');
+  const count = editor.querySelector('[data-children-count]');
+  const list = editor.querySelector('[data-children-list]');
+  const plus = editor.querySelector('[data-child-plus]');
+  const minus = editor.querySelector('[data-child-minus]');
+  plus.hidden = minus.hidden = false;
+  const names = () => [...list.querySelectorAll('[data-child-name]')].map((field) => field.value);
+  const render = (values) => {
+    count.value = String(values.length);
+    list.replaceChildren();
+    values.forEach((value, index) => {
+      const row = document.createElement('div');
+      row.className = 'child-row';
+      const field = document.createElement('div');
+      field.className = 'child-field';
+      const label = document.createElement('label');
+      const input = document.createElement('input');
+      input.id = `child-${editor.dataset.prefix}-${index + 1}`;
+      label.htmlFor = input.id;
+      label.textContent = `${editor.dataset.childLabel} ${index + 1} (${editor.dataset.optional})`;
+      input.name = 'children';
+      input.value = value;
+      input.maxLength = 120;
+      input.autocomplete = 'off';
+      input.dataset.childName = '';
+      field.append(label, input);
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'button button-small button-outline';
+      remove.textContent = '−';
+      remove.setAttribute('aria-label', `${editor.dataset.remove} ${index + 1}`);
+      remove.addEventListener('click', () => {
+        const values = names();
+        values.splice(index, 1);
+        render(values);
+      });
+      row.append(field, remove);
+      list.append(row);
+    });
+    plus.disabled = values.length >= 20;
+    minus.disabled = values.length === 0;
+  };
+  const resize = (length) => {
+    const values = names();
+    length = Math.min(20, Math.max(0, Math.trunc(length) || 0));
+    while (values.length < length) values.push('');
+    render(values.slice(0, length));
+  };
+  plus.addEventListener('click', () => resize(Number(count.value) + 1));
+  minus.addEventListener('click', () => resize(Number(count.value) - 1));
+  count.addEventListener('change', () => resize(Number(count.value)));
+  render(names());
+});

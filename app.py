@@ -3,6 +3,7 @@ from datetime import timedelta
 from functools import wraps
 import hashlib
 import hmac
+import json
 import os
 from pathlib import Path
 import secrets
@@ -19,6 +20,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from wedding.store import allow_request, connect, details, digest, initialize, normalize_code, invitation, revoke, authenticate_invitation
 from wedding import translate
 from wedding.store import issue_admin_recovery, recovery_code
+from wedding.store import validate_household
 
 ROOT = Path(__file__).resolve().parent
 DIETS = {"standard": "Standardowa", "vegetarian": "Wegetariańska", "vegan": "Wegańska",
@@ -35,7 +37,7 @@ def create_app(config=None):
         SESSION_COOKIE_NAME="__Host-wedding", SESSION_COOKIE_SECURE=True,
         SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE="Lax",
         PERMANENT_SESSION_LIFETIME=timedelta(hours=8), SESSION_REFRESH_EACH_REQUEST=False,
-        MAX_CONTENT_LENGTH=16*1024, MAX_FORM_MEMORY_SIZE=16*1024, MAX_FORM_PARTS=20,
+        MAX_CONTENT_LENGTH=16*1024, MAX_FORM_MEMORY_SIZE=16*1024, MAX_FORM_PARTS=64,
         TRUSTED_HOSTS=["weronikarafal.com", "www.weronikarafal.com", "127.0.0.1", "localhost"],
         LOGIN_LIMIT=12, TRUST_PROXY=os.environ.get("WEDDING_TRUST_PROXY") == "1",
         ADMIN_LOGIN_LIMIT=5,
@@ -220,25 +222,48 @@ def create_app(config=None):
             rsvps.companion_name, rsvps.diet, rsvps.lodging, rsvps.notes, rsvps.updated_at
             FROM guests
             LEFT JOIN rsvps ON guests.id=rsvps.guest_id ORDER BY guests.name COLLATE NOCASE""").fetchall()
+        people = [dict(person, child_names=json.loads(person["children"])) for person in people]
         active = [person for person in people if person["active"]]
         totals = {"invitations": len(active), "yes": sum(p["attendance"] == "yes" for p in active),
                   "no": sum(p["attendance"] == "no" for p in active),
                   "pending": sum(p["attendance"] is None for p in active),
                   "lodging": sum(p["attendance"] == "yes" and p["lodging"] == "yes" for p in active)}
+        totals["adults"] = sum(2 if p["partner_name"] or p["allows_companion"] else 1 for p in active)
+        totals["children"] = sum(len(p["child_names"]) for p in active)
         return render_template("templates/admin.html", people=people, totals=totals,
                                diets={key: translate(label) for key, label in DIETS.items()})
+
+    def household_form(existing=None):
+        kind = request.form.get("kind", "plusone" if request.form.get("companion") == "yes" else
+                                "couple" if existing and existing["partner_name"] else "single")
+        if kind not in {"single", "couple", "plusone"}:
+            raise ValueError("Invalid invitation kind")
+        partner = request.form.get("partner_name", existing["partner_name"] if existing else "") if kind == "couple" else ""
+        if kind == "couple" and not partner.strip():
+            raise ValueError("Partner name required")
+        previous_children = json.loads(existing["children"]) if existing else []
+        count = int(request.form.get("children_count", str(len(previous_children))))
+        if not 0 <= count <= 20:
+            raise ValueError("Invalid child count")
+        children = request.form.getlist("children") if "children_count" in request.form or "children" in request.form else previous_children
+        if len(children) > count:
+            raise ValueError("Child count mismatch")
+        name, partner, children = validate_household(request.form.get("name", ""), partner,
+                                                    children + [""] * (count - len(children)))
+        return name, partner, kind == "plusone", children
 
     @app.post("/admin/guests")
     @require_admin
     def admin_add_guest():
         limited("admin-write", [("user:"+g.admin["username"], 60, 60)])
         try:
-            guest_id, code = invitation(db(), request.form.get("name", ""), request.form.get("companion") == "yes",
-                       code=request.form.get("code", "").strip() or None)
+            name, partner, companion, children = household_form()
+            guest_id, code = invitation(db(), name, companion, code=request.form.get("code", "").strip() or None,
+                                       partner_name=partner, children=children)
         except (ValueError, sqlite3.IntegrityError):
-            flash("Nie zapisano zaproszenia. Podaj imię i nazwisko (do 120 znaków). Własny kod musi mieć 48 znaków 0–9 / a–f i być unikalny; zostaw pole puste, aby go wygenerować.")
+            flash("Nie zapisano zaproszenia. Sprawdź dane osób i liczbę dzieci (0–20). Para wymaga danych obu osób; osoba towarzysząca nie wymaga danych. Własny kod musi mieć 48 znaków 0–9 / a–f i być unikalny.")
         else:
-            return render_template("templates/admin_code.html", code=code, name=request.form.get("name", ""))
+            return render_template("templates/admin_code.html", code=code, name=name + (" & " + partner if partner else ""))
         return redirect(url_for("admin"), code=303)
 
     @app.post("/admin/guests/<guest_id>")
@@ -251,22 +276,23 @@ def create_app(config=None):
         try:
             if action == "rotate":
                 _, code = invitation(db(), person["name"], person["allows_companion"], guest_id)
-                return render_template("templates/admin_code.html", code=code, name=person["name"])
+                return render_template("templates/admin_code.html", code=code,
+                                       name=person["name"] + (" & " + person["partner_name"] if person["partner_name"] else ""))
             elif action == "revoke":
                 revoke(db(), guest_id)
                 flash("Zaproszenie wyłączone. Odpowiedź została zachowana.")
             elif action == "edit":
-                name = request.form.get("name", "").strip()
-                if not name or len(name) > 120 or any(ord(c) < 32 for c in name):
-                    raise ValueError("Invalid name")
+                name, partner, companion, children = household_form(person)
                 with db():
-                    db().execute("UPDATE guests SET name=?, allows_companion=? WHERE id=?",
-                                 (name, int(request.form.get("companion") == "yes"), guest_id))
+                    db().execute("UPDATE guests SET name=?, partner_name=?, allows_companion=?, children=? WHERE id=?",
+                                 (name, partner, int(companion), json.dumps(children, ensure_ascii=False), guest_id))
+                    if not companion:
+                        db().execute("UPDATE rsvps SET companion_name='' WHERE guest_id=?", (guest_id,))
                 flash("Dane zaproszenia zapisane.")
             else:
                 abort(400)
         except ValueError:
-            flash("Podaj poprawne imię i nazwisko, do 120 znaków.")
+            flash("Sprawdź dane osób (do 120 znaków) i liczbę dzieci (0–20). Dla pary wpisz dane obu osób.")
         return redirect(url_for("admin", _anchor="guest-"+guest_id), code=303)
 
     @app.post("/admin/password")
@@ -325,10 +351,12 @@ def create_app(config=None):
     @require_guest
     def guest():
         rsvp = db().execute("SELECT * FROM rsvps WHERE guest_id=?", (g.guest["id"],)).fetchone()
-        guests = db().execute("""SELECT guests.name, rsvps.attendance FROM guests
+        guests = db().execute("""SELECT CASE WHEN guests.partner_name<>'' THEN guests.name || ' & ' || guests.partner_name
+            ELSE guests.name END AS name, rsvps.attendance FROM guests
             LEFT JOIN rsvps ON guests.id=rsvps.guest_id WHERE guests.active=1
             ORDER BY guests.name COLLATE NOCASE""").fetchall()
         return render_template("templates/guest.html", rsvp=rsvp, guests=guests,
+            invited_children=json.loads(g.guest["children"]),
             diets={key: translate(label) for key, label in DIETS.items()}, private=details(app.config["DETAILS"]))
 
     @app.post("/rsvp")

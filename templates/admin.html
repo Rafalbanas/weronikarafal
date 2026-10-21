@@ -1,4 +1,36 @@
 {% extends 'templates/base.html' %}
+{% macro household_fields(person=none, prefix='new') %}
+  {% set kind = 'plusone' if person and person.allows_companion else 'couple' if person and person.partner_name else 'single' %}
+  <div class="household-fields" data-household>
+    <label for="name-{{ prefix }}">{{ _('Imię i nazwisko') }}</label><input id="name-{{ prefix }}" name="name" value="{{ person.name if person else '' }}" maxlength="120" autocomplete="off" required>
+    <label for="kind-{{ prefix }}">{{ _('Kogo obejmuje zaproszenie?') }}</label>
+    <select id="kind-{{ prefix }}" name="kind" data-household-kind>
+      <option value="single" {% if kind == 'single' %}selected{% endif %}>{{ _('Jedna osoba') }}</option>
+      <option value="couple" {% if kind == 'couple' %}selected{% endif %}>{{ _('Para — wpisuję obie osoby') }}</option>
+      <option value="plusone" {% if kind == 'plusone' %}selected{% endif %}>{{ _('Osoba z osobą towarzyszącą — bez danych drugiej osoby') }}</option>
+    </select>
+    <div data-partner-fields>
+      <label for="partner-{{ prefix }}">{{ _('Imię i nazwisko drugiej osoby') }}</label>
+      <input id="partner-{{ prefix }}" name="partner_name" value="{{ person.partner_name if person else '' }}" maxlength="120" autocomplete="off">
+      <p class="field-help">{{ _('Wypełnij tylko dla pary. Osoba towarzysząca nie wymaga podawania imienia i nazwiska.') }}</p>
+    </div>
+    <div class="children-editor" data-children-editor data-prefix="{{ prefix }}" data-child-label="{{ _('Dziecko') }}" data-optional="{{ _('imię opcjonalne') }}" data-remove="{{ _('Usuń dziecko') }}">
+      <label for="children-count-{{ prefix }}">{{ _('Dzieci na zaproszeniu') }}</label>
+      <div class="children-controls">
+        <button class="button button-small button-outline" type="button" data-child-minus hidden aria-label="{{ _('Odejmij dziecko') }}">−</button>
+        <input id="children-count-{{ prefix }}" name="children_count" type="number" min="0" max="20" step="1" value="{{ person.child_names|length if person else 0 }}" inputmode="numeric" data-children-count>
+        <button class="button button-small button-outline" type="button" data-child-plus hidden>{{ _('+ Dodaj dziecko') }}</button>
+      </div>
+      <p class="field-help">{{ _('Imiona dzieci są opcjonalne. Możesz dodać dzieci do każdego rodzaju zaproszenia.') }}</p>
+      <div class="children-list" data-children-list>
+        {% if person %}{% for child in person.child_names %}
+        <div class="child-row"><div class="child-field"><label for="child-{{ prefix }}-{{ loop.index }}">{{ _('Dziecko') }} {{ loop.index }} ({{ _('imię opcjonalne') }})</label><input id="child-{{ prefix }}-{{ loop.index }}" name="children" value="{{ child }}" maxlength="120" autocomplete="off" data-child-name></div></div>
+        {% endfor %}{% endif %}
+      </div>
+    </div>
+  </div>
+{% endmacro %}
+
 {% block title %}{{ _('Panel pary młodej · Weronika & Rafał') }}{% endblock %}
 {% block content %}
 <div class="guest-shell admin-shell">
@@ -10,13 +42,13 @@
     <div class="card"><strong>{{ value }}</strong><span>{{ label }}</span></div>
     {% endfor %}
   </div>
+  <p class="household-totals">{{ _('Miejsca dla dorosłych:') }} <strong>{{ totals.adults }}</strong> · {{ _('Dzieci:') }} <strong>{{ totals.children }}</strong></p>
   <section id="nowe" class="card admin-add">
     <span class="eyebrow">{{ _('Jeszcze jedno miejsce przy stole') }}</span><h2>{{ _('Dodaj zaproszenie') }}</h2>
-    <p class="muted">{{ _('Jedno zaproszenie może obejmować osobę lub parę. Kod powstanie automatycznie.') }}</p>
+    <p class="muted">{{ _('Jedno zaproszenie i jeden kod dla osoby, pary lub rodziny. Wybierz wariant i dodaj dzieci przyciskiem +.') }}</p>
     <form method="post" action="{{ url_for('admin_add_guest') }}" class="form-stack">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <label for="name">{{ _('Imię i nazwisko / nazwa pary') }}</label><input id="name" name="name" maxlength="120" required placeholder="{{ _('np. Anna i Jan Kowalscy') }}">
-      <label class="choice"><input type="checkbox" name="companion" value="yes"><span>{{ _('Może zgłosić osobę towarzyszącą') }}</span></label>
+      {{ household_fields() }}
       <details><summary>{{ _('Chcę wpisać własny kod') }}</summary><label for="custom-code">{{ _('Kod zaproszenia') }}</label><input id="custom-code" name="code" maxlength="64" autocomplete="off" autocapitalize="none" spellcheck="false"><p class="field-help">{{ _('48 znaków 0–9 i a–f; myślniki są opcjonalne. Puste pole = nowy losowy kod.') }}</p></details>
       <button class="button" type="submit">{{ _('Dodaj gości i utwórz kod +') }}</button>
     </form>
@@ -26,19 +58,19 @@
     <p class="muted">{{ _('Kod pojawia się tylko raz, po utworzeniu lub zresetowaniu zaproszenia. Przekażcie go adresatom wraz z adresem weronikarafal.com/login. Zgubiony kod można łatwo zastąpić nowym. Liczniki dotyczą zaproszeń, nie liczby osób.') }}</p>
     {% for person in people %}
     <article id="guest-{{ person.id }}" class="card admin-person">
-      <div class="admin-person-heading"><h3>{{ person.name }}</h3><span class="badge {{ 'badge-yes' if person.active and person.attendance == 'yes' else '' }}">{{ _('Wyłączone') if not person.active else _('Potwierdzone') if person.attendance == 'yes' else _('Nie dotrą') if person.attendance == 'no' else _('Bez odpowiedzi') }}</span></div>
+      <div class="admin-person-heading"><h3>{{ person.name }}{% if person.partner_name %} &amp; {{ person.partner_name }}{% elif person.allows_companion %} {{ _('z osobą towarzyszącą') }}{% endif %}</h3><span class="badge {{ 'badge-yes' if person.active and person.attendance == 'yes' else '' }}">{{ _('Wyłączone') if not person.active else _('Potwierdzone') if person.attendance == 'yes' else _('Nie dotrą') if person.attendance == 'no' else _('Bez odpowiedzi') }}</span></div>
       <p class="field-help">{{ _('Kod jest zapisany jako hash z solą. Aby wydać nowy kod, użyj przycisku poniżej.') }}</p>
       <dl class="admin-response">
-        <div><dt>{{ _('Osoba towarzysząca') }}</dt><dd>{{ person.companion_name or (_('Może zgłosić') if person.allows_companion else _('Nie dotyczy')) }}</dd></div>
+        <div><dt>{{ _('Osoba towarzysząca') }}</dt><dd>{{ person.partner_name or person.companion_name or (_('Może zgłosić') if person.allows_companion else _('Nie dotyczy')) }}</dd></div>
         <div><dt>{{ _('Dieta') }}</dt><dd>{{ diets.get(person.diet, '—') }}</dd></div>
         <div><dt>{{ _('Nocleg') }}</dt><dd>{{ _('Tak') if person.lodging == 'yes' else _('Nie') if person.lodging == 'no' else '—' }}</dd></div>
         <div class="admin-notes"><dt>{{ _('Uwagi / piosenka') }}</dt><dd class="pre-line">{{ person.notes or '—' }}</dd></div>
+        <div class="admin-notes"><dt>{{ _('Dzieci na zaproszeniu') }} ({{ person.child_names|length }})</dt><dd>{% for child in person.child_names %}{{ child or (_('Dziecko') ~ ' ' ~ loop.index) }}{{ ', ' if not loop.last }}{% else %}—{% endfor %}</dd></div>
       </dl>
       <details><summary>{{ _('Edytuj zaproszenie') }}</summary>
         <form class="form-stack" method="post" action="{{ url_for('admin_update_guest', guest_id=person.id) }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="edit">
-          <label for="name-{{ person.id }}">{{ _('Nazwa zaproszenia') }}</label><input id="name-{{ person.id }}" name="name" value="{{ person.name }}" maxlength="120" required>
-          <label class="choice"><input type="checkbox" name="companion" value="yes" {% if person.allows_companion %}checked{% endif %}><span>{{ _('Może zgłosić osobę towarzyszącą') }}</span></label>
+          {{ household_fields(person, person.id) }}
           <button type="submit" class="button button-small">{{ _('Zapisz dane') }}</button>
         </form>
       </details>
