@@ -3,7 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% if request.endpoint != 'index' %}
   <meta name="robots" content="noindex, nofollow, noarchive">
+  {% endif %}
   <meta name="theme-color" content="#faf7f2">
   <meta name="description" content="{{ _('Weronika i Rafał — 27 sierpnia 2027. Informacje o ceremonii i strefa gości.') }}">
   <title>{% block title %}Weronika & Rafał · 27.08.2027{% endblock %}</title>
