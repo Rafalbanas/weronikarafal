@@ -7,13 +7,13 @@
   <p class="hero-date">{{ _('27 sierpnia 2027') }}</p>
   <div class="countdown-card">
     <span class="eyebrow">{{ _('Do naszego ślubu zostało') }}</span>
-    <div class="countdown" data-countdown="2027-08-27T15:00:00+02:00" aria-label="{{ _('Odliczanie do ślubu') }}">
+    <div class="countdown" data-countdown="2027-08-27T14:00:00+02:00" aria-label="{{ _('Odliczanie do ślubu') }}">
       <div><strong data-unit="days">—</strong><span>{{ _('dni') }}</span></div>
       <div><strong data-unit="hours">—</strong><span>{{ _('godzin') }}</span></div>
       <div><strong data-unit="minutes">—</strong><span>{{ _('minut') }}</span></div>
       <div><strong data-unit="seconds">—</strong><span>{{ _('sekund') }}</span></div>
     </div>
-    <p class="countdown-note">{{ _('27.08.2027 · 15:00 · czas polski') }}</p>
+    <p class="countdown-note">{{ _('27.08.2027 · 14:00 · czas polski') }}</p>
   </div>
   <p class="hero-intro">{{ _('Jeden dzień, tyle wspomnień przed nami.') }}<br>{{ _('Nie możemy się doczekać, aż powiemy sobie „tak”.') }}</p>
   <a class="button button-outline" href="#ceremonia">{{ _('Gdzie się spotkamy') }} <span aria-hidden="true">↓</span></a>
@@ -21,7 +21,7 @@
 <section class="public-details" id="ceremonia">
   <div class="card ceremony-card">
     <span class="eyebrow">{{ _('Początek naszego dnia') }}</span><h2>{{ _('Ceremonia ślubna') }}</h2>
-    <p class="ceremony-time">15:00</p><p class="muted small">{{ _('Piątek, 27 sierpnia 2027 r.') }}</p>
+    <p class="ceremony-time">14:00</p><p class="muted small">{{ _('Piątek, 27 sierpnia 2027 r.') }}</p>
     {% if ceremony.name %}<h3>{{ ceremony.name }}</h3><p class="muted pre-line">{{ ceremony.address }}</p>
     {% if ceremony.address %}<a class="button button-outline" href="{{ map_url }}" target="_blank" rel="noopener noreferrer">{{ _('Sprawdź dojazd ↗') }}</a>{% endif %}
     {% else %}<p class="muted">{{ _('Nazwę i adres kościoła podamy tutaj wkrótce.') }}</p>{% endif %}
