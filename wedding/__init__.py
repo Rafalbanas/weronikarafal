@@ -8,7 +8,7 @@ EN = {
 'Do naszego ślubu zostało': 'Counting down to our wedding',
 'Odliczanie do ślubu': 'Wedding countdown',
 'dni': 'days', 'godzin': 'hours', 'minut': 'minutes', 'sekund': 'seconds',
-'27.08.2027 · 15:00 · czas polski': '27 August 2027 · 3:00 pm · Poland time',
+'27.08.2027 · 14:00 · czas polski': '27 August 2027 · 2:00 pm · Poland time',
 'Jeden dzień, tyle wspomnień przed nami.': 'One day, so many memories to make.',
 'Nie możemy się doczekać, aż powiemy sobie „tak”.': 'We cannot wait to say “I do”.',
 'Gdzie się spotkamy': 'Where to find us',
