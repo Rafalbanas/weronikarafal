@@ -43,7 +43,9 @@ Cloudflare nadal odpowiada za ochronę przed dużym ruchem sieciowym. Baza sama
 usuwa wygasłe kubełki limitów i wygasłe sesje przy logowaniu.
 
 Wszystkie odpowiedzi aplikacji mają `private, no-store`, CSP bez zewnętrznych
-skryptów i stylów, blokadę ramek oraz noindex. Działanie formularza nie wymaga
+skryptów i stylów oraz blokadę ramek. Publiczna strona ceremonii może być
+indeksowana; pozostałe strony i błędy mają nagłówek noindex, a robots.txt
+wyklucza ścieżki logowania, gości i administracji. Działanie formularza nie wymaga
 JavaScript. Błędy zapisu nigdy nie są przedstawiane jako sukces. Teksty gości
 są escapowane przez Jinja. Backend sprawdza wartości, długości, duplikaty pól
 oraz uprawnienia do osoby towarzyszącej. Maksymalne żądanie ma 16 KiB.

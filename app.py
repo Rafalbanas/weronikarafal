@@ -117,7 +117,6 @@ def create_app(config=None):
         response.headers.update({
             "Cache-Control": "private, no-store, max-age=0",
             "Pragma": "no-cache", "Vary": "Cookie",
-            "X-Robots-Tag": "noindex, nofollow, noarchive",
             "X-Content-Type-Options": "nosniff", "X-Frame-Options": "DENY",
             "Referrer-Policy": "same-origin",
             "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
@@ -125,6 +124,8 @@ def create_app(config=None):
                 "img-src 'self' data:; font-src 'self'; connect-src 'self'; form-action 'self'; "
                 "frame-ancestors 'none'; base-uri 'none'; object-src 'none'",
         })
+        if request.endpoint not in {"index", "robots"} or response.status_code != 200:
+            response.headers["X-Robots-Tag"] = "noindex, nofollow, noarchive"
         if request.is_secure:
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         return response
@@ -416,7 +417,9 @@ def create_app(config=None):
 
     @app.get("/robots.txt")
     def robots():
-        return "User-agent: *\nDisallow: /\n", 200, {"Content-Type": "text/plain; charset=utf-8"}
+        return ("User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /guest\n"
+                "Disallow: /login\nDisallow: /rsvp\nDisallow: /logout\nDisallow: /healthz\n",
+                200, {"Content-Type": "text/plain; charset=utf-8"})
 
     @app.errorhandler(CSRFError)
     def csrf_error(_):

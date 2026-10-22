@@ -60,6 +60,30 @@ class GuestTests(unittest.TestCase):
             self.assertNotIn(private, response.text)
         self.assertNotIn("csrf_token", response.text)
 
+    def test_search_engines_can_index_public_page_in_both_languages(self):
+        for path in ("/", "/?lang=pl", "/?lang=en"):
+            response = self.get(path)
+            self.assertEqual(response.status_code, 200)
+            self.assertNotIn("noindex", response.headers.get("X-Robots-Tag", ""))
+            self.assertNotRegex(response.text, r'<meta[^>]*name="robots"[^>]*noindex')
+        response = self.get("/robots.txt")
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("X-Robots-Tag", response.headers)
+        self.assertIn("Allow: /", response.text.splitlines())
+        self.assertNotIn("Disallow: /", response.text.splitlines())
+        self.assertIn("Disallow: /admin", response.text.splitlines())
+        self.assertIn("Disallow: /guest", response.text.splitlines())
+
+    def test_nonpublic_pages_and_errors_keep_noindex(self):
+        for path in ("/login", "/admin/login", "/guest", "/missing"):
+            response = self.get(path)
+            self.assertIn("noindex", response.headers.get("X-Robots-Tag", ""))
+        self.login()
+        response = self.get("/guest")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("noindex", response.headers["X-Robots-Tag"])
+        self.assertIn('<meta name="robots" content="noindex, nofollow, noarchive">', response.text)
+
     def test_private_routes_require_authentication(self):
         self.assertEqual(self.get().status_code, 303)
         self.assertEqual(self.post("/rsvp", {}).status_code, 400)
