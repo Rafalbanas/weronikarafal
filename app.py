@@ -122,7 +122,7 @@ def create_app(config=None):
             "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
             "Content-Security-Policy": "default-src 'none'; script-src 'self'; style-src 'self'; "
                 "img-src 'self' data:; font-src 'self'; connect-src 'self'; form-action 'self'; "
-                "frame-ancestors 'none'; base-uri 'none'; object-src 'none'",
+                "frame-src https://www.google.com; frame-ancestors 'none'; base-uri 'none'; object-src 'none'",
         })
         if request.endpoint not in {"index", "robots"} or response.status_code != 200:
             response.headers["X-Robots-Tag"] = "noindex, nofollow, noarchive"
@@ -325,8 +325,10 @@ def create_app(config=None):
     @app.get("/")
     def index():
         ceremony = details(app.config["DETAILS"])["ceremony"]
+        map_query = ", ".join(value for value in (ceremony["name"], ceremony["address"]) if value)
         return render_template("index.html", ceremony=ceremony,
-            map_url="https://www.google.com/maps/search/?"+urlencode({"api": 1, "query": ceremony["address"]}))
+            map_url="https://www.google.com/maps/search/?"+urlencode({"api": 1, "query": map_query}),
+            map_embed_url="https://www.google.com/maps?"+urlencode({"q": map_query, "output": "embed", "z": 16}))
 
     @app.route("/login", methods=["GET", "POST"])
     def login():

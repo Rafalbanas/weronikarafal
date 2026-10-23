@@ -40,7 +40,8 @@ CREATE TABLE IF NOT EXISTS admin_recovery (
 """
 
 DEFAULT_DETAILS = {
-    "ceremony": {"name": "", "address": ""},
+    "ceremony": {"name": 'Bazylika św. Ludwika Króla i Wniebowzięcia Najświętszej Maryi Panny',
+                 "address": 'ul. Panewnicka 76, 40-760 Katowice (Panewniki)'},
     "venue": {"name": "", "address": ""},
     "contacts": [],
     "schedule": [],

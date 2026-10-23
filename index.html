@@ -23,7 +23,10 @@
     <span class="eyebrow">{{ _('Początek naszego dnia') }}</span><h2>{{ _('Ceremonia ślubna') }}</h2>
     <p class="ceremony-time">14:00</p><p class="muted small">{{ _('Piątek, 27 sierpnia 2027 r.') }}</p>
     {% if ceremony.name %}<h3>{{ ceremony.name }}</h3><p class="muted pre-line">{{ ceremony.address }}</p>
-    {% if ceremony.address %}<a class="button button-outline" href="{{ map_url }}" target="_blank" rel="noopener noreferrer">{{ _('Sprawdź dojazd ↗') }}</a>{% endif %}
+    {% if ceremony.address %}
+    <iframe class="ceremony-map" src="{{ map_embed_url }}" title="{{ _('Mapa dojazdu do kościoła') }}" width="600" height="280" loading="lazy" referrerpolicy="no-referrer" allowfullscreen></iframe>
+    <a class="button button-outline" href="{{ map_url }}" target="_blank" rel="noopener noreferrer">{{ _('Sprawdź dojazd ↗') }}</a>
+    {% endif %}
     {% else %}<p class="muted">{{ _('Nazwę i adres kościoła podamy tutaj wkrótce.') }}</p>{% endif %}
   </div>
   <div class="private-invitation"><span class="eyebrow">{{ _('Masz już zaproszenie?') }}</span><h2>{{ _('Twoje miejsce z nami') }}</h2><p class="muted">{{ _('Potwierdzenie obecności, lista gości i szczegóły przyjęcia czekają w strefie dla zaproszonych.') }}</p><a class="button" href="{{ url_for('guest') if g.guest else url_for('login') }}">{{ _('Przejdź do strefy gości') if g.guest else _('Zaloguj się kodem z zaproszenia') }} <span aria-hidden="true">→</span></a></div>
