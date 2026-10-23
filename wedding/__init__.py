@@ -16,6 +16,7 @@ EN = {
 'Ceremonia ślubna': 'Wedding ceremony',
 'Piątek, 27 sierpnia 2027 r.': 'Friday, 27 August 2027',
 'Sprawdź dojazd ↗': 'Get directions ↗',
+'Mapa dojazdu do kościoła': 'Map and directions to the church',
 'Nazwę i adres kościoła podamy tutaj wkrótce.': 'We will share the church name and address here soon.',
 'Masz już zaproszenie?': 'Already have an invitation?',
 'Twoje miejsce z nami': 'A place for you',
