@@ -128,3 +128,205 @@ document.querySelectorAll('[data-household]').forEach((group) => {
   count.addEventListener('change', () => resize(Number(count.value)));
   render(names());
 });
+
+// Media library: dropzone, per-file upload progress, lightbox and delete confirmation.
+const mediaUpload = document.querySelector('[data-media-upload]');
+if (mediaUpload) {
+  const form = mediaUpload.querySelector('[data-media-form]');
+  const input = mediaUpload.querySelector('[data-media-input]');
+  const dropzone = mediaUpload.querySelector('[data-dropzone]');
+  const pending = mediaUpload.querySelector('[data-media-pending]');
+  const submit = mediaUpload.querySelector('[data-media-submit]');
+  const statusOutput = mediaUpload.querySelector('[data-media-status]');
+  const maxBytes = Number(mediaUpload.dataset.maxBytes) || 0;
+  const isEnglish = document.documentElement.lang === 'en';
+  const messages = {
+    tooLarge: mediaUpload.dataset.msgTooLarge,
+    choose: mediaUpload.dataset.msgChoose,
+    error: mediaUpload.dataset.msgError,
+    uploading: mediaUpload.dataset.msgUploading,
+    done: mediaUpload.dataset.msgDone,
+    failed: mediaUpload.dataset.msgFailed,
+  };
+  const rows = new Map();
+  let queue = [];
+  let uploading = false;
+
+  const setStatus = (text, failed = false) => {
+    statusOutput.textContent = text || '';
+    statusOutput.classList.toggle('notice-error', failed);
+  };
+
+  const renderPending = () => {
+    pending.replaceChildren();
+    rows.clear();
+    queue.forEach((file) => {
+      const row = document.createElement('li');
+      row.className = 'media-pending-item';
+      row.dataset.state = 'ready';
+      const name = document.createElement('span');
+      name.className = 'media-pending-name';
+      name.textContent = file.name;
+      const bar = document.createElement('progress');
+      bar.max = 100;
+      bar.value = 0;
+      const label = document.createElement('span');
+      label.className = 'media-pending-status';
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'media-pending-remove';
+      remove.setAttribute('aria-label', `${isEnglish ? 'Remove file' : 'Usuń plik'}: ${file.name}`);
+      remove.textContent = '×';
+      remove.addEventListener('click', () => {
+        if (uploading) return;
+        queue = queue.filter((item) => item !== file);
+        renderPending();
+      });
+      row.append(name, bar, label, remove);
+      pending.append(row);
+      rows.set(file, { row, bar, label });
+    });
+    pending.hidden = queue.length === 0;
+    submit.disabled = uploading || queue.length === 0;
+  };
+
+  const addFiles = (fileList) => {
+    let tooLarge = false;
+    Array.from(fileList).forEach((file) => {
+      if (maxBytes && file.size > maxBytes) {
+        tooLarge = true;
+        return;
+      }
+      if (queue.some((item) => item.name === file.name && item.size === file.size
+          && item.lastModified === file.lastModified)) return;
+      queue.push(file);
+    });
+    if (tooLarge) setStatus(messages.tooLarge, true);
+    renderPending();
+  };
+
+  input.addEventListener('change', () => {
+    addFiles(input.files);
+    input.value = '';
+  });
+  ['dragenter', 'dragover'].forEach((name) => {
+    dropzone.addEventListener(name, (event) => {
+      event.preventDefault();
+      dropzone.classList.add('is-dragging');
+    });
+  });
+  ['dragleave', 'drop'].forEach((name) => {
+    dropzone.addEventListener(name, (event) => {
+      event.preventDefault();
+      dropzone.classList.remove('is-dragging');
+    });
+  });
+  dropzone.addEventListener('drop', (event) => {
+    if (event.dataTransfer && event.dataTransfer.files.length) addFiles(event.dataTransfer.files);
+  });
+  dropzone.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      input.click();
+    }
+  });
+
+  const uploadFile = (file) => new Promise((resolve) => {
+    const row = rows.get(file);
+    const xhr = new XMLHttpRequest();
+    const finish = (ok, message) => {
+      if (row) {
+        row.row.dataset.state = ok ? 'done' : 'error';
+        if (ok) row.bar.value = 100;
+        row.label.textContent = ok ? messages.done : (message || messages.failed);
+      }
+      resolve(ok);
+    };
+    xhr.open('POST', form.action);
+    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+    if (row) {
+      row.row.dataset.state = 'uploading';
+      row.label.textContent = messages.uploading;
+    }
+    xhr.upload.addEventListener('progress', (event) => {
+      if (row && event.lengthComputable) row.bar.value = Math.round(event.loaded / event.total * 100);
+    });
+    xhr.addEventListener('load', () => {
+      let payload = null;
+      try {
+        payload = JSON.parse(xhr.responseText);
+      } catch {
+        payload = null;
+      }
+      finish(xhr.status >= 200 && xhr.status < 300, payload && payload.error);
+    });
+    xhr.addEventListener('error', () => finish(false));
+    xhr.addEventListener('timeout', () => finish(false));
+    const body = new FormData();
+    body.append('csrf_token', form.querySelector('[name="csrf_token"]').value);
+    body.append('files', file, file.name);
+    xhr.send(body);
+  });
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (uploading) return;
+    if (!queue.length) {
+      setStatus(messages.choose, true);
+      return;
+    }
+    uploading = true;
+    submit.disabled = true;
+    setStatus('');
+    const finished = new Set();
+    let failed = false;
+    for (const file of queue.slice()) {
+      if (await uploadFile(file)) finished.add(file);
+      else failed = true;
+    }
+    uploading = false;
+    if (!failed) {
+      window.location.reload();
+      return;
+    }
+    queue = queue.filter((file) => !finished.has(file));
+    renderPending();
+    setStatus(messages.error, true);
+  });
+
+  renderPending();
+}
+
+const mediaConfirm = document.querySelector('[data-media-confirm]');
+if (mediaConfirm) {
+  document.querySelectorAll('[data-media-delete]').forEach((form) => {
+    form.addEventListener('submit', (event) => {
+      if (form.dataset.confirmed === '1') return;
+      event.preventDefault();
+      const text = mediaConfirm.querySelector('[data-media-confirm-text]');
+      if (text) text.textContent = form.dataset.confirm || '';
+      mediaConfirm.returnValue = '';
+      mediaConfirm.showModal();
+      mediaConfirm.addEventListener('close', () => {
+        if (mediaConfirm.returnValue !== 'confirm') return;
+        form.dataset.confirmed = '1';
+        form.submit();
+      }, { once: true });
+    });
+  });
+}
+
+const mediaLightbox = document.querySelector('[data-media-lightbox]');
+if (mediaLightbox) {
+  const image = mediaLightbox.querySelector('[data-media-lightbox-image]');
+  document.querySelectorAll('[data-media-open]').forEach((button) => {
+    button.addEventListener('click', () => {
+      image.src = button.dataset.mediaSrc;
+      image.alt = button.dataset.mediaAlt || '';
+      mediaLightbox.showModal();
+    });
+  });
+  mediaLightbox.addEventListener('click', (event) => {
+    if (event.target === mediaLightbox) mediaLightbox.close();
+  });
+}

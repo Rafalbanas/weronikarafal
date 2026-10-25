@@ -26,9 +26,11 @@
       {% endif %}
       {% if g.admin %}
       <a class="nav-link" href="{{ url_for('admin') }}">{{ _('Panel pary młodej') }}</a>
+      <a class="nav-link" href="{{ url_for('media') }}">{{ _('Media') }}</a>
       <form method="post" action="{{ url_for('logout') }}" class="inline-form"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="button button-small button-outline" type="submit">{{ _('Wyloguj') }}</button></form>
       {% elif g.guest %}
       <a class="nav-link" href="{{ url_for('guest') }}">{{ _('Strefa gości') }}</a>
+      <a class="nav-link" href="{{ url_for('media') }}">{{ _('Media') }}</a>
       <form method="post" action="{{ url_for('logout') }}" class="inline-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button class="button button-small button-outline" type="submit">{{ _('Wyloguj') }}</button>

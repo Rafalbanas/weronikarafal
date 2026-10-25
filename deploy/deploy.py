@@ -20,6 +20,7 @@ FILES = {"public/revision.txt", "app.py", "manage.py", "requirements.txt", "inde
          "wedding/__init__.py", "wedding/store.py", "templates/base.html",
          "templates/login.html", "templates/guest.html", "templates/error.html",
          "templates/admin.html", "templates/admin_login.html", "templates/admin_code.html",
+         "templates/media.html",
          "public/assets/site.css", "public/assets/site.js", "public/assets/favicon.svg"}
 
 

@@ -37,6 +37,16 @@ CREATE TABLE IF NOT EXISTS admin_sessions (
 CREATE TABLE IF NOT EXISTS admin_recovery (
     username TEXT PRIMARY KEY REFERENCES administrators(username), code_hash TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS uploads (
+    id TEXT PRIMARY KEY,
+    owner_id TEXT NOT NULL,
+    owner_kind TEXT NOT NULL CHECK(owner_kind IN ('guest', 'admin')),
+    original_name TEXT NOT NULL,
+    content_type TEXT NOT NULL,
+    size INTEGER NOT NULL CHECK(size >= 0),
+    created_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS uploads_owner ON uploads(owner_id, created_at);
 """
 
 DEFAULT_DETAILS = {
@@ -156,6 +166,42 @@ def issue_admin_recovery(db, username):
         db.execute("INSERT INTO admin_recovery VALUES (?, ?) ON CONFLICT(username) DO UPDATE SET code_hash=excluded.code_hash",
                    (username, generate_password_hash(normalize_code(code))))
     return code
+
+
+def record_media(db, owner_id, owner_kind, upload_id, original_name, content_type, size, created_at=None):
+    """Register one saved binary. The upload id is also its random on-disk name."""
+    created_at = int(time.time()) if created_at is None else created_at
+    with db:
+        db.execute("""INSERT INTO uploads(id, owner_id, owner_kind, original_name, content_type, size, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            (upload_id, owner_id, owner_kind, original_name, content_type, size, created_at))
+    return created_at
+
+
+def media_record(db, upload_id):
+    if not isinstance(upload_id, str):
+        return None
+    return db.execute("SELECT * FROM uploads WHERE id=?", (upload_id,)).fetchone()
+
+
+def media_list(db, owner_id, owner_kind, administrator=False):
+    """Admins see every upload; everyone else only the files they own."""
+    if administrator:
+        return db.execute("""SELECT uploads.*, guests.name AS owner_name FROM uploads
+            LEFT JOIN guests ON uploads.owner_kind='guest' AND guests.id=uploads.owner_id
+            ORDER BY uploads.created_at DESC, uploads.id""").fetchall()
+    return db.execute("""SELECT * FROM uploads WHERE owner_id=? AND owner_kind=?
+        ORDER BY created_at DESC, id""", (owner_id, owner_kind)).fetchall()
+
+
+def media_count(db, owner_id, owner_kind):
+    return db.execute("SELECT count(*) FROM uploads WHERE owner_id=? AND owner_kind=?",
+                      (owner_id, owner_kind)).fetchone()[0]
+
+
+def remove_media(db, upload_id):
+    with db:
+        return db.execute("DELETE FROM uploads WHERE id=?", (upload_id,)).rowcount
 
 
 def allow_request(db, buckets, now=None):
