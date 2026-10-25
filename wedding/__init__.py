@@ -178,5 +178,52 @@ EN.update({
 })
 
 
+EN.update({
+    'Biblioteka mediów · Weronika & Rafał': 'Media library · Weronika & Rafał',
+    'Pamiątki z naszego dnia': 'Memories of our day',
+    'Biblioteka mediów': 'Media library',
+    'Widok administratora: wszystkie zdjęcia i filmy dodane przez gości oraz organizatorów.': 'Administrator view: all photos and videos added by guests and organisers.',
+    'Administrator': 'Administrator',
+    'Zdjęcia i filmy widoczne tylko dla Ciebie i organizatorów.': 'Photos and videos are visible only to you and the organisers.',
+    'Dodaj wspomnienia': 'Add memories',
+    'Wgraj zdjęcia lub filmy': 'Upload photos or videos',
+    'Przeciągnij pliki tutaj lub wybierz je z dysku. Obsługujemy JPG, PNG, GIF, WEBP, MP4, WEBM i MOV. Jeden plik może mieć do': 'Drag files here or choose them from your device. We support JPG, PNG, GIF, WEBP, MP4, WEBM and MOV. Each file can be up to',
+    'a jedno żądanie do': 'and one request can contain up to',
+    'plików.': 'files.',
+    'Przeciągnij i upuść pliki': 'Drag and drop files',
+    'lub kliknij, aby wybrać z dysku': 'or click to choose from your device',
+    'Wgraj wybrane pliki': 'Upload selected files',
+    'Wasze wspomnienia': 'Your memories',
+    'Wszystkie media': 'All media',
+    'Twoje media': 'Your media',
+    'Liczba plików:': 'Files:',
+    'Powiększ zdjęcie': 'Enlarge photo',
+    'Zdjęcie': 'Photo',
+    'Film': 'Video',
+    'Usuń': 'Delete',
+    'Jeszcze tu pusto': 'Nothing here yet',
+    'Dodaj pierwsze zdjęcie lub film, aby zachować wspomnienia z naszego dnia.': 'Add your first photo or video to keep the memories of our day.',
+    'Usunąć plik?': 'Delete file?',
+    'Czy na pewno usunąć ten plik?': 'Are you sure you want to delete this file?',
+    'Anuluj': 'Cancel',
+    'Podgląd zdjęcia': 'Photo preview',
+    'Zamknij podgląd': 'Close preview',
+    'Twoje': 'Yours',
+    'Plik jest za duży.': 'The file is too large.',
+    'Wybierz co najmniej jeden plik.': 'Choose at least one file.',
+    'Nie udało się wgrać pliku.': 'The file could not be uploaded.',
+    'Wgrywanie…': 'Uploading…',
+    'Wgrano': 'Uploaded',
+    'Błąd': 'Error',
+    'Pliki zostały dodane do biblioteki.': 'The files have been added to the library.',
+    'Plik został usunięty.': 'The file has been deleted.',
+    'Nie udało się dodać pliku': 'Could not add the file',
+    'Zbyt wiele plików w jednym żądaniu.': 'Too many files in one request.',
+    'Osiągnięto limit liczby plików.': 'The file limit has been reached.',
+    'Nieobsługiwany format pliku.': 'Unsupported file format.',
+    'Nieprawidłowa nazwa pliku.': 'Invalid file name.',
+})
+
+
 def translate(text):
     return EN.get(text, text) if g.get('language', 'pl') == 'en' else text

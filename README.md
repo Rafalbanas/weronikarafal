@@ -30,6 +30,31 @@ Kod jest wyświetlany raz. Uruchom aplikację przez WSGI z lokalną konfiguracj�
 zaufanego hosta. Sesyjne cookies wymagają HTTPS również w podglądzie. Nie
 uruchamiaj serwera developerskiego jako publicznego serwera produkcyjnego.
 
+## Biblioteka mediów (`/media`)
+
+Po zalogowaniu kodem zaproszenia lub kontem pary młodej dostępna jest biblioteka
+zdjęć i filmów. Plik jest zapisywany na dysku pod losową, wewnętrzną nazwą,
+a metadane (oryginalna nazwa, typ, rozmiar, data i właściciel) trafiają do
+SQLite. Domyślnie pliki są prywatne: właściciel widzi własne, a administratorzy
+wszystkie. Usuwanie jest weryfikowane po stronie serwera na podstawie sesji,
+nigdy na podstawie nazwy pliku przesłanej przez klienta.
+
+Domyślny katalog to `/var/lib/weronikarafal-data/uploads` — obok bazy danych,
+poza katalogiem publicznym i wydaniami. Konfiguracja:
+
+| Zmienna | Domyślnie | Znaczenie |
+| --- | --- | --- |
+| `WEDDING_UPLOADS_DIR` | `<katalog danych>/uploads` | trwały katalog na pliki |
+| `WEDDING_MAX_UPLOAD_BYTES` | `33554432` (32 MiB) | limit jednego pliku |
+| `WEDDING_MAX_UPLOAD_FILES` | `5` | limit plików w jednym żądaniu |
+| `WEDDING_MAX_UPLOADS_PER_USER` | `100` | limit plików na konto |
+
+Dozwolone formaty: JPEG, PNG, GIF, WEBP, MP4, WEBM i MOV. Rozszerzenie, typ MIME
+i sygnatura pliku muszą się zgadzać; SVG, HTML i inne formaty są odrzucane.
+Zwiększając limit pliku, podnieś też `client_max_body_size` w Nginx oraz
+`--timeout` Gunicorna (patrz [deploy/README.md](deploy/README.md)).
+Plików z biblioteki nie dodawaj do Git; katalog `uploads/` jest ignorowany.
+
 ## Testy
 
 ```sh

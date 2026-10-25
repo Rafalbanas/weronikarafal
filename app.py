@@ -6,18 +6,21 @@ import hmac
 import json
 import os
 from pathlib import Path
+import re
 import secrets
 import sqlite3
 import time
 from urllib.parse import urlencode
 
-from flask import Flask, abort, flash, g, redirect, render_template, request, session, url_for
+from flask import (Flask, Response, abort, flash, g, jsonify, redirect, render_template,
+                   request, send_file, session, url_for)
 from flask_wtf.csrf import CSRFError, CSRFProtect
 from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.exceptions import SecurityError
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from wedding.store import allow_request, connect, details, digest, initialize, normalize_code, invitation, revoke, authenticate_invitation
+from wedding.store import media_count, media_list, media_record, record_media, remove_media
 from wedding import translate
 from wedding.store import issue_admin_recovery, recovery_code
 from wedding.store import validate_household
@@ -25,6 +28,76 @@ from wedding.store import validate_household
 ROOT = Path(__file__).resolve().parent
 DIETS = {"standard": "Standardowa", "vegetarian": "Wegetariańska", "vegan": "Wegańska",
          "gluten_free": "Bezglutenowa", "other": "Inna / alergie"}
+
+# Media is limited to an explicit allowlist of container formats. The extension,
+# the declared MIME type and the real file signature must all agree.
+MEDIA_EXTENSIONS = {
+    ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".gif": "image/gif",
+    ".webp": "image/webp", ".mp4": "video/mp4", ".webm": "video/webm", ".mov": "video/quicktime",
+}
+MEDIA_LABELS = {"image/jpeg": "JPEG", "image/png": "PNG", "image/gif": "GIF", "image/webp": "WEBP",
+                "video/mp4": "MP4", "video/webm": "WEBM", "video/quicktime": "MOV"}
+MEDIA_GENERIC_TYPES = {"application/octet-stream"}
+
+
+class MediaRejected(Exception):
+    def __init__(self, status, message):
+        super().__init__(message)
+        self.status = status
+        self.message = message
+
+
+def media_kind(filename, declared):
+    kind = MEDIA_EXTENSIONS.get(Path(filename).suffix.lower())
+    declared = (declared or "").split(";", 1)[0].strip().lower()
+    if not kind or (declared and declared not in MEDIA_GENERIC_TYPES | {kind}):
+        raise ValueError("Unsupported media type")
+    return kind
+
+
+def media_signature(kind, head):
+    if kind == "image/png":
+        return head.startswith(b"\x89PNG\r\n\x1a\n")
+    if kind == "image/jpeg":
+        return head.startswith(b"\xff\xd8\xff")
+    if kind == "image/gif":
+        return head[:6] in {b"GIF87a", b"GIF89a"}
+    if kind == "image/webp":
+        return head[:4] == b"RIFF" and head[8:12] == b"WEBP"
+    if kind in {"video/mp4", "video/quicktime"}:
+        return head[4:8] == b"ftyp"
+    if kind == "video/webm":
+        return head.startswith(b"\x1a\x45\xdf\xa3")
+    return False
+
+
+def safe_media_name(name):
+    name = (name or "").strip()
+    if (not name or len(name) > 200 or name in {".", ".."} or "/" in name or "\\" in name
+            or any(ord(char) < 32 for char in name)):
+        raise ValueError("Invalid media name")
+    return name
+
+
+def byte_range(value, size):
+    """Parse a single RFC 7233 byte range. Invalid ranges return None."""
+    match = re.fullmatch(r"bytes=(\d*)-(\d*)", (value or "").strip())
+    if not match or size <= 0:
+        return None
+    first, last = match.groups()
+    try:
+        if first:
+            start, end = int(first), int(last) if last else size - 1
+        else:
+            length = int(last)
+            if length <= 0:
+                return None
+            start, end = max(0, size - length), size - 1
+    except ValueError:
+        return None
+    if start >= size or start > end:
+        return None
+    return start, min(end, size - 1)
 
 
 def create_app(config=None):
@@ -36,6 +109,10 @@ def create_app(config=None):
     @app.template_global()
     def asset_url(filename):
         return url_for("static", filename=filename, v=asset_versions[filename])
+
+    @app.template_filter("media_date")
+    def media_date(timestamp):
+        return time.strftime("%d.%m.%Y · %H:%M", time.localtime(timestamp))
 
     data = Path(os.environ.get("WEDDING_DATA_DIR", "/var/lib/weronikarafal-data"))
     app.config.update(
@@ -51,8 +128,26 @@ def create_app(config=None):
     )
     if config:
         app.config.update(config)
+    if not app.config.get("UPLOADS_DIR"):
+        # Default next to the SQLite database: persistent, private and outside the web root.
+        app.config["UPLOADS_DIR"] = os.environ.get("WEDDING_UPLOADS_DIR") or str(
+            Path(app.config["DATABASE"]).parent / "uploads")
+    app.config.setdefault("MAX_UPLOAD_BYTES", int(os.environ.get("WEDDING_MAX_UPLOAD_BYTES", 32*1024*1024)))
+    app.config.setdefault("MAX_UPLOAD_FILES", int(os.environ.get("WEDDING_MAX_UPLOAD_FILES", 5)))
+    app.config.setdefault("MAX_UPLOADS_PER_USER", int(os.environ.get("WEDDING_MAX_UPLOADS_PER_USER", 100)))
     if not app.config["SECRET_KEY"] or len(app.config["SECRET_KEY"]) < 32:
         raise RuntimeError("Set a persistent WEDDING_SECRET_KEY with at least 32 random characters.")
+    uploads_dir = Path(app.config["UPLOADS_DIR"])
+    uploads_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
+    # Abandoned multipart writes from a crashed worker are never referenced by
+    # the database. Only old ones are removed so parallel starts cannot race.
+    stale = time.time() - 3600
+    for leftover in uploads_dir.glob("*.part"):
+        try:
+            if leftover.stat().st_mtime < stale:
+                leftover.unlink()
+        except OSError:
+            pass
     if app.config["TRUST_PROXY"]:
         # Only enabled behind the loopback Nginx listener, which overwrites these headers.
         app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=0, x_port=0, x_prefix=0)
@@ -67,10 +162,21 @@ def create_app(config=None):
         # Language links lead to GET pages and never replay a form submission.
         target = {"admin_add_guest": "admin", "admin_update_guest": "admin",
                   "admin_password": "admin", "admin_issue_recovery": "admin", "rsvp": "guest", "logout": "index"}.get(request.endpoint, request.endpoint)
-        if target not in {"index", "guest", "login", "admin", "admin_login", "admin_recover"}:
+        if target not in {"index", "guest", "login", "admin", "admin_login", "admin_recover", "media"}:
             target = "index"
         return {"_": translate, "language": g.get("language", "pl"),
                 "language_urls": {lang: url_for(target, lang=lang) for lang in ("pl", "en")}}
+
+    @app.before_request
+    def upload_body_limit():
+        # Runs before Flask-WTF reads a multipart body, so only the upload endpoint
+        # receives the larger limit. Every other form keeps the strict 16 KiB cap.
+        if request.endpoint == "media_upload":
+            request.max_content_length = app.config["MAX_UPLOAD_BYTES"] + 1024*1024
+            # Werkzeug counts buffered multipart bytes against this limit even for
+            # file parts, so it must cover at least one read chunk. Non-file fields
+            # remain bounded to 1 MiB and files are streamed to private temp files.
+            request.max_form_memory_size = 1024*1024
 
     CSRFProtect(app)
     initialize(app.config["DATABASE"])
@@ -121,7 +227,7 @@ def create_app(config=None):
             "Referrer-Policy": "same-origin",
             "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
             "Content-Security-Policy": "default-src 'none'; script-src 'self'; style-src 'self'; "
-                "img-src 'self' data:; font-src 'self'; connect-src 'self'; form-action 'self'; "
+                "img-src 'self' data:; media-src 'self'; font-src 'self'; connect-src 'self'; form-action 'self'; "
                 "frame-src https://www.google.com; frame-ancestors 'none'; base-uri 'none'; object-src 'none'",
         })
         if request.endpoint not in {"index", "robots"} or response.status_code != 200:
@@ -134,6 +240,15 @@ def create_app(config=None):
         @wraps(view)
         def protected(*args, **kwargs):
             if not g.guest:
+                return redirect(url_for("login"), code=303)
+            return view(*args, **kwargs)
+        return protected
+
+    def require_user(view):
+        """Guests and administrators share the media library; roles differ inside."""
+        @wraps(view)
+        def protected(*args, **kwargs):
+            if not g.guest and not g.admin:
                 return redirect(url_for("login"), code=303)
             return view(*args, **kwargs)
         return protected
@@ -398,6 +513,146 @@ def create_app(config=None):
         flash("Dziękujemy! Twoja odpowiedź została zapisana. Możesz ją później zmienić.")
         return redirect(url_for("guest", _anchor="rsvp"), code=303)
 
+    def media_identity():
+        if g.admin:
+            return g.admin["username"], "admin", True
+        return g.guest["id"], "guest", False
+
+    def can_manage_upload(row, owner_id, administrator):
+        return administrator or (row["owner_kind"] == "guest" and row["owner_id"] == owner_id)
+
+    def media_error(status, message):
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return jsonify(error=translate(message)), status
+        return render_template("templates/error.html", title=translate("Nie udało się dodać pliku"),
+                               message=translate(message)), status
+
+    def visible_media(owner_id, owner_kind, administrator):
+        items = []
+        for row in media_list(db(), owner_id, owner_kind, administrator):
+            item = dict(row)
+            item["is_video"] = row["content_type"].startswith("video/")
+            item["can_manage"] = can_manage_upload(row, owner_id, administrator)
+            item["type_label"] = MEDIA_LABELS.get(row["content_type"], row["content_type"])
+            if administrator:
+                item["owner_label"] = (translate("Administrator") if row["owner_kind"] == "admin"
+                                       else row["owner_name"] or row["owner_id"])
+            else:
+                item["owner_label"] = translate("Twoje")
+            items.append(item)
+        return items
+
+    @app.get("/media")
+    @require_user
+    def media():
+        owner_id, owner_kind, administrator = media_identity()
+        return render_template("templates/media.html", items=visible_media(owner_id, owner_kind, administrator),
+            is_admin=administrator, max_bytes=app.config["MAX_UPLOAD_BYTES"],
+            max_files=app.config["MAX_UPLOAD_FILES"],
+            accept=",".join(sorted(MEDIA_EXTENSIONS)))
+
+    @app.post("/media")
+    @require_user
+    def media_upload():
+        owner_id, owner_kind, _ = media_identity()
+        limited("media-upload", [(f"user:{owner_kind}:{owner_id}", 30, 60)])
+        files = [upload for upload in request.files.getlist("files") if upload and upload.filename]
+        if not files:
+            return media_error(400, "Wybierz co najmniej jeden plik.")
+        if len(files) > app.config["MAX_UPLOAD_FILES"]:
+            return media_error(413, "Zbyt wiele plików w jednym żądaniu.")
+        if media_count(db(), owner_id, owner_kind) + len(files) > app.config["MAX_UPLOADS_PER_USER"]:
+            return media_error(413, "Osiągnięto limit liczby plików.")
+        saved = []
+        try:
+            for upload in files:
+                try:
+                    original = safe_media_name(upload.filename)
+                except ValueError:
+                    raise MediaRejected(400, "Nieprawidłowa nazwa pliku.")
+                try:
+                    kind = media_kind(original, upload.mimetype)
+                except ValueError:
+                    raise MediaRejected(415, "Nieobsługiwany format pliku.")
+                if not media_signature(kind, upload.stream.read(16)):
+                    raise MediaRejected(415, "Nieobsługiwany format pliku.")
+                upload.stream.seek(0)
+                upload_id = secrets.token_hex(16)
+                part = uploads_dir / (upload_id + ".part")
+                final = uploads_dir / upload_id
+                size = 0
+                descriptor = os.open(part, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+                try:
+                    with os.fdopen(descriptor, "wb") as output:
+                        while chunk := upload.stream.read(1024*1024):
+                            size += len(chunk)
+                            if size > app.config["MAX_UPLOAD_BYTES"]:
+                                raise MediaRejected(413, "Plik jest za duży.")
+                            output.write(chunk)
+                    os.replace(part, final)
+                    record_media(db(), owner_id, owner_kind, upload_id, original, kind, size)
+                except BaseException:
+                    part.unlink(missing_ok=True)
+                    final.unlink(missing_ok=True)
+                    raise
+                saved.append(upload_id)
+        except MediaRejected as rejection:
+            for upload_id in saved:
+                (uploads_dir / upload_id).unlink(missing_ok=True)
+                remove_media(db(), upload_id)
+            return media_error(rejection.status, rejection.message)
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return jsonify(ok=True, saved=saved)
+        flash("Pliki zostały dodane do biblioteki.")
+        return redirect(url_for("media"), code=303)
+
+    @app.get("/media/<upload_id>")
+    @require_user
+    def media_file(upload_id):
+        owner_id, owner_kind, administrator = media_identity()
+        item = media_record(db(), upload_id)
+        if not item or not can_manage_upload(item, owner_id, administrator):
+            abort(404)
+        path = uploads_dir / item["id"]
+        if not path.is_file():
+            abort(404)
+        size = path.stat().st_size
+        range_header = request.headers.get("Range")
+        if not range_header:
+            response = send_file(path, mimetype=item["content_type"], as_attachment=False)
+        else:
+            requested = byte_range(range_header, size)
+            if requested is None:
+                response = Response(status=416)
+                response.headers["Content-Range"] = f"bytes */{size}"
+            else:
+                start, end = requested
+                with path.open("rb") as source:
+                    source.seek(start)
+                    payload = source.read(end - start + 1)
+                response = Response(payload, status=206, mimetype=item["content_type"])
+                response.headers["Content-Range"] = f"bytes {start}-{end}/{size}"
+        response.headers["Accept-Ranges"] = "bytes"
+        response.headers["Content-Disposition"] = "inline"
+        return response
+
+    @app.post("/media/<upload_id>/delete")
+    @require_user
+    def media_delete(upload_id):
+        owner_id, owner_kind, administrator = media_identity()
+        limited("media-delete", [(f"user:{owner_kind}:{owner_id}", 60, 60)])
+        item = media_record(db(), upload_id)
+        if not item:
+            abort(404)
+        if not can_manage_upload(item, owner_id, administrator):
+            abort(403)
+        (uploads_dir / item["id"]).unlink(missing_ok=True)
+        remove_media(db(), item["id"])
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return jsonify(ok=True)
+        flash("Plik został usunięty.")
+        return redirect(url_for("media"), code=303)
+
     @app.post("/logout")
     def logout():
         if isinstance(session.get("admin_sid"), str):
@@ -420,7 +675,7 @@ def create_app(config=None):
     @app.get("/robots.txt")
     def robots():
         return ("User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /guest\n"
-                "Disallow: /login\nDisallow: /rsvp\nDisallow: /logout\nDisallow: /healthz\n",
+                "Disallow: /login\nDisallow: /media\nDisallow: /rsvp\nDisallow: /logout\nDisallow: /healthz\n",
                 200, {"Content-Type": "text/plain; charset=utf-8"})
 
     @app.errorhandler(CSRFError)

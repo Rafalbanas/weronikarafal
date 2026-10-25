@@ -107,3 +107,41 @@ blokadę nieudanych logowań dla bieżącego IP, aby właściciel mógł użyć 
 Generowanie kodu w zalogowanym panelu wymaga ponownego podania obecnego hasła.
 Hasła pozostają wrażliwe na wielkość liter; podgląd pola zmienia jedynie jego
 lokalny typ i nie zapisuje wartości.
+
+
+## Biblioteka mediów
+
+`/media` jest dostępne wyłącznie po zalogowaniu — kodem zaproszenia albo kontem
+administratora. Gość widzi i usuwa tylko własne pliki; administrator widzi
+i usuwa wszystkie. Właściciel jest brany z sesji serwerowej (identyfikator
+zaproszenia lub login konta administratora), a nie z danych formularza. Każde
+żądanie pobrania i usunięcia sprawdza uprawnienie do konkretnego rekordu, więc
+zmiana identyfikatora w adresie nie daje dostępu do cudzego pliku (ochrona IDOR).
+
+Pliki są zapisywane w prywatnym katalogu poza katalogiem publicznym pod nazwą
+złożoną z 128 losowych bitów, z uprawnieniami `0600`. Oryginalna nazwa jest
+wyłącznie metadanymi i jest escapowana w HTML. Ścieżka pliku nigdy nie powstaje
+z nazwy przesłanej przez klienta, dlatego próby typu `../` nie mogą wyjść poza
+katalog danych. Nazwy zawierające separatory ścieżek są odrzucane.
+
+Serwer przyjmuje wyłącznie jawną listę formatów (JPEG, PNG, GIF, WEBP, MP4,
+WEBM, MOV). Zgłoszony typ MIME musi zgadzać się z rozszerzeniem, a pierwsze
+bajty pliku muszą odpowiadać sygnaturze formatu. SVG, HTML i inne formaty są
+odrzucane, aby nie renderować niezaufanej treści jako aktywnej. Pliki są
+przesyłane strumieniowo do pliku tymczasowego; nie trafiają w całości do pamięci.
+Nieudane lub odrzucone przesłania są usuwane, a rekord w bazie powstaje dopiero
+po zapisaniu pliku.
+
+Endpoint przesłania ma podniesiony limit rozmiaru żądania tylko dla tej trasy;
+pozostałe formularze zachowują limit 16 KiB. Obowiązują limity liczby plików
+w żądaniu, liczby plików na konto, rozmiaru pojedynczego pliku oraz limity
+częstotliwości. Usuwanie i przesyłanie wymagają CSRF i tego samego Origin.
+Odpowiedzi z plikami mają `Cache-Control: private, no-store`, `nosniff`
+i `Content-Disposition: inline` bez nazwy pochodzącej od klienta. Obsługiwane są
+zakresy bajtów (`Range`), aby bezpiecznie odtwarzać filmy. Pliki nie są
+publicznie dostępne pod zgadywalnym adresem — wymagają aktywnej sesji.
+
+Kopie zapasowe muszą obejmować jednocześnie bazę SQLite i katalog `uploads/`;
+przywracanie tylko jednej z tych części pozostawi osierocone rekordy lub pliki.
+Limit rozmiaru w aplikacji trzeba zsynchronizować z `client_max_body_size`
+w Nginx i limitem czasu pracy Gunicorna.

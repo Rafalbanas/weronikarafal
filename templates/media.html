@@ -1,0 +1,112 @@
+{% extends 'templates/base.html' %}
+{% block title %}{{ _('Biblioteka mediów · Weronika & Rafał') }}{% endblock %}
+{% block content %}
+<div class="guest-shell media-shell">
+  <section class="guest-heading">
+    <span class="eyebrow">{{ _('Pamiątki z naszego dnia') }}</span>
+    <h1>{{ _('Biblioteka mediów') }}</h1>
+    {% if is_admin %}
+    <p class="muted">{{ _('Widok administratora: wszystkie zdjęcia i filmy dodane przez gości oraz organizatorów.') }}</p>
+    <p><span class="badge badge-admin">{{ _('Administrator') }}: {{ g.admin.username }}</span></p>
+    {% else %}
+    <p class="muted">{{ _('Zdjęcia i filmy widoczne tylko dla Ciebie i organizatorów.') }}</p>
+    {% endif %}
+  </section>
+
+  {% for message in get_flashed_messages() %}<p class="notice notice-success" role="status">{{ _(message) }}</p>{% endfor %}
+
+  <section class="card media-upload" data-media-upload
+    data-max-bytes="{{ max_bytes }}" data-max-files="{{ max_files }}"
+    data-msg-too-large="{{ _('Plik jest za duży.') }}"
+    data-msg-choose="{{ _('Wybierz co najmniej jeden plik.') }}"
+    data-msg-error="{{ _('Nie udało się wgrać pliku.') }}"
+    data-msg-uploading="{{ _('Wgrywanie…') }}"
+    data-msg-done="{{ _('Wgrano') }}"
+    data-msg-failed="{{ _('Błąd') }}">
+    <span class="eyebrow">{{ _('Dodaj wspomnienia') }}</span>
+    <h2>{{ _('Wgraj zdjęcia lub filmy') }}</h2>
+    <p class="muted small">{{ _('Przeciągnij pliki tutaj lub wybierz je z dysku. Obsługujemy JPG, PNG, GIF, WEBP, MP4, WEBM i MOV. Jeden plik może mieć do') }} {{ max_bytes|filesizeformat }}, {{ _('a jedno żądanie do') }} {{ max_files }} {{ _('plików.') }}</p>
+    <form method="post" action="{{ url_for('media_upload') }}" enctype="multipart/form-data" class="media-form" data-media-form>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label class="media-dropzone" for="media-files" data-dropzone tabindex="0">
+        <span class="media-dropzone-mark" aria-hidden="true">✧</span>
+        <strong>{{ _('Przeciągnij i upuść pliki') }}</strong>
+        <span class="muted small">{{ _('lub kliknij, aby wybrać z dysku') }}</span>
+        <input id="media-files" name="files" type="file" multiple accept="{{ accept }}" data-media-input>
+      </label>
+      <ul class="media-pending" data-media-pending hidden></ul>
+      <div class="media-upload-actions">
+        <button class="button" type="submit" data-media-submit>{{ _('Wgraj wybrane pliki') }}</button>
+        <p class="field-help" data-media-status role="status" aria-live="polite"></p>
+      </div>
+    </form>
+  </section>
+
+  <section class="media-library" id="biblioteka">
+    <div class="media-library-heading">
+      <div>
+        <span class="eyebrow">{{ _('Wasze wspomnienia') }}</span>
+        <h2>{{ _('Wszystkie media') if is_admin else _('Twoje media') }}</h2>
+      </div>
+      <p class="muted small">{{ _('Liczba plików:') }} {{ items|length }}</p>
+    </div>
+    {% if items %}
+    <div class="media-grid">
+      {% for item in items %}
+      <figure class="media-item" id="media-{{ item.id }}">
+        {% if item.is_video %}
+        <div class="media-visual">
+          <video controls preload="metadata" playsinline src="{{ url_for('media_file', upload_id=item.id) }}"></video>
+        </div>
+        {% else %}
+        <button class="media-visual media-zoom" type="button" data-media-open
+          data-media-src="{{ url_for('media_file', upload_id=item.id) }}"
+          data-media-alt="{{ item.original_name }}"
+          aria-label="{{ _('Powiększ zdjęcie') }}: {{ item.original_name }}">
+          <img src="{{ url_for('media_file', upload_id=item.id) }}" alt="{{ item.original_name }}" loading="lazy">
+        </button>
+        {% endif %}
+        <figcaption class="media-meta">
+          <span class="media-name" title="{{ item.original_name }}">{{ item.original_name }}</span>
+          <span class="media-facts">{{ _('Film') if item.is_video else _('Zdjęcie') }} · {{ item.type_label }} · {{ item.size|filesizeformat }} · {{ item.created_at|media_date }}</span>
+          <span class="badge media-owner">{{ item.owner_label }}</span>
+          {% if item.can_manage %}
+          <form method="post" action="{{ url_for('media_delete', upload_id=item.id) }}"
+            class="media-delete" data-media-delete
+            data-confirm="{{ _('Czy na pewno usunąć ten plik?') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="button button-small button-outline" type="submit">{{ _('Usuń') }}</button>
+          </form>
+          {% endif %}
+        </figcaption>
+      </figure>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="card media-empty">
+      <span class="media-dropzone-mark" aria-hidden="true">✧</span>
+      <h3>{{ _('Jeszcze tu pusto') }}</h3>
+      <p class="muted">{{ _('Dodaj pierwsze zdjęcie lub film, aby zachować wspomnienia z naszego dnia.') }}</p>
+    </div>
+    {% endif %}
+  </section>
+</div>
+
+<dialog class="media-confirm" data-media-confirm aria-labelledby="media-confirm-title">
+  <form method="dialog" class="media-confirm-card">
+    <h2 id="media-confirm-title">{{ _('Usunąć plik?') }}</h2>
+    <p class="muted" data-media-confirm-text>{{ _('Czy na pewno usunąć ten plik?') }}</p>
+    <div class="media-confirm-actions">
+      <button class="button button-small button-outline" value="cancel">{{ _('Anuluj') }}</button>
+      <button class="button button-small" value="confirm">{{ _('Usuń') }}</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog class="media-lightbox" data-media-lightbox aria-label="{{ _('Podgląd zdjęcia') }}">
+  <form method="dialog" class="media-lightbox-close">
+    <button class="button button-small button-outline" aria-label="{{ _('Zamknij podgląd') }}">×</button>
+  </form>
+  <img alt="" data-media-lightbox-image>
+</dialog>
+{% endblock %}
