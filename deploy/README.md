@@ -39,6 +39,8 @@ administracyjnej; odbiornik odrzuci wydanie z innym plikiem zależności.
 - `/var/lib/weronikarafal/previous` — poprzednie udane wydanie aplikacji.
 - `/var/lib/weronikarafal-data/` — prywatna baza i ustawienia, użytkownik
   `weronikarafal-web`, katalog 700, baza/ustawienia 600.
+- `/var/lib/weronikarafal-data/uploads/` — pliki biblioteki mediów, ten sam
+  użytkownik, katalog 700, pliki 600; poza Nginx, wydaniami i Git.
 - `/etc/weronikarafal/web.env` — trwały sekret sesji i ścieżka danych, root 600.
 - `/etc/weronikarafal/deploy.json` — stała konfiguracja odbiornika, root 600.
 - `/opt/weronikarafal/venv` — symlink do wersji środowiska zależności.
@@ -179,3 +181,46 @@ z pustymi wartościami dla istniejących zaproszeń. Inicjalizacja WAL i schemat
 jest chroniona prywatnym plikiem guests.sqlite3.init.lock, aby równoległy start
 workerów nie powodował SQLITE_BUSY. Wdrożenie wymaga kopii bazy, nie wymaga
 zmiany zależności ani odbiornika ZIP.
+
+
+## Biblioteka mediów
+
+Wydanie z biblioteką mediów dodaje szablon `templates/media.html`, tabelę
+`uploads` i endpointy `/media`. Tabela powstaje automatycznie jako addytywna
+migracja w `wedding/store.py`; istniejące dane pozostają nietknięte. Przed
+pierwszym wdrożeniem:
+
+1. Wykonaj prywatną kopię bazy (`manage.py backup`) oraz katalogu
+   `/var/lib/weronikarafal-data/` (razem z `details.json`).
+2. Zaktualizuj root-owned odbiornik z przejrzanego commita
+   (`deploy/deploy.py` → `/usr/local/sbin/weronikarafal-deploy`, tryb 755).
+   Nowa wersja odbiornika akceptuje dodatkowy plik `templates/media.html`;
+   stara odrzuci wydanie jako „Unexpected archive entries”.
+3. Zaktualizuj konfigurację Nginx z `deploy/nginx-site.conf`
+   (`client_max_body_size 34m`) i jednostkę systemd z
+   `deploy/weronikarafal-web.service` (`--timeout 120`). Bez tego Nginx
+   odrzuci większe przesłania (413), a Gunicorn może przerwać wolne
+   przesyłanie. Nie zmieniaj innych serwerów wirtualnych ani konfiguracji
+   systemowej.
+4. Upewnij się, że `/var/lib/weronikarafal-data/uploads/` należy do
+   `weronikarafal-web:weronikarafal-web` i ma tryb 700. Katalog powstaje
+   automatycznie przy starcie aplikacji; usługa ma już zapis do całego
+   `/var/lib/weronikarafal-data`.
+
+Konfiguracja limitów (opcjonalna, w `/etc/weronikarafal/web.env`):
+
+```sh
+WEDDING_MAX_UPLOAD_BYTES=33554432   # 32 MiB na plik
+WEDDING_MAX_UPLOAD_FILES=5          # plików w jednym żądaniu
+WEDDING_MAX_UPLOADS_PER_USER=100    # plików na konto
+# WEDDING_UPLOADS_DIR=/var/lib/weronikarafal-data/uploads
+```
+
+Jeśli podnosisz `WEDDING_MAX_UPLOAD_BYTES`, podnieś też `client_max_body_size`
+w Nginx (do rozmiaru pliku plus ok. 1 MiB narzutu) i pozostaw `--timeout`
+wystarczający na wolne łącze. Nie zezwalaj na nieograniczone przesyłanie.
+
+Kopie zapasowe: `manage.py backup` obejmuje tylko SQLite. Pliki kopiuj osobno
+(np. `tar` lub `rsync` całego katalogu `uploads/`) i przechowuj razem z bazą.
+Przywracanie rób przy zatrzymanej usłudze, zachowując właściciela i tryby.
+Nie dodawaj katalogu `uploads/` do repozytorium.
