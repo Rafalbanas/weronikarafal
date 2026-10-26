@@ -3,24 +3,26 @@ from datetime import timedelta
 from functools import wraps
 import hashlib
 import hmac
+import io
 import json
 import os
 from pathlib import Path
-import re
 import secrets
 import sqlite3
+import subprocess
 import time
+import zipfile
 from urllib.parse import urlencode
 
 from flask import (Flask, Response, abort, flash, g, jsonify, redirect, render_template,
                    request, send_file, session, url_for)
 from flask_wtf.csrf import CSRFError, CSRFProtect
 from werkzeug.middleware.proxy_fix import ProxyFix
-from werkzeug.exceptions import SecurityError
+from werkzeug.exceptions import RequestedRangeNotSatisfiable, SecurityError
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from wedding.store import allow_request, connect, details, digest, initialize, normalize_code, invitation, revoke, authenticate_invitation
-from wedding.store import media_count, media_list, media_record, record_media, remove_media
+from wedding.store import media_count, media_list, media_record, record_media_batch, remove_media, MediaLimitExceeded
 from wedding import translate
 from wedding.store import issue_admin_recovery, recovery_code
 from wedding.store import validate_household
@@ -29,15 +31,18 @@ ROOT = Path(__file__).resolve().parent
 DIETS = {"standard": "Standardowa", "vegetarian": "Wegetariańska", "vegan": "Wegańska",
          "gluten_free": "Bezglutenowa", "other": "Inna / alergie"}
 
-# Media is limited to an explicit allowlist of container formats. The extension,
-# the declared MIME type and the real file signature must all agree.
-MEDIA_EXTENSIONS = {
-    ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".gif": "image/gif",
-    ".webp": "image/webp", ".mp4": "video/mp4", ".webm": "video/webm", ".mov": "video/quicktime",
+# libmagic recognises media by content, independently of filename and browser MIME.
+# Keep active documents and formats without reliable browser support downloadable.
+MEDIA_IMAGE_PREVIEWS = {"image/jpeg", "image/png", "image/gif", "image/webp", "image/avif"}
+MEDIA_VIDEO_PREVIEWS = {"video/mp4", "video/webm", "video/ogg", "video/quicktime"}
+MEDIA_GENERIC_TYPES = {"application/octet-stream", "binary/octet-stream"}
+MEDIA_MIME_ALIASES = {
+    "image/jpg": "image/jpeg", "image/pjpeg": "image/jpeg",
+    "image/x-png": "image/png", "image/x-ms-bmp": "image/bmp",
+    "image/x-tiff": "image/tiff", "video/avi": "video/x-msvideo",
+    "video/msvideo": "video/x-msvideo", "video/x-m4v": "video/mp4",
+    "image/heic-sequence": "image/heic", "image/heif-sequence": "image/heif",
 }
-MEDIA_LABELS = {"image/jpeg": "JPEG", "image/png": "PNG", "image/gif": "GIF", "image/webp": "WEBP",
-                "video/mp4": "MP4", "video/webm": "WEBM", "video/quicktime": "MOV"}
-MEDIA_GENERIC_TYPES = {"application/octet-stream"}
 
 
 class MediaRejected(Exception):
@@ -47,28 +52,64 @@ class MediaRejected(Exception):
         self.message = message
 
 
-def media_kind(filename, declared):
-    kind = MEDIA_EXTENSIONS.get(Path(filename).suffix.lower())
+def media_kind(head, declared):
+    # Fixed command and bounded input: filenames never become command arguments.
+    result = subprocess.run(["file", "--brief", "--mime-type", "-"], input=head,
+                            capture_output=True, timeout=5, check=True)
+    kind = result.stdout.decode("ascii").strip().lower()
+    kind = MEDIA_MIME_ALIASES.get(kind, kind)
+    if not kind.startswith(("image/", "video/")):
+        raise ValueError("Unsupported media type")
     declared = (declared or "").split(";", 1)[0].strip().lower()
-    if not kind or (declared and declared not in MEDIA_GENERIC_TYPES | {kind}):
+    declared = MEDIA_MIME_ALIASES.get(declared, declared)
+    # Camera RAW is commonly detected as its underlying TIFF container.
+    raw_tiff = kind == "image/tiff" and declared in {
+        "image/x-canon-cr2", "image/x-nikon-nef", "image/x-nikon-nrw",
+        "image/x-sony-arw", "image/x-adobe-dng", "image/x-pentax-pef",
+        "image/x-samsung-srw", "image/x-panasonic-rw2", "image/x-olympus-orf",
+    }
+    heif_alias = kind in {"image/heic", "image/heif"} and declared in {"image/heic", "image/heif"}
+    if declared and declared not in MEDIA_GENERIC_TYPES | {kind} and not raw_tiff and not heif_alias:
         raise ValueError("Unsupported media type")
     return kind
 
 
-def media_signature(kind, head):
-    if kind == "image/png":
-        return head.startswith(b"\x89PNG\r\n\x1a\n")
-    if kind == "image/jpeg":
-        return head.startswith(b"\xff\xd8\xff")
-    if kind == "image/gif":
-        return head[:6] in {b"GIF87a", b"GIF89a"}
-    if kind == "image/webp":
-        return head[:4] == b"RIFF" and head[8:12] == b"WEBP"
-    if kind in {"video/mp4", "video/quicktime"}:
-        return head[4:8] == b"ftyp"
-    if kind == "video/webm":
-        return head.startswith(b"\x1a\x45\xdf\xa3")
-    return False
+def media_archive(items, uploads_dir):
+    """Write ZIP records incrementally without buffering the whole gallery."""
+    class Sink(io.RawIOBase):
+        def __init__(self):
+            self.pending = bytearray()
+            self.position = 0
+
+        def writable(self):
+            return True
+
+        def tell(self):
+            return self.position
+
+        def write(self, data):
+            self.pending.extend(data)
+            self.position += len(data)
+            return len(data)
+
+        def take(self):
+            data = bytes(self.pending)
+            self.pending.clear()
+            return data
+
+    sink = Sink()
+    with zipfile.ZipFile(sink, "w", compression=zipfile.ZIP_STORED, allowZip64=True) as archive:
+        for item in items:
+            try:
+                source = (uploads_dir / item["id"]).open("rb")
+            except FileNotFoundError:
+                continue  # The owner may have deleted it since the gallery was read.
+            with source, archive.open(item["id"] + "_" + item["original_name"], "w", force_zip64=True) as target:
+                while chunk := source.read(64*1024):
+                    target.write(chunk)
+                    yield sink.take()
+            yield sink.take()
+    yield sink.take()
 
 
 def safe_media_name(name):
@@ -77,27 +118,6 @@ def safe_media_name(name):
             or any(ord(char) < 32 for char in name)):
         raise ValueError("Invalid media name")
     return name
-
-
-def byte_range(value, size):
-    """Parse a single RFC 7233 byte range. Invalid ranges return None."""
-    match = re.fullmatch(r"bytes=(\d*)-(\d*)", (value or "").strip())
-    if not match or size <= 0:
-        return None
-    first, last = match.groups()
-    try:
-        if first:
-            start, end = int(first), int(last) if last else size - 1
-        else:
-            length = int(last)
-            if length <= 0:
-                return None
-            start, end = max(0, size - length), size - 1
-    except ValueError:
-        return None
-    if start >= size or start > end:
-        return None
-    return start, min(end, size - 1)
 
 
 def create_app(config=None):
@@ -529,16 +549,14 @@ def create_app(config=None):
 
     def visible_media(owner_id, owner_kind, administrator):
         items = []
-        for row in media_list(db(), owner_id, owner_kind, administrator):
+        for row in media_list(db()):
             item = dict(row)
             item["is_video"] = row["content_type"].startswith("video/")
             item["can_manage"] = can_manage_upload(row, owner_id, administrator)
-            item["type_label"] = MEDIA_LABELS.get(row["content_type"], row["content_type"])
-            if administrator:
-                item["owner_label"] = (translate("Administrator") if row["owner_kind"] == "admin"
-                                       else row["owner_name"] or row["owner_id"])
-            else:
-                item["owner_label"] = translate("Twoje")
+            item["type_label"] = Path(row["original_name"]).suffix.lstrip(".").upper() or row["content_type"]
+            item["can_preview"] = row["content_type"] in MEDIA_IMAGE_PREVIEWS | MEDIA_VIDEO_PREVIEWS
+            item["owner_label"] = (translate("Administrator") if row["owner_kind"] == "admin"
+                                   else row["owner_name"] or translate("Gość"))
             items.append(item)
         return items
 
@@ -549,7 +567,14 @@ def create_app(config=None):
         return render_template("templates/media.html", items=visible_media(owner_id, owner_kind, administrator),
             is_admin=administrator, max_bytes=app.config["MAX_UPLOAD_BYTES"],
             max_files=app.config["MAX_UPLOAD_FILES"],
-            accept=",".join(sorted(MEDIA_EXTENSIONS)))
+            accept="image/*,video/*,.heic,.heif,.avif,.dng,.cr2,.cr3,.nef,.nrw,.arw,.raf,.orf,.rw2,.pef,.srw,.raw,.mkv,.mts,.m2ts,.mxf")
+
+    @app.get("/media/download")
+    @require_user
+    def media_download_all():
+        items = media_list(db())
+        return Response(media_archive(items, uploads_dir), mimetype="application/zip",
+                        headers={"Content-Disposition": 'attachment; filename="wedding-media.zip"'})
 
     @app.post("/media")
     @require_user
@@ -564,6 +589,7 @@ def create_app(config=None):
         if media_count(db(), owner_id, owner_kind) + len(files) > app.config["MAX_UPLOADS_PER_USER"]:
             return media_error(413, "Osiągnięto limit liczby plików.")
         saved = []
+        total_size = 0
         try:
             for upload in files:
                 try:
@@ -571,10 +597,8 @@ def create_app(config=None):
                 except ValueError:
                     raise MediaRejected(400, "Nieprawidłowa nazwa pliku.")
                 try:
-                    kind = media_kind(original, upload.mimetype)
+                    kind = media_kind(upload.stream.read(256*1024), upload.mimetype)
                 except ValueError:
-                    raise MediaRejected(415, "Nieobsługiwany format pliku.")
-                if not media_signature(kind, upload.stream.read(16)):
                     raise MediaRejected(415, "Nieobsługiwany format pliku.")
                 upload.stream.seek(0)
                 upload_id = secrets.token_hex(16)
@@ -586,23 +610,29 @@ def create_app(config=None):
                     with os.fdopen(descriptor, "wb") as output:
                         while chunk := upload.stream.read(1024*1024):
                             size += len(chunk)
-                            if size > app.config["MAX_UPLOAD_BYTES"]:
+                            total_size += len(chunk)
+                            if total_size > app.config["MAX_UPLOAD_BYTES"]:
                                 raise MediaRejected(413, "Plik jest za duży.")
                             output.write(chunk)
                     os.replace(part, final)
-                    record_media(db(), owner_id, owner_kind, upload_id, original, kind, size)
                 except BaseException:
                     part.unlink(missing_ok=True)
                     final.unlink(missing_ok=True)
                     raise
-                saved.append(upload_id)
-        except MediaRejected as rejection:
-            for upload_id in saved:
+                saved.append((upload_id, original, kind, size))
+            try:
+                record_media_batch(db(), owner_id, owner_kind, saved,
+                                   app.config["MAX_UPLOADS_PER_USER"])
+            except MediaLimitExceeded:
+                raise MediaRejected(413, "Osiągnięto limit liczby plików.")
+        except BaseException as error:
+            for upload_id, *_ in saved:
                 (uploads_dir / upload_id).unlink(missing_ok=True)
-                remove_media(db(), upload_id)
-            return media_error(rejection.status, rejection.message)
+            if isinstance(error, MediaRejected):
+                return media_error(error.status, error.message)
+            raise
         if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-            return jsonify(ok=True, saved=saved)
+            return jsonify(ok=True, saved=[item[0] for item in saved])
         flash("Pliki zostały dodane do biblioteki.")
         return redirect(url_for("media"), code=303)
 
@@ -611,29 +641,21 @@ def create_app(config=None):
     def media_file(upload_id):
         owner_id, owner_kind, administrator = media_identity()
         item = media_record(db(), upload_id)
-        if not item or not can_manage_upload(item, owner_id, administrator):
+        if not item:
             abort(404)
         path = uploads_dir / item["id"]
         if not path.is_file():
             abort(404)
         size = path.stat().st_size
-        range_header = request.headers.get("Range")
-        if not range_header:
-            response = send_file(path, mimetype=item["content_type"], as_attachment=False)
-        else:
-            requested = byte_range(range_header, size)
-            if requested is None:
-                response = Response(status=416)
-                response.headers["Content-Range"] = f"bytes */{size}"
-            else:
-                start, end = requested
-                with path.open("rb") as source:
-                    source.seek(start)
-                    payload = source.read(end - start + 1)
-                response = Response(payload, status=206, mimetype=item["content_type"])
-                response.headers["Content-Range"] = f"bytes {start}-{end}/{size}"
+        try:
+            # Werkzeug streams full and partial responses and handles If-Range.
+            preview = item["content_type"] in MEDIA_IMAGE_PREVIEWS | MEDIA_VIDEO_PREVIEWS
+            download = request.args.get("download") == "1" or not preview
+            response = send_file(path, mimetype="application/octet-stream" if download else item["content_type"],
+                                 download_name=item["original_name"], as_attachment=download)
+        except RequestedRangeNotSatisfiable:
+            return "", 416, {"Content-Range": f"bytes */{size}", "Accept-Ranges": "bytes"}
         response.headers["Accept-Ranges"] = "bytes"
-        response.headers["Content-Disposition"] = "inline"
         return response
 
     @app.post("/media/<upload_id>/delete")

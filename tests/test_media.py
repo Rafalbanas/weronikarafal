@@ -3,6 +3,12 @@ import io
 import os
 import time
 import unittest
+from concurrent.futures import ThreadPoolExecutor
+from threading import Barrier
+from unittest.mock import patch
+import sqlite3
+import struct
+import zipfile
 from pathlib import Path
 
 from werkzeug.security import generate_password_hash
@@ -10,13 +16,13 @@ from werkzeug.security import generate_password_hash
 import test_guests
 from app import create_app
 from test_guests import BASE
-from wedding.store import connect
+from wedding.store import connect, record_media_batch, MediaLimitExceeded
 
-PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 120
-PNG_OTHER = b"\x89PNG\r\n\x1a\n" + b"\x01" * 120
+PNG = b"\x89PNG\r\n\x1a\n" + struct.pack(">I4sIIBBBBB", 13, b"IHDR", 1, 1, 8, 2, 0, 0, 0) + b"\x00" * 100
+PNG_OTHER = PNG + b"different photo"
 JPEG = b"\xff\xd8\xff\xe0" + b"\x00" * 120
 MP4 = b"\x00\x00\x00\x18ftypmp42" + b"\x00" * 120
-WEBM = b"\x1a\x45\xdf\xa3" + b"\x00" * 120
+WEBM = bytes.fromhex("1a45dfa39f4286810142f7810142f2810442f381084282847765626d4287810242858102")
 
 
 class MediaTests(unittest.TestCase):
@@ -152,14 +158,21 @@ class MediaTests(unittest.TestCase):
         self.assertEqual(self.rows(), [])
         self.assertFalse(stored.exists())
 
-    def test_other_guest_cannot_access_or_delete_private_media(self):
+    def test_other_guest_can_view_and_download_but_cannot_delete_media(self):
         alice = self.client_for(self.alice_code)
         self.upload(alice, xhr=True)
         row = self.single_row()
         stored = self.uploads() / row["id"]
         bob = self.client_for(self.bob_code)
-        self.assertEqual(self.get("/media/" + row["id"], bob).status_code, 404)
-        self.assertNotIn("photo.png", self.get("/media", bob).text)
+        with self.get("/media/" + row["id"], bob) as response:
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.data, PNG)
+        with self.get("/media/" + row["id"] + "?download=1", bob) as response:
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.data, PNG)
+        page = self.get("/media", bob).text
+        self.assertIn("photo.png", page)
+        self.assertNotIn('/media/' + row["id"] + '/delete', page)
         response = self.delete(row["id"], bob)
         self.assertEqual(response.status_code, 403)
         self.assertEqual(len(self.rows()), 1)
@@ -174,21 +187,24 @@ class MediaTests(unittest.TestCase):
         self.assertEqual(page.status_code, 200)
         self.assertIn("photo.png", page.text)
         self.assertIn("Gość Alfa", page.text)
-        self.assertEqual(self.get("/media/" + row["id"], admin).status_code, 200)
+        with self.get("/media/" + row["id"], admin) as response:
+            self.assertEqual(response.status_code, 200)
         response = self.delete(row["id"], admin)
         self.assertEqual(response.status_code, 303)
         self.assertEqual(self.rows(), [])
         self.assertFalse((self.uploads() / row["id"]).exists())
 
-    def test_admin_uploads_are_private_to_administrators(self):
+    def test_admin_uploads_are_visible_to_guests_but_only_admins_can_delete(self):
         admin = self.admin_client()
         self.assertEqual(self.upload(admin, name="admin.png", xhr=True).status_code, 200)
         row = self.single_row()
         self.assertEqual(row["owner_kind"], "admin")
         self.assertEqual(row["owner_id"], "para")
         alice = self.client_for(self.alice_code)
-        self.assertNotIn("admin.png", self.get("/media", alice).text)
-        self.assertEqual(self.get("/media/" + row["id"], alice).status_code, 404)
+        self.assertIn("admin.png", self.get("/media", alice).text)
+        with self.get("/media/" + row["id"], alice) as response:
+            self.assertEqual(response.status_code, 200)
+        self.assertEqual(self.delete(row["id"], alice).status_code, 403)
 
     def test_identical_original_names_do_not_overwrite_each_other(self):
         alice = self.client_for(self.alice_code)
@@ -209,7 +225,6 @@ class MediaTests(unittest.TestCase):
         alice = self.client_for(self.alice_code)
         cases = [
             ("notes.txt", b"plain text", "text/plain"),
-            ("drawing.svg", b'<svg xmlns="http://www.w3.org/2000/svg"></svg>', "image/svg+xml"),
             ("page.html", b"<script>alert(1)</script>", "text/html"),
             ("photo.png", b"<html>not an image</html>", "image/png"),
             ("photo.png", PNG, "image/jpeg"),
@@ -270,7 +285,7 @@ class MediaTests(unittest.TestCase):
         self.assertEqual(self.rows(), [])
         self.assertEqual(list(self.uploads().iterdir()), [])
         response = self.post("/media", {"csrf_token": self.token("/media", client),
-            "files": (io.BytesIO(b"\x89PNG\r\n\x1a\n" + b"\x00" * 8), "small.png", "image/png")}, client,
+            "files": (io.BytesIO(PNG), "small.png", "image/png")}, client,
             content_type="multipart/form-data")
         self.assertEqual(response.status_code, 303)
         self.assertEqual(len(self.rows()), 1)
@@ -388,6 +403,122 @@ class MediaTests(unittest.TestCase):
                 self.assertEqual(response.status_code, 416)
                 self.assertEqual(response.headers["Content-Range"], f"bytes */{len(MP4)}")
                 response.close()
+
+    def test_guest_can_download_complete_gallery_as_zip(self):
+        alice = self.client_for(self.alice_code)
+        bob = self.client_for(self.bob_code)
+        self.upload(alice, name="same.png", content=PNG, xhr=True)
+        self.upload(bob, name="same.png", content=PNG_OTHER, xhr=True)
+        self.assertEqual(self.get("/media/download", self.app.test_client()).status_code, 303)
+        with self.get("/media/download", bob) as response:
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.mimetype, "application/zip")
+            with zipfile.ZipFile(io.BytesIO(response.data)) as archive:
+                self.assertEqual(len(archive.namelist()), 2)
+                self.assertEqual({archive.read(name) for name in archive.namelist()}, {PNG, PNG_OTHER})
+                self.assertTrue(all(name.endswith("_same.png") for name in archive.namelist()))
+
+    def test_extended_photo_and_video_formats_are_recognised_by_content(self):
+        alice = self.client_for(self.alice_code)
+        cases = [
+            ("iphone.heic", b"\0\0\0\x18ftypheic\0\0\0\0mif1heic", "image/heic"),
+            ("photo.avif", b"\0\0\0\x18ftypavif\0\0\0\0mif1avif", "image/avif"),
+            ("camera.nef", b"II\x2a\0\x08\0\0\0" + b"\0"*128, "image/tiff"),
+            ("movie.avi", b"RIFF\0\0\0\0AVI " + b"\0"*128, "video/x-msvideo"),
+            ("movie.mkv", WEBM.replace(b"\x9f", b"\xa3", 1).replace(b"\x84webm", b"\x88matroska"), "video/x-matroska"),
+            ("photo.unusual-extension", PNG, "image/png"),
+        ]
+        for name, content, expected in cases:
+            with self.subTest(name=name):
+                response = self.upload(alice, name=name, content=content,
+                                       content_type="application/octet-stream", xhr=True)
+                self.assertEqual(response.status_code, 200)
+                with connect(self.app.config["DATABASE"]) as db:
+                    row = db.execute("SELECT * FROM uploads WHERE original_name=?", (name,)).fetchone()
+                self.assertEqual(row["content_type"], expected)
+
+    def test_active_images_are_downloaded_and_never_embedded(self):
+        alice = self.client_for(self.alice_code)
+        svg = b'<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>'
+        self.assertEqual(self.upload(alice, name="image.svg", content=svg,
+                                     content_type="image/svg+xml", xhr=True).status_code, 200)
+        row = self.single_row()
+        with self.get("/media/" + row["id"], alice) as response:
+            self.assertEqual(response.headers["Content-Type"], "application/octet-stream")
+            self.assertIn("attachment", response.headers["Content-Disposition"])
+            self.assertEqual(response.data, svg)
+        page = self.get("/media", alice).text
+        self.assertNotIn('<img src="/media/' + row["id"], page)
+        self.assertIn("Pobierz oryginał", page)
+
+    def test_download_preserves_original_filename_and_bytes(self):
+        alice = self.client_for(self.alice_code)
+        self.upload(alice, name="zdjęcie.png", xhr=True)
+        row = self.single_row()
+        with self.get("/media/" + row["id"] + "?download=1", alice) as response:
+            self.assertEqual(response.data, PNG)
+            self.assertIn("attachment", response.headers["Content-Disposition"])
+            self.assertIn("filename*=UTF-8", response.headers["Content-Disposition"])
+
+    def test_parallel_batches_cannot_exceed_account_quota(self):
+        barrier = Barrier(2)
+
+        def save(upload_id):
+            connection = connect(self.app.config["DATABASE"])
+            try:
+                barrier.wait(timeout=5)
+                record_media_batch(connection, self.alice, "guest",
+                                   [(upload_id, "photo.png", "image/png", len(PNG))], 1)
+                return True
+            except MediaLimitExceeded:
+                return False
+            finally:
+                connection.close()
+
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            results = list(executor.map(save, ["a" * 32, "b" * 32]))
+        self.assertEqual(sorted(results), [False, True])
+        self.assertEqual(len(self.rows()), 1)
+
+    def test_storage_failure_removes_all_files_in_batch(self):
+        alice = self.client_for(self.alice_code)
+        payload = {"csrf_token": self.token("/media", alice), "files": [
+            (io.BytesIO(PNG), "one.png", "image/png"),
+            (io.BytesIO(PNG), "two.png", "image/png"),
+        ]}
+        with patch("app.record_media_batch", side_effect=sqlite3.OperationalError("unavailable")):
+            response = self.post("/media", payload, alice, content_type="multipart/form-data")
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(self.rows(), [])
+        self.assertEqual(list(self.uploads().iterdir()), [])
+
+    def test_batch_cannot_exceed_total_size_limit(self):
+        limited = self.new_app(MAX_UPLOAD_BYTES=len(PNG) + 10)
+        client = limited.test_client()
+        self.login(self.alice_code, client)
+        payload = {"csrf_token": self.token("/media", client), "files": [
+            (io.BytesIO(PNG), "one.png", "image/png"),
+            (io.BytesIO(PNG), "two.png", "image/png"),
+        ]}
+        response = self.post("/media", payload, client, content_type="multipart/form-data")
+        self.assertEqual(response.status_code, 413)
+        self.assertEqual(self.rows(), [])
+        self.assertEqual(list(self.uploads().iterdir()), [])
+
+    def test_stale_if_range_returns_full_file_and_head_has_no_body(self):
+        alice = self.client_for(self.alice_code)
+        self.upload(alice, name="clip.mp4", content=MP4, content_type="video/mp4", xhr=True)
+        path = "/media/" + self.single_row()["id"]
+        response = alice.get(path, base_url=BASE,
+                             headers={"Range": "bytes=4-11", "If-Range": '"stale-etag"'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, MP4)
+        response.close()
+        response = alice.head(path, base_url=BASE, headers={"Range": "bytes=4-11"})
+        self.assertEqual(response.status_code, 206)
+        self.assertEqual(response.data, b"")
+        self.assertEqual(response.content_length, 8)
+        response.close()
 
     def test_media_page_is_translated(self):
         alice = self.client_for(self.alice_code)

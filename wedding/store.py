@@ -168,14 +168,21 @@ def issue_admin_recovery(db, username):
     return code
 
 
-def record_media(db, owner_id, owner_kind, upload_id, original_name, content_type, size, created_at=None):
-    """Register one saved binary. The upload id is also its random on-disk name."""
-    created_at = int(time.time()) if created_at is None else created_at
+class MediaLimitExceeded(ValueError):
+    pass
+
+
+def record_media_batch(db, owner_id, owner_kind, items, limit):
+    """Commit a whole batch and enforce the quota across concurrent workers."""
     with db:
-        db.execute("""INSERT INTO uploads(id, owner_id, owner_kind, original_name, content_type, size, created_at)
+        db.execute("BEGIN IMMEDIATE")
+        if media_count(db, owner_id, owner_kind) + len(items) > limit:
+            raise MediaLimitExceeded()
+        db.executemany("""INSERT INTO uploads
+            (id, owner_id, owner_kind, original_name, content_type, size, created_at)
             VALUES (?, ?, ?, ?, ?, ?, ?)""",
-            (upload_id, owner_id, owner_kind, original_name, content_type, size, created_at))
-    return created_at
+            [(item_id, owner_id, owner_kind, name, kind, size, int(time.time()))
+             for item_id, name, kind, size in items])
 
 
 def media_record(db, upload_id):
@@ -184,14 +191,11 @@ def media_record(db, upload_id):
     return db.execute("SELECT * FROM uploads WHERE id=?", (upload_id,)).fetchone()
 
 
-def media_list(db, owner_id, owner_kind, administrator=False):
-    """Admins see every upload; everyone else only the files they own."""
-    if administrator:
-        return db.execute("""SELECT uploads.*, guests.name AS owner_name FROM uploads
-            LEFT JOIN guests ON uploads.owner_kind='guest' AND guests.id=uploads.owner_id
-            ORDER BY uploads.created_at DESC, uploads.id""").fetchall()
-    return db.execute("""SELECT * FROM uploads WHERE owner_id=? AND owner_kind=?
-        ORDER BY created_at DESC, id""", (owner_id, owner_kind)).fetchall()
+def media_list(db):
+    """Every authenticated guest shares the gallery; deletion stays owner-only."""
+    return db.execute("""SELECT uploads.*, guests.name AS owner_name FROM uploads
+        LEFT JOIN guests ON uploads.owner_kind='guest' AND guests.id=uploads.owner_id
+        ORDER BY uploads.created_at DESC, uploads.id""").fetchall()
 
 
 def media_count(db, owner_id, owner_kind):

@@ -35,8 +35,9 @@ uruchamiaj serwera developerskiego jako publicznego serwera produkcyjnego.
 Po zalogowaniu kodem zaproszenia lub kontem pary młodej dostępna jest biblioteka
 zdjęć i filmów. Plik jest zapisywany na dysku pod losową, wewnętrzną nazwą,
 a metadane (oryginalna nazwa, typ, rozmiar, data i właściciel) trafiają do
-SQLite. Domyślnie pliki są prywatne: właściciel widzi własne, a administratorzy
-wszystkie. Usuwanie jest weryfikowane po stronie serwera na podstawie sesji,
+SQLite. Wszyscy zalogowani goście i administratorzy widzą oraz pobierają
+wszystkie pliki, także zbiorczo przyciskiem „Pobierz wszystkie (ZIP)”. Gość usuwa wyłącznie własne, a para młoda może usunąć każdy plik.
+Usuwanie jest weryfikowane po stronie serwera na podstawie sesji,
 nigdy na podstawie nazwy pliku przesłanej przez klienta.
 
 Domyślny katalog to `/var/lib/weronikarafal-data/uploads` — obok bazy danych,
@@ -45,12 +46,19 @@ poza katalogiem publicznym i wydaniami. Konfiguracja:
 | Zmienna | Domyślnie | Znaczenie |
 | --- | --- | --- |
 | `WEDDING_UPLOADS_DIR` | `<katalog danych>/uploads` | trwały katalog na pliki |
-| `WEDDING_MAX_UPLOAD_BYTES` | `33554432` (32 MiB) | limit jednego pliku |
+| `WEDDING_MAX_UPLOAD_BYTES` | `33554432` (32 MiB) | limit pliku i łącznego rozmiaru plików w żądaniu |
 | `WEDDING_MAX_UPLOAD_FILES` | `5` | limit plików w jednym żądaniu |
 | `WEDDING_MAX_UPLOADS_PER_USER` | `100` | limit plików na konto |
 
-Dozwolone formaty: JPEG, PNG, GIF, WEBP, MP4, WEBM i MOV. Rozszerzenie, typ MIME
-i sygnatura pliku muszą się zgadzać; SVG, HTML i inne formaty są odrzucane.
+Formaty są rozpoznawane po zawartości przez systemowe `file`/libmagic, zamiast
+zamkniętej listy rozszerzeń. Przyjmowane są rozpoznane typy `image/*` i `video/*`,
+w tym HEIC/HEIF, AVIF, TIFF, RAW rozpoznawany przez libmagic, AVI i MKV.
+Zakres rozpoznawania zależy od wersji systemowej bazy libmagic; nie jest to
+obietnica obsługi każdego istniejącego formatu. HTML, archiwa i pliki wykonywalne
+są odrzucane niezależnie od nazwy. SVG i formaty bez podglądu są pobierane jako
+załącznik `application/octet-stream`; oryginalne bajty i nazwa są zachowane.
+Podgląd lub odtwarzanie zależy od formatów i kodeków obsługiwanych przez przeglądarkę.
+Wymagana jest komenda `file` (Debian/Ubuntu: `apt-get install file`).
 Zwiększając limit pliku, podnieś też `client_max_body_size` w Nginx oraz
 `--timeout` Gunicorna (patrz [deploy/README.md](deploy/README.md)).
 Plików z biblioteki nie dodawaj do Git; katalog `uploads/` jest ignorowany.

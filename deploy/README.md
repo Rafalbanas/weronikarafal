@@ -185,6 +185,9 @@ zmiany zależności ani odbiornika ZIP.
 
 ## Biblioteka mediów
 
+Rozpoznawanie formatów wymaga systemowej komendy `file` i jej bazy libmagic
+(Debian/Ubuntu: `apt-get install file`). Nie dochodzą zależności pip.
+
 Wydanie z biblioteką mediów dodaje szablon `templates/media.html`, tabelę
 `uploads` i endpointy `/media`. Tabela powstaje automatycznie jako addytywna
 migracja w `wedding/store.py`; istniejące dane pozostają nietknięte. Przed
@@ -210,7 +213,7 @@ pierwszym wdrożeniem:
 Konfiguracja limitów (opcjonalna, w `/etc/weronikarafal/web.env`):
 
 ```sh
-WEDDING_MAX_UPLOAD_BYTES=33554432   # 32 MiB na plik
+WEDDING_MAX_UPLOAD_BYTES=33554432   # 32 MiB na plik i łącznie w żądaniu
 WEDDING_MAX_UPLOAD_FILES=5          # plików w jednym żądaniu
 WEDDING_MAX_UPLOADS_PER_USER=100    # plików na konto
 # WEDDING_UPLOADS_DIR=/var/lib/weronikarafal-data/uploads

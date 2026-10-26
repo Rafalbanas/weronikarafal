@@ -191,6 +191,7 @@ if (mediaUpload) {
   };
 
   const addFiles = (fileList) => {
+    if (uploading) return;
     let tooLarge = false;
     Array.from(fileList).forEach((file) => {
       if (maxBytes && file.size > maxBytes) {
@@ -258,7 +259,8 @@ if (mediaUpload) {
       } catch {
         payload = null;
       }
-      finish(xhr.status >= 200 && xhr.status < 300, payload && payload.error);
+      finish(xhr.status >= 200 && xhr.status < 300 && payload && payload.ok === true,
+        payload && payload.error);
     });
     xhr.addEventListener('error', () => finish(false));
     xhr.addEventListener('timeout', () => finish(false));
@@ -276,6 +278,7 @@ if (mediaUpload) {
       return;
     }
     uploading = true;
+    input.disabled = true;
     submit.disabled = true;
     setStatus('');
     const finished = new Set();
@@ -285,12 +288,17 @@ if (mediaUpload) {
       else failed = true;
     }
     uploading = false;
+    input.disabled = false;
     if (!failed) {
       window.location.reload();
       return;
     }
     queue = queue.filter((file) => !finished.has(file));
-    renderPending();
+    finished.forEach((file) => {
+      rows.get(file).row.remove();
+      rows.delete(file);
+    });
+    submit.disabled = queue.length === 0;
     setStatus(messages.error, true);
   });
 

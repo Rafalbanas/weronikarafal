@@ -179,15 +179,19 @@ EN.update({
 
 
 EN.update({
+    'Łączny rozmiar plików w jednym żądaniu nie może przekroczyć': 'The total size of files in one request must not exceed',
+    'Pobierz wszystkie (ZIP)': 'Download all (ZIP)',
+    'Pobierz oryginał': 'Download original',
+    'Ten format jest dostępny do pobrania bez podglądu.': 'This format is available to download without a preview.',
     'Biblioteka mediów · Weronika & Rafał': 'Media library · Weronika & Rafał',
     'Pamiątki z naszego dnia': 'Memories of our day',
     'Biblioteka mediów': 'Media library',
     'Widok administratora: wszystkie zdjęcia i filmy dodane przez gości oraz organizatorów.': 'Administrator view: all photos and videos added by guests and organisers.',
     'Administrator': 'Administrator',
-    'Zdjęcia i filmy widoczne tylko dla Ciebie i organizatorów.': 'Photos and videos are visible only to you and the organisers.',
+    'Zdjęcia i filmy są dostępne dla wszystkich zalogowanych gości. Możesz usuwać tylko własne pliki.': 'Photos and videos are available to all signed-in guests. You can only delete your own files.',
     'Dodaj wspomnienia': 'Add memories',
     'Wgraj zdjęcia lub filmy': 'Upload photos or videos',
-    'Przeciągnij pliki tutaj lub wybierz je z dysku. Obsługujemy JPG, PNG, GIF, WEBP, MP4, WEBM i MOV. Jeden plik może mieć do': 'Drag files here or choose them from your device. We support JPG, PNG, GIF, WEBP, MP4, WEBM and MOV. Each file can be up to',
+    'Przeciągnij pliki tutaj lub wybierz je z dysku. Możesz dodać zdjęcia i filmy, także HEIC, HEIF i RAW. Jeden plik może mieć do': 'Drag files here or choose them from your device. Add photos and videos, including HEIC, HEIF and RAW. Each file can be up to',
     'a jedno żądanie do': 'and one request can contain up to',
     'plików.': 'files.',
     'Przeciągnij i upuść pliki': 'Drag and drop files',

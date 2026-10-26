@@ -9,7 +9,7 @@
     <p class="muted">{{ _('Widok administratora: wszystkie zdjęcia i filmy dodane przez gości oraz organizatorów.') }}</p>
     <p><span class="badge badge-admin">{{ _('Administrator') }}: {{ g.admin.username }}</span></p>
     {% else %}
-    <p class="muted">{{ _('Zdjęcia i filmy widoczne tylko dla Ciebie i organizatorów.') }}</p>
+    <p class="muted">{{ _('Zdjęcia i filmy są dostępne dla wszystkich zalogowanych gości. Możesz usuwać tylko własne pliki.') }}</p>
     {% endif %}
   </section>
 
@@ -25,7 +25,8 @@
     data-msg-failed="{{ _('Błąd') }}">
     <span class="eyebrow">{{ _('Dodaj wspomnienia') }}</span>
     <h2>{{ _('Wgraj zdjęcia lub filmy') }}</h2>
-    <p class="muted small">{{ _('Przeciągnij pliki tutaj lub wybierz je z dysku. Obsługujemy JPG, PNG, GIF, WEBP, MP4, WEBM i MOV. Jeden plik może mieć do') }} {{ max_bytes|filesizeformat }}, {{ _('a jedno żądanie do') }} {{ max_files }} {{ _('plików.') }}</p>
+    <p class="muted small">{{ _('Przeciągnij pliki tutaj lub wybierz je z dysku. Możesz dodać zdjęcia i filmy, także HEIC, HEIF i RAW. Jeden plik może mieć do') }} {{ max_bytes|filesizeformat }}, {{ _('a jedno żądanie do') }} {{ max_files }} {{ _('plików.') }}</p>
+    <p class="muted small">{{ _('Łączny rozmiar plików w jednym żądaniu nie może przekroczyć') }} {{ max_bytes|filesizeformat }}.</p>
     <form method="post" action="{{ url_for('media_upload') }}" enctype="multipart/form-data" class="media-form" data-media-form>
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <label class="media-dropzone" for="media-files" data-dropzone tabindex="0">
@@ -46,15 +47,20 @@
     <div class="media-library-heading">
       <div>
         <span class="eyebrow">{{ _('Wasze wspomnienia') }}</span>
-        <h2>{{ _('Wszystkie media') if is_admin else _('Twoje media') }}</h2>
+        <h2>{{ _('Wszystkie media') }}</h2>
       </div>
       <p class="muted small">{{ _('Liczba plików:') }} {{ items|length }}</p>
+      {% if items %}<a class="button button-outline" href="{{ url_for('media_download_all') }}">{{ _('Pobierz wszystkie (ZIP)') }}</a>{% endif %}
     </div>
     {% if items %}
     <div class="media-grid">
       {% for item in items %}
       <figure class="media-item" id="media-{{ item.id }}">
-        {% if item.is_video %}
+        {% if not item.can_preview %}
+        <div class="media-visual">
+          <a class="button button-outline" href="{{ url_for('media_file', upload_id=item.id, download=1) }}">{{ _('Pobierz oryginał') }}</a>
+        </div>
+        {% elif item.is_video %}
         <div class="media-visual">
           <video controls preload="metadata" playsinline src="{{ url_for('media_file', upload_id=item.id) }}"></video>
         </div>
@@ -69,6 +75,8 @@
         <figcaption class="media-meta">
           <span class="media-name" title="{{ item.original_name }}">{{ item.original_name }}</span>
           <span class="media-facts">{{ _('Film') if item.is_video else _('Zdjęcie') }} · {{ item.type_label }} · {{ item.size|filesizeformat }} · {{ item.created_at|media_date }}</span>
+          {% if not item.can_preview %}<span class="muted small">{{ _('Ten format jest dostępny do pobrania bez podglądu.') }}</span>{% endif %}
+          <a href="{{ url_for('media_file', upload_id=item.id, download=1) }}">{{ _('Pobierz oryginał') }}</a>
           <span class="badge media-owner">{{ item.owner_label }}</span>
           {% if item.can_manage %}
           <form method="post" action="{{ url_for('media_delete', upload_id=item.id) }}"
