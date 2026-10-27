@@ -7,7 +7,7 @@
     <p class="guest-name">{{ g.guest.name }}{% if g.guest.partner_name %} &amp; {{ g.guest.partner_name }}{% elif g.guest.allows_companion %} {{ _('z osobą towarzyszącą') }}{% endif %}</p>
     <p class="muted">{{ _('Tutaj potwierdzicie obecność i znajdziecie informacje na nasz wspólny dzień.') }}</p>
   </section>
-  <nav class="section-nav" aria-label="{{ _('Strefa gości') }}"><a href="#rsvp">{{ _('Moja odpowiedź') }}</a><a href="#lista">{{ _('Kto będzie z nami') }}</a><a href="#szczegoly">{{ _('Szczegóły dnia') }}</a><a href="#kontakt">{{ _('Kontakt') }}</a></nav>
+  <nav class="section-nav" aria-label="{{ _('Strefa gości') }}"><a href="#rsvp">{{ _('Moja odpowiedź') }}</a><a href="#lista">{{ _('Kto będzie z nami') }}</a><a href="#szczegoly">{{ _('Szczegóły dnia') }}</a><a href="#wspomnienia">{{ _('Wspomnienia') }}</a><a href="#kontakt">{{ _('Kontakt') }}</a></nav>
   {% for message in get_flashed_messages() %}<p class="notice notice-success" role="status">{{ _(message) }}</p>{% endfor %}
   <div class="guest-grid">
     <section id="rsvp" class="card rsvp-card">
@@ -50,6 +50,11 @@
         <span class="eyebrow">{{ _('Nasz wspólny dzień') }}</span><h2>{{ _('Wesele i harmonogram') }}</h2>
         {% if private.venue.name %}<h3>{{ private.venue.name }}</h3><p class="muted pre-line">{{ private.venue.address }}</p>{% else %}<p class="muted">{{ _('Szczegóły przyjęcia podamy tutaj wkrótce.') }}</p>{% endif %}
         {% if private.schedule %}<ol class="timeline">{% for item in private.schedule %}<li><time>{{ item.time }}</time><div><strong>{{ item.title }}</strong><p class="muted small">{{ item.description }}</p></div></li>{% endfor %}</ol>{% endif %}
+      </section>
+      <section id="wspomnienia" class="card media-card">
+        <span class="eyebrow">{{ _('Wspólne wspomnienia') }}</span><h2>{{ _('Biblioteka mediów') }}</h2>
+        <p class="muted">{{ _('Zdjęcia i filmy są dostępne dla wszystkich zalogowanych gości. Możesz usuwać tylko własne pliki.') }}</p>
+        <a class="button button-outline" href="{{ url_for('media') }}">{{ _('Otwórz bibliotekę') }} <span aria-hidden="true">→</span></a>
       </section>
       <section id="kontakt" class="card">
         <span class="eyebrow">{{ _('Jesteśmy dla Was') }}</span><h2>{{ _('Kontakt do świadków') }}</h2>
