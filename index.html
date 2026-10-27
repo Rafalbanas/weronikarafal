@@ -16,7 +16,10 @@
     <p class="countdown-note">{{ _('27.08.2027 · 14:00 · czas polski') }}</p>
   </div>
   <p class="hero-intro">{{ _('Jeden dzień, tyle wspomnień przed nami.') }}<br>{{ _('Nie możemy się doczekać, aż powiemy sobie „tak”.') }}</p>
-  <a class="button button-outline" href="#ceremonia">{{ _('Gdzie się spotkamy') }} <span aria-hidden="true">↓</span></a>
+  <div class="hero-actions">
+    <a class="button button-outline" href="#ceremonia">{{ _('Gdzie się spotkamy') }} <span aria-hidden="true">↓</span></a>
+    <a class="hero-link" href="#pytania">{{ _('Pytania i odpowiedzi') }}</a>
+  </div>
 </section>
 <section class="public-details" id="ceremonia">
   <div class="card ceremony-card">
@@ -30,5 +33,38 @@
     {% else %}<p class="muted">{{ _('Nazwę i adres kościoła podamy tutaj wkrótce.') }}</p>{% endif %}
   </div>
   <div class="private-invitation"><span class="eyebrow">{{ _('Masz już zaproszenie?') }}</span><h2>{{ _('Twoje miejsce z nami') }}</h2><p class="muted">{{ _('Potwierdzenie obecności, lista gości i szczegóły przyjęcia czekają w strefie dla zaproszonych.') }}</p><a class="button" href="{{ url_for('guest') if g.guest else url_for('login') }}">{{ _('Przejdź do strefy gości') if g.guest else _('Zaloguj się kodem z zaproszenia') }} <span aria-hidden="true">→</span></a></div>
+</section>
+<section class="guest-steps" aria-labelledby="guest-steps-title">
+  <span class="eyebrow">{{ _('Dla zaproszonych') }}</span><h2 id="guest-steps-title">{{ _('Trzy kroki do naszego dnia') }}</h2>
+  <p class="muted">{{ _('Wszystko, co warto zrobić przed naszym wspólnym świętowaniem.') }}</p>
+  <ol class="steps-list">
+    <li><h3>{{ _('Zaloguj się kodem z zaproszenia') }}</h3><p class="muted">{{ _('Kod z zaproszenia otwiera strefę gości.') }}</p></li>
+    <li><h3>{{ _('Potwierdź obecność do 1 lipca 2027 r.') }}</h3><p class="muted">{{ _('Dajcie nam znać do 1 lipca 2027 r. Odpowiedź możecie później zaktualizować.') }}</p></li>
+    <li><h3>{{ _('Wróć po szczegóły i wspomnienia') }}</h3><p class="muted">{{ _('Szczegóły przyjęcia, lista gości i wspomnienia czekają w strefie gości.') }}</p></li>
+  </ol>
+</section>
+<section class="faq" id="pytania" aria-labelledby="faq-title">
+  <span class="eyebrow">{{ _('Praktyczne sprawy') }}</span><h2 id="faq-title">{{ _('Pytania i odpowiedzi') }}</h2>
+  <details>
+    <summary>{{ _('Jak wpisać kod z zaproszenia?') }}</summary>
+    <p>{{ _('Wpisz indywidualny kod z zaproszenia, aby potwierdzić obecność i poznać szczegóły naszego dnia.') }}</p>
+    <p>{{ _('Kod jest przypisany do osoby lub pary. Nie masz kodu? Skontaktuj się z Weroniką lub Rafałem.') }}</p>
+  </details>
+  <details>
+    <summary>{{ _('Do kiedy potwierdzić obecność?') }}</summary>
+    <p>{{ _('Dajcie nam znać do 1 lipca 2027 r. Odpowiedź możecie później zaktualizować.') }}</p>
+  </details>
+  <details>
+    <summary>{{ _('Gdzie podać dietę i nocleg?') }}</summary>
+    <p>{{ _('Preferencje żywieniowe i zapotrzebowanie na nocleg możecie podać w formularzu potwierdzenia obecności w strefie gości.') }}</p>
+  </details>
+  <details>
+    <summary>{{ _('Gdzie znajdę szczegóły przyjęcia?') }}</summary>
+    <p>{{ _('Szczegóły przyjęcia są widoczne tylko zalogowanym gościom w sekcji „Szczegóły dnia”.') }}</p>
+  </details>
+  <details>
+    <summary>{{ _('Kto może widzieć zdjęcia i filmy?') }}</summary>
+    <p>{{ _('Zdjęcia i filmy są dostępne dla wszystkich zalogowanych gości. Możesz usuwać tylko własne pliki.') }}</p>
+  </details>
 </section>
 {% endblock %}

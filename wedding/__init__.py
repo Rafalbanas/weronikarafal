@@ -179,6 +179,27 @@ EN.update({
 
 
 EN.update({
+    'Pytania i odpowiedzi': 'Questions and answers',
+    'Trzy kroki do naszego dnia': 'Three steps to our day',
+    'Wszystko, co warto zrobić przed naszym wspólnym świętowaniem.': 'Everything to do before our celebration together.',
+    'Kod z zaproszenia otwiera strefę gości.': 'The invitation code opens the guest area.',
+    'Potwierdź obecność do 1 lipca 2027 r.': 'Confirm attendance by 1 July 2027.',
+    'Wróć po szczegóły i wspomnienia': 'Come back for details and memories',
+    'Szczegóły przyjęcia, lista gości i wspomnienia czekają w strefie gości.': 'Reception details, the guest list and memories are waiting in the guest area.',
+    'Praktyczne sprawy': 'Practical matters',
+    'Jak wpisać kod z zaproszenia?': 'How do I enter the invitation code?',
+    'Do kiedy potwierdzić obecność?': 'When is the RSVP deadline?',
+    'Gdzie podać dietę i nocleg?': 'Where do I enter diet and lodging?',
+    'Preferencje żywieniowe i zapotrzebowanie na nocleg możecie podać w formularzu potwierdzenia obecności w strefie gości.': 'Dietary preferences and lodging needs can be given in the RSVP form in the guest area.',
+    'Gdzie znajdę szczegóły przyjęcia?': 'Where can I find reception details?',
+    'Szczegóły przyjęcia są widoczne tylko zalogowanym gościom w sekcji „Szczegóły dnia”.': 'Reception details are visible only to signed-in guests in the “The day’s details” section.',
+    'Kto może widzieć zdjęcia i filmy?': 'Who can see the photos and videos?',
+    'Wspomnienia': 'Memories',
+    'Wspólne wspomnienia': 'Shared memories',
+    'Otwórz bibliotekę': 'Open the library',
+})
+
+EN.update({
     'Łączny rozmiar plików w jednym żądaniu nie może przekroczyć': 'The total size of files in one request must not exceed',
     'Pobierz wszystkie (ZIP)': 'Download all (ZIP)',
     'Pobierz oryginał': 'Download original',
