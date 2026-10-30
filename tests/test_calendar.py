@@ -2,7 +2,7 @@ import json
 import re
 import time
 import unittest
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 import test_guests
@@ -59,6 +59,11 @@ class CalendarTests(unittest.TestCase):
         line = next(line for line in lines if line.startswith("LOCATION:"))
         return CalendarTests._decode(line.partition(":")[2])
 
+    @staticmethod
+    def _property_value(lines, label):
+        # The unfolded property value, unfolded to one complete line.
+        return next(line for line in lines if line.startswith(label + ":")).partition(":")[2]
+
     def test_ics_response_content_type_and_filename(self):
         response = self.get("/ceremony.ics")
         self.assertEqual(response.status_code, 200)
@@ -71,17 +76,29 @@ class CalendarTests(unittest.TestCase):
         lines = self._lines(self._ics("?lang=pl"))
         for label in ("BEGIN:VCALENDAR", "END:VCALENDAR", "BEGIN:VEVENT", "END:VEVENT",
                       "VERSION:2.0", "UID:weronikarafal-ceremonia", "DTSTART:20270827T120000Z",
+                      "DTEND:20270827T130000Z",
                       "SUMMARY:Weronika i Rafał ceremonia",
                       "LOCATION:Publiczny kościół\\, Publiczna ulica"):
             self.assertIn(label, lines)
+        # The event carries DTSTART and DTEND exactly once each, with no DURATION.
+        self.assertEqual(lines.count("DTSTART:20270827T120000Z"), 1)
+        self.assertEqual(lines.count("DTEND:20270827T130000Z"), 1)
+        self.assertFalse(any(line.startswith("DURATION") for line in lines))
         stamp = datetime.strptime(
             re.search(r"DTSTAMP:(\d{8}T\d{6}Z)", "\n".join(lines)).group(1),
             "%Y%m%dT%H%M%SZ").replace(tzinfo=timezone.utc)
         # DTSTAMP is the current UTC time, not a placeholder value.
         self.assertLessEqual(abs((stamp - datetime.now(timezone.utc)).total_seconds()), 180)
+        start = datetime.strptime(CalendarTests._property_value(lines, "DTSTART"),
+                               "%Y%m%dT%H%M%SZ").replace(tzinfo=timezone.utc)
+        end = datetime.strptime(CalendarTests._property_value(lines, "DTEND"),
+                              "%Y%m%dT%H%M%SZ").replace(tzinfo=timezone.utc)
+        warsaw = ZoneInfo("Europe/Warsaw")
         # DTSTART is 14:00 in Europe/Warsaw and stored as UTC.
-        self.assertEqual(datetime(2027, 8, 27, 14, 0, tzinfo=ZoneInfo("Europe/Warsaw")),
-                        datetime(2027, 8, 27, 12, 0, tzinfo=timezone.utc))
+        self.assertEqual(start.astimezone(warsaw), datetime(2027, 8, 27, 14, 0, tzinfo=warsaw))
+        # DTEND is one hour after DTSTART: 15:00 in Europe/Warsaw.
+        self.assertEqual(end, start + timedelta(hours=1))
+        self.assertEqual(end.astimezone(warsaw), datetime(2027, 8, 27, 15, 0, tzinfo=warsaw))
         self.assertEqual(self._location(lines), "Publiczny kościół, Publiczna ulica")
         # Private venue, contacts, guest and RSVP data never reach the response text.
         for secret in ("Prywatna sala", "Prywatny adres", "+48 555", "Prywatny świadek", "Gość", "RSVP"):
@@ -91,9 +108,10 @@ class CalendarTests(unittest.TestCase):
         lines = self._lines(self._ics("?lang=en"))
         self.assertIn("SUMMARY:Weronika and Rafał ceremony", lines)
         self.assertNotIn("SUMMARY:Weronika i Rafał ceremonia", lines)
-        # The UID and start time are host- and language-stable.
+        # The UID and the fixed start/end times are host- and language-stable.
         self.assertIn("UID:weronikarafal-ceremonia", lines)
-        self.assertIn("DTSTART:20270827T120000Z", lines)
+        self.assertEqual(lines.count("DTSTART:20270827T120000Z"), 1)
+        self.assertEqual(lines.count("DTEND:20270827T130000Z"), 1)
 
     def test_lines_are_crlf_and_folded_at_seventyfive_octets(self):
         data = self._ics("?lang=pl")
@@ -178,7 +196,11 @@ class CalendarTests(unittest.TestCase):
         self.assertEqual(self._location(self._lines(data)), "Publiczny kościół, Publiczna ulica")
         for secret in ("Prywatna sala", "Prywatny adres", "+48 555", "Prywatny świadek", "Gość", "RSVP"):
             self.assertNotIn(secret, data)
-        self.assertFalse(any(line.startswith("DTEND") or line.startswith("DURATION") for line in self._lines(data)))
+        lines = self._lines(data)
+        # DTSTART and DTEND appear exactly once each, and no DURATION is emitted.
+        self.assertEqual(lines.count("DTSTART:20270827T120000Z"), 1)
+        self.assertEqual(lines.count("DTEND:20270827T130000Z"), 1)
+        self.assertFalse(any(line.startswith("DURATION") for line in lines))
 
     def test_calendar_button_present_in_both_languages(self):
         page = self.get("/?lang=pl")

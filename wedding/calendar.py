@@ -3,6 +3,7 @@ import time
 
 UID = "weronikarafal-ceremonia"
 DTSTART = "20270827T120000Z"  # 2027-08-27 14:00 Europe/Warsaw, stored in UTC
+DTEND = "20270827T130000Z"  # 2027-08-27 15:00 Europe/Warsaw, stored in UTC
 DOWNLOAD_NAME = "Weronika-and-Rafal-ceremonia.ics"  # ASCII-safe, constant across language and host
 SUMMARY_BY_LANGUAGE = {"pl": "Weronika i Rafał ceremonia", "en": "Weronika and Rafał ceremony"}
 
@@ -49,7 +50,7 @@ def build_ics(ceremony, language, timestamp):
         "BEGIN:VCALENDAR", "VERSION:2.0",
         "PRODID:-//weronikarafal.com//ceremony//1.0", "CALSCALE:GREGORIAN", "METHOD:PUBLISH",
         "BEGIN:VEVENT",
-        "UID:" + UID, "DTSTAMP:" + dtstamp, "DTSTART:" + DTSTART,
+        "UID:" + UID, "DTSTAMP:" + dtstamp, "DTSTART:" + DTSTART, "DTEND:" + DTEND,
         "SUMMARY:" + _escape(SUMMARY_BY_LANGUAGE[language]),
     ]
     if location:
