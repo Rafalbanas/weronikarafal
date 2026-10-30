@@ -139,10 +139,16 @@
   </form>
 </dialog>
 
-<dialog class="media-lightbox" data-media-lightbox aria-label="{{ _('Podgląd zdjęcia') }}">
+<dialog class="media-lightbox" data-media-lightbox aria-label="{{ _('Podgląd zdjęcia') }}" data-counter-template="{{ _('Zdjęcie {current} z {total}') }}">
   <form method="dialog" class="media-lightbox-close">
     <button class="button button-small button-outline" aria-label="{{ _('Zamknij podgląd') }}">×</button>
   </form>
+  <p class="media-lightbox-counter" data-media-counter role="status" aria-live="polite" aria-atomic="true"></p>
+  <div class="media-lightbox-toolbar" data-media-navigation hidden>
+    <button type="button" class="button button-small button-outline" data-media-prev>{{ _('Poprzednie zdjęcie') }}</button>
+    <button type="button" class="button button-small button-outline" data-media-next>{{ _('Następne zdjęcie') }}</button>
+  </div>
   <img alt="" data-media-lightbox-image>
+  <p class="media-lightbox-caption" data-media-caption></p>
 </dialog>
 {% endblock %}

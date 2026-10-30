@@ -65,6 +65,9 @@ Plików z biblioteki nie dodawaj do Git; katalog `uploads/` jest ignorowany.
 
 ## Testy
 
+Node.js musi być dostępny na `PATH` również dla testów zachowania podglądu zdjęć.
+Nie jest wymagany do uruchamiania aplikacji produkcyjnej.
+
 ```sh
 .venv/bin/python -m unittest discover -s tests -v
 .venv/bin/python scripts/check_site.py  # Node.js na PATH
@@ -117,3 +120,10 @@ filtrów oraz niepoprawny numer strony zwracają 400.
 Nie zmienia uprawnień: gość może usuwać wyłącznie własne pliki, administrator
 wszystkie. ZIP zawsze zawiera cały album, niezależnie od aktywnych filtrów
 i wyświetlanej strony. Interfejs dostępny jest w PL i EN.
+
+Podgląd zdjęć pozwala przechodzić między zdjęciami na bieżącej stronie
+biblioteki przyciskami lub strzałkami klawiatury. Licznik wskazuje pozycję
+wśród tych zdjęć; filmy i formaty bez podglądu są pomijane. Po ostatnim zdjęciu
+nawigacja wraca do pierwszego. Escape, przycisk zamknięcia lub kliknięcie tła
+zamyka podgląd i przywraca fokus do zdjęcia, z którego go otwarto.
+Pobieranie oryginałów pozostaje dostępne bez JavaScript.

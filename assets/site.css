@@ -52,7 +52,10 @@
 .media-confirm::backdrop,.media-lightbox::backdrop{background:#1d241f99}
 .media-confirm-card{background:white;border:1px solid var(--line);border-radius:20px;padding:1.8rem;box-shadow:0 30px 60px -30px #0006}
 .media-confirm-actions{display:flex;justify-content:flex-end;gap:.7rem;margin-top:1rem}
-.media-lightbox img{display:block;width:100%;height:auto;max-height:82vh;object-fit:contain;background:#111;border-radius:14px}
+.media-lightbox img{display:block;width:100%;height:auto;max-height:65vh;object-fit:contain;background:#111;border-radius:14px}
+.media-lightbox-toolbar{display:flex;gap:.5rem;flex-wrap:wrap;justify-content:space-between;padding:.5rem}
+.media-lightbox-caption{overflow-wrap:anywhere;background:white;padding:.5rem;border-radius:8px}
+.media-lightbox-counter{background:white;padding:.3rem .5rem;display:inline-block}
 .media-lightbox-close{display:flex;justify-content:flex-end;margin-bottom:.6rem}
 @media(max-width:700px){.media-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.8rem}.media-meta{padding:.7rem .75rem .8rem}.media-facts{font-size:.62rem}.media-upload{padding:1.3rem}.media-dropzone{padding:1.8rem 1rem}.media-pending-item{flex-wrap:wrap}.media-pending-item progress{width:100%}}
 
