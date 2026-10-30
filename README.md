@@ -94,9 +94,10 @@ wydarzenia zachowują oryginalną treść.
 Przycisk „Dodaj do kalendarza” w karcie ceremonii pobiera publiczny wpis ICS.
 Zawiera wyłącznie `ceremony.name` i `ceremony.address` z danych publicznych
 (puste pola nie generują `LOCATION`); miejsce przyjęcia, kontakty, harmonogram
-oraz goście nigdy się w nim nie pojawiają, także po zalogowaniu. `UID` i
-`DTSTART` (`20270827T120000Z`, czyli 14:00 Europe/Warsaw) są stałe;
-`DTSTAMP` to bieżący czas UTC. Wartości tekstowe są escapowane, a linie
+oraz goście nigdy się w nim nie pojawiają, także po zalogowaniu. `UID` i `DTSTART` (`20270827T120000Z`, czyli 14:00 Europe/Warsaw),
+oraz stałe `DTEND` (`20270827T130000Z`, czyli 15:00 Europe/Warsaw —
+orientacyjna, godzinowa rezerwacja kalendarza, nie gwarantowany koniec
+mszy) są stałe; `DTSTAMP` to bieżący czas UTC. Nie występuje `DURATION`. Wartości tekstowe są escapowane, a linie
 zawijane do najwyżej 75 oktetów UTF-8 bez dzielenia sekwencji. Typ
 zawartości to `text/calendar; charset=utf-8` ze stałą, czysto ASCII nazwą
 załącznika. Sam endpoint ma nagłówek noindex; polityka indeksowania strony
