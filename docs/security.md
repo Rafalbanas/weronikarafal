@@ -7,6 +7,13 @@ ceremonii z sekcji `ceremony` prywatnego pliku ustawień. Widok `/guest` jest
 renderowany na serwerze dopiero po uwierzytelnieniu. Lista gości, kontakty
 i adres wesela nie są dołączane do publicznego HTML, CSS ani JavaScript.
 
+Osobne widoki `/schedule` (harmonogram) i `/tables` (plan stołów) wymagają
+aktywnej sesji gościa lub administratora. Anonimowy dostęp przekierowuje do
+logowania; obie strony mają nagłówki `noindex` i `no-store`. Pusta rozpiska
+nie zawiera przykładowych ani wymyślonych danych gości. Ustawienie motywu
+jest jedyną daną zapisywaną przez przełącznik wyglądu w `localStorage`;
+nie zawiera kodu zaproszenia ani danych sesji.
+
 Kod zaproszenia identyfikuje osobę lub parę. Jest generowany przez organizatora
 z losowych 24 bajtów: 8 bajtów publicznego identyfikatora i 16 bajtów sekretu
 (128 bitów), nie z nazwiska ani numeru telefonu. Serwer przechowuje identyfikator

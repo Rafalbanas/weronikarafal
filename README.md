@@ -30,6 +30,13 @@ Kod jest wyświetlany raz. Uruchom aplikację przez WSGI z lokalną konfiguracj�
 zaufanego hosta. Sesyjne cookies wymagają HTTPS również w podglądzie. Nie
 uruchamiaj serwera developerskiego jako publicznego serwera produkcyjnego.
 
+### Poprawianie nazwisk bez zmiany kodu
+
+W panelu `/admin`, przy istniejącym zaproszeniu, wybierz „Edytuj dane — kod bez
+zmian”, popraw imiona/nazwiska i użyj „Zapisz dane”. Ta operacja zachowuje
+dotychczasowy kod zaproszenia i sesje gości. Wygenerowanie nowego kodu jest
+osobną operacją — nie służy do poprawiania nazwisk.
+
 ## Biblioteka mediów (`/media`)
 
 Po zalogowaniu kodem zaproszenia lub kontem pary młodej dostępna jest biblioteka
@@ -91,6 +98,26 @@ panel pary młodej i komunikaty formularzy. Wybór jest zapamiętywany w osobnym
 bezpiecznym cookie przez rok, także po wylogowaniu. Domyślny język to polski;
 link `/?lang=en` otwiera wersję angielską. Treści wpisane przez gości oraz dane
 wydarzenia zachowują oryginalną treść.
+
+## Wygląd i prywatne strony dnia
+
+Przycisk „Ciemny motyw” w nagłówku pozwala przełączać jasny i ciemny wygląd.
+Wybór jest zapamiętywany lokalnie w przeglądarce (`wedding-theme` w
+`localStorage`), bez danych konta ani zaproszenia. Jeśli zapis ustawień jest
+zablokowany, przełącznik nadal działa na bieżącej stronie. Bez JavaScript
+pozostaje jasny wygląd i pełna obsługa zwykłych formularzy oraz nawigacji.
+
+Po zalogowaniu kodem zaproszenia lub kontem pary młodej dostępne są:
+- `/schedule` — osobna rozpiska godzinowa. Dopóki `schedule` w prywatnym
+  `details.json` jest puste, wyświetla komunikat „pojawi się wkrótce”. Później
+  można uzupełnić istniejącą konfigurację przez `manage.py set-details`.
+- `/tables` — osobna strona rozmieszczenia stołów, na razie z komunikatem
+  o późniejszym uzupełnieniu. Nie tworzy fikcyjnych miejsc ani przypisań gości;
+  edytor i właściwy plan stołów będą osobnym etapem.
+
+Obie strony wymagają aktywnej sesji na serwerze, mają `noindex` i `no-store`.
+Korzystają z istniejącego szablonu strefy gości, więc nie zmieniają listy
+plików paczki ani nie wymagają aktualizacji odbiornika wdrożeń.
 
 ## Kalendarz (`/ceremony.ics`)
 

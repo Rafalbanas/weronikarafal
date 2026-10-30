@@ -270,5 +270,22 @@ EN.update({
 })
 
 
+EN.update({
+    'Edytuj dane — kod bez zmian': 'Edit details — keep invitation code',
+    'Możesz poprawić imiona i nazwiska bez zmiany kodu zaproszenia. Dotychczasowy kod nadal działa.': 'You can correct names without changing the invitation code. The existing code will still work.',
+    'Ciemny motyw': 'Dark theme',
+    'Harmonogram': 'Schedule',
+    'Stoły': 'Tables',
+    'Rozmieszczenie stołów': 'Seating plan',
+    'Harmonogram · Weronika & Rafał': 'Schedule · Weronika & Rafał',
+    'Rozmieszczenie stołów · Weronika & Rafał': 'Seating plan · Weronika & Rafał',
+    'Informacje dostępne tylko po zalogowaniu.': 'Information available only after signing in.',
+    'Rozpiska godzinowa pojawi się wkrótce': 'The schedule is coming soon',
+    'Dokładny plan naszego dnia uzupełnimy później. Zajrzyjcie tutaj bliżej wesela.': 'We will add the detailed plan later. Check back closer to the wedding.',
+    'Plan stołów pojawi się wkrótce': 'The seating plan is coming soon',
+    'Rozmieszczenie stołów i miejsca gości podamy tutaj później.': 'We will share the table layout and guest seating here later.',
+    'Otwórz harmonogram': 'Open the schedule',
+})
+
 def translate(text):
     return EN.get(text, text) if g.get('language', 'pl') == 'en' else text

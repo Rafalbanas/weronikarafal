@@ -1,6 +1,32 @@
 {% extends 'templates/base.html' %}
-{% block title %}{{ _('Twoje zaproszenie · Weronika & Rafał') }}{% endblock %}
+{% block title %}{% if private_page == 'schedule' %}{{ _('Harmonogram · Weronika & Rafał') }}{% elif private_page == 'tables' %}{{ _('Rozmieszczenie stołów · Weronika & Rafał') }}{% else %}{{ _('Twoje zaproszenie · Weronika & Rafał') }}{% endif %}{% endblock %}
 {% block content %}
+{% if private_page in ['schedule', 'tables'] %}
+<div class="guest-shell private-page">
+  <section class="guest-heading">
+    <span class="eyebrow">{{ _('Nasz wspólny dzień') }}</span>
+    <h1>{{ _('Harmonogram') if private_page == 'schedule' else _('Rozmieszczenie stołów') }}</h1>
+    <p class="muted">{{ _('Informacje dostępne tylko po zalogowaniu.') }}</p>
+  </section>
+  <section class="card">
+    {% if private_page == 'schedule' %}
+      {% if private.schedule %}
+      <ol class="timeline">{% for item in private.schedule %}<li><time>{{ item.time }}</time><div><strong>{{ item.title }}</strong><p class="muted small">{{ item.description }}</p></div></li>{% endfor %}</ol>
+      {% else %}
+      <h2>{{ _('Rozpiska godzinowa pojawi się wkrótce') }}</h2>
+      <p class="muted">{{ _('Dokładny plan naszego dnia uzupełnimy później. Zajrzyjcie tutaj bliżej wesela.') }}</p>
+      {% endif %}
+    {% else %}
+      <h2>{{ _('Plan stołów pojawi się wkrótce') }}</h2>
+      <p class="muted">{{ _('Rozmieszczenie stołów i miejsca gości podamy tutaj później.') }}</p>
+    {% endif %}
+  </section>
+  <nav class="section-nav" aria-label="{{ _('Szczegóły dnia') }}">
+    <a href="{{ url_for('admin') if g.admin else url_for('guest') }}">{{ _('Panel pary młodej') if g.admin else _('Strefa gości') }}</a>
+    <a href="{{ url_for('tables') if private_page == 'schedule' else url_for('schedule') }}">{{ _('Rozmieszczenie stołów') if private_page == 'schedule' else _('Harmonogram') }}</a>
+  </nav>
+</div>
+{% else %}
 <div class="guest-shell">
   <section class="guest-heading">
     <span class="eyebrow">{{ _('Dobrze, że jesteście z nami') }}</span><h1>{{ _('Wasze zaproszenie') }}</h1>
@@ -50,6 +76,8 @@
         <span class="eyebrow">{{ _('Nasz wspólny dzień') }}</span><h2>{{ _('Wesele i harmonogram') }}</h2>
         {% if private.venue.name %}<h3>{{ private.venue.name }}</h3><p class="muted pre-line">{{ private.venue.address }}</p>{% else %}<p class="muted">{{ _('Szczegóły przyjęcia podamy tutaj wkrótce.') }}</p>{% endif %}
         {% if private.schedule %}<ol class="timeline">{% for item in private.schedule %}<li><time>{{ item.time }}</time><div><strong>{{ item.title }}</strong><p class="muted small">{{ item.description }}</p></div></li>{% endfor %}</ol>{% endif %}
+        <p><a href="{{ url_for('schedule') }}">{{ _('Otwórz harmonogram') }}</a></p>
+        <p><a href="{{ url_for('tables') }}">{{ _('Rozmieszczenie stołów') }}</a></p>
       </section>
       <section id="wspomnienia" class="card media-card">
         <span class="eyebrow">{{ _('Wspólne wspomnienia') }}</span><h2>{{ _('Biblioteka mediów') }}</h2>
@@ -63,4 +91,5 @@
     </div>
   </div>
 </div>
+{% endif %}
 {% endblock %}

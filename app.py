@@ -182,7 +182,7 @@ def create_app(config=None):
         # Language links lead to GET pages and never replay a form submission.
         target = {"admin_add_guest": "admin", "admin_update_guest": "admin",
                   "admin_password": "admin", "admin_issue_recovery": "admin", "rsvp": "guest", "logout": "index"}.get(request.endpoint, request.endpoint)
-        if target not in {"index", "guest", "login", "admin", "admin_login", "admin_recover", "media"}:
+        if target not in {"index", "guest", "login", "admin", "admin_login", "admin_recover", "media", "schedule", "tables"}:
             target = "index"
         # On the media gallery the switch preserves only the validated selectors
         # already present in the URL (kind, owner, page) and replaces lang.
@@ -287,7 +287,7 @@ def create_app(config=None):
         return protected
 
     def require_user(view):
-        """Guests and administrators share the media library; roles differ inside."""
+        """Guests and administrators can access shared private pages."""
         @wraps(view)
         def protected(*args, **kwargs):
             if not g.guest and not g.admin:
@@ -535,6 +535,17 @@ def create_app(config=None):
             invited_children=json.loads(g.guest["children"]),
             diets={key: translate(label) for key, label in DIETS.items()}, private=details(app.config["DETAILS"]))
 
+    @app.get("/schedule")
+    @require_user
+    def schedule():
+        return render_template("templates/guest.html", private_page="schedule",
+                               private=details(app.config["DETAILS"]))
+
+    @app.get("/tables")
+    @require_user
+    def tables():
+        return render_template("templates/guest.html", private_page="tables")
+
     @app.post("/rsvp")
     @require_guest
     def rsvp():
@@ -744,7 +755,7 @@ def create_app(config=None):
     @app.get("/robots.txt")
     def robots():
         return ("User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /guest\n"
-                "Disallow: /login\nDisallow: /media\nDisallow: /rsvp\nDisallow: /logout\nDisallow: /healthz\n",
+                "Disallow: /login\nDisallow: /media\nDisallow: /schedule\nDisallow: /tables\nDisallow: /rsvp\nDisallow: /logout\nDisallow: /healthz\n",
                 200, {"Content-Type": "text/plain; charset=utf-8"})
 
     @app.errorhandler(CSRFError)
