@@ -184,8 +184,30 @@ def create_app(config=None):
                   "admin_password": "admin", "admin_issue_recovery": "admin", "rsvp": "guest", "logout": "index"}.get(request.endpoint, request.endpoint)
         if target not in {"index", "guest", "login", "admin", "admin_login", "admin_recover", "media"}:
             target = "index"
+        # On the media gallery the switch preserves only the validated selectors
+        # already present in the URL (kind, owner, page) and replaces lang.
+        # Duplicated, invalid or unknown parameters are never carried.
+        extra = {}
+        if request.endpoint == "media" and request.method == "GET":
+            for name in ("kind", "owner", "page"):
+                values = request.args.getlist(name)
+                if not values:
+                    continue
+                if len(values) != 1:
+                    extra.clear()
+                    break
+                value = values[0]
+                if name == "kind" and value in {"all", "image", "video"}:
+                    extra[name] = value
+                elif name == "owner" and value in {"all", "mine"}:
+                    extra[name] = value
+                elif name == "page" and value.isascii() and value.isdecimal() and len(value) <= 9 and int(value) >= 1:
+                    extra[name] = value
+                else:
+                    extra.clear()
+                    break
         return {"_": translate, "language": g.get("language", "pl"),
-                "language_urls": {lang: url_for(target, lang=lang) for lang in ("pl", "en")}}
+                "language_urls": {lang: url_for(target, **extra, lang=lang) for lang in ("pl", "en")}}
 
     @app.before_request
     def upload_body_limit():
