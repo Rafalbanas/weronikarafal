@@ -239,3 +239,10 @@ Kopie zapasowe: `manage.py backup` obejmuje tylko SQLite. Pliki kopiuj osobno
 (np. `tar` lub `rsync` całego katalogu `uploads/`) i przechowuj razem z bazą.
 Przywracanie rób przy zatrzymanej usłudze, zachowując właściciela i tryby.
 Nie dodawaj katalogu `uploads/` do repozytorium.
+
+## Storage i automatyczna kopia poza serwerem
+
+Konfiguracja `/storage`, kopia zdjęć i filmów przez SSH oraz spójne snapshoty
+SQLite są opisane w [backup/README.md](backup/README.md). Pliki usług i skrypt
+są wersjonowane w `deploy/backup/`; instalacja administracyjna jest oddzielna
+od standardowego wdrożenia aplikacji.

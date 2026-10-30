@@ -1,0 +1,18 @@
+[Unit]
+Description=Wedding media and SQLite backup to stacjonarka
+Wants=network-online.target
+After=network-online.target
+RequiresMountsFor=/storage
+ConditionPathIsMountPoint=/storage
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/weronikarafal/backup.env
+ExecStart=/usr/local/sbin/weronikarafal-backup-stacjonarka
+RuntimeDirectory=weronikarafal-backup
+RuntimeDirectoryMode=0700
+UMask=0077
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+TimeoutStartSec=55min
