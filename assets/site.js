@@ -1,5 +1,27 @@
 'use strict';
 
+// A local display preference only; no invitation or account data goes into storage.
+const themeToggle = document.querySelector('[data-theme-toggle]');
+if (themeToggle) {
+  const applyTheme = (theme) => {
+    document.documentElement.dataset.theme = theme;
+    themeToggle.setAttribute('aria-pressed', String(theme === 'dark'));
+    const color = document.querySelector('meta[name="theme-color"]');
+    if (color) color.setAttribute('content', theme === 'dark' ? '#141c18' : '#faf7f2');
+  };
+  let savedTheme = 'light';
+  try {
+    if (window.localStorage.getItem('wedding-theme') === 'dark') savedTheme = 'dark';
+  } catch { /* Storage can be disabled; the toggle still works on this page. */ }
+  applyTheme(savedTheme);
+  themeToggle.hidden = false;
+  themeToggle.addEventListener('click', () => {
+    const theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    applyTheme(theme);
+    try { window.localStorage.setItem('wedding-theme', theme); } catch { /* Optional preference. */ }
+  });
+}
+
 const copyCode = document.getElementById('copy-code');
 if (copyCode && navigator.clipboard) {
   copyCode.hidden = false;

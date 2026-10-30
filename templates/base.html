@@ -18,6 +18,7 @@
   <header class="site-header">
     <a class="brand" href="{{ url_for('index') }}" aria-label="{{ _('Weronika i Rafał — strona główna') }}"><span class="monogram">W&R</span><span>Weronika <i>&</i> Rafał</span></a>
     <nav aria-label="{{ _('Nawigacja') }}">
+      <button type="button" class="button button-small button-outline" data-theme-toggle aria-pressed="false" hidden>{{ _('Ciemny motyw') }}</button>
       {% if not ((code is defined or issued_recovery is defined) and request.method == 'POST') %}
       <div class="language-switch" role="group" aria-label="{{ 'Language' if language == 'en' else 'Język' }}">
         <a href="{{ language_urls.pl }}" lang="pl" hreflang="pl" aria-label="Polski" {% if language == 'pl' %}aria-current="true"{% endif %}>PL</a>
@@ -25,10 +26,14 @@
       </div>
       {% endif %}
       {% if g.admin %}
+      <a class="nav-link" href="{{ url_for('schedule') }}">{{ _('Harmonogram') }}</a>
+      <a class="nav-link" href="{{ url_for('tables') }}">{{ _('Stoły') }}</a>
       <a class="nav-link" href="{{ url_for('admin') }}">{{ _('Panel pary młodej') }}</a>
       <a class="nav-link" href="{{ url_for('media') }}">{{ _('Media') }}</a>
       <form method="post" action="{{ url_for('logout') }}" class="inline-form"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="button button-small button-outline" type="submit">{{ _('Wyloguj') }}</button></form>
       {% elif g.guest %}
+      <a class="nav-link" href="{{ url_for('schedule') }}">{{ _('Harmonogram') }}</a>
+      <a class="nav-link" href="{{ url_for('tables') }}">{{ _('Stoły') }}</a>
       <a class="nav-link" href="{{ url_for('guest') }}">{{ _('Strefa gości') }}</a>
       <a class="nav-link" href="{{ url_for('media') }}">{{ _('Media') }}</a>
       <form method="post" action="{{ url_for('logout') }}" class="inline-form">

@@ -67,9 +67,10 @@
         <div class="admin-notes"><dt>{{ _('Uwagi / piosenka') }}</dt><dd class="pre-line">{{ person.notes or '—' }}</dd></div>
         <div class="admin-notes"><dt>{{ _('Dzieci na zaproszeniu') }} ({{ person.child_names|length }})</dt><dd>{% for child in person.child_names %}{{ child or (_('Dziecko') ~ ' ' ~ loop.index) }}{{ ', ' if not loop.last }}{% else %}—{% endfor %}</dd></div>
       </dl>
-      <details><summary>{{ _('Edytuj zaproszenie') }}</summary>
+      <details><summary>{{ _('Edytuj dane — kod bez zmian') }}</summary>
         <form class="form-stack" method="post" action="{{ url_for('admin_update_guest', guest_id=person.id) }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="edit">
+          <p class="field-help">{{ _('Możesz poprawić imiona i nazwiska bez zmiany kodu zaproszenia. Dotychczasowy kod nadal działa.') }}</p>
           {{ household_fields(person, person.id) }}
           <button type="submit" class="button button-small">{{ _('Zapisz dane') }}</button>
         </form>

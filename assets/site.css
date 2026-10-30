@@ -75,3 +75,23 @@
 .faq p{padding:0 1.1rem 1.1rem;margin:0;overflow-wrap:anywhere}
 .media-card .button{margin-top:.85rem}
 @media(max-width:700px){.steps-list{grid-template-columns:1fr}.guest-steps p{max-width:none}.faq p{padding:0 .95rem 1rem}}
+
+/* Optional display preference; the light palette remains the default. */
+:root{color-scheme:light}
+:root[data-theme=dark]{color-scheme:dark;--paper:#141c18;--ink:#edf3ee;--muted:#b2bfb5;--sage:#b3d3b6;--sage-light:#25392c;--line:#415047;--gold:#e0bd7e;--white:#202b24}
+.site-header nav{flex-wrap:wrap;justify-content:flex-end;min-width:0}
+.private-page{max-width:800px}.private-page .timeline li>div{min-width:0;overflow-wrap:anywhere}
+:root[data-theme=dark] .card,:root[data-theme=dark] .steps-list li,:root[data-theme=dark] .faq details,:root[data-theme=dark] .media-item,:root[data-theme=dark] .media-confirm-card,:root[data-theme=dark] .skip-link,:root[data-theme=dark] .media-lightbox-caption,:root[data-theme=dark] .media-lightbox-counter{background:var(--white)}
+:root[data-theme=dark] .countdown-card{background:var(--white)}
+:root[data-theme=dark] .section-nav a{background:var(--sage-light)}
+:root[data-theme=dark] .button:not(.button-outline){background:#42624a;color:#fff;border-color:#86a98c}
+:root[data-theme=dark] .button:not(.button-outline):hover{background:#354f3b}
+:root[data-theme=dark] .language-switch a[aria-current=true]{background:var(--sage);color:var(--paper)}
+:root[data-theme=dark] .badge{background:#303e34;color:var(--muted)}
+:root[data-theme=dark] .badge-yes,:root[data-theme=dark] .badge-admin{background:var(--sage-light);color:#c8e7c2}
+:root[data-theme=dark] .notice-success{color:var(--ink);border-color:var(--line)}
+:root[data-theme=dark] .notice-error,:root[data-theme=dark] .media-pending-item[data-state=error]{background:#402923;color:#ffdbd0;border-color:#8b6052}
+:root[data-theme=dark] .media-pending-item[data-state=done]{border-color:var(--line)}
+:root[data-theme=dark] .media-dropzone{background:linear-gradient(180deg,#202b24,#25392c);border-color:var(--line)}
+:root[data-theme=dark] .media-dropzone:hover,:root[data-theme=dark] .media-dropzone.is-dragging{background:var(--sage-light);border-color:var(--sage)}
+:root[data-theme=dark] .media-visual{background:#26332b}

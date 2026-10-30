@@ -159,7 +159,7 @@ class DeploymentTests(unittest.TestCase):
             self.send("a"*40, self.payload("a"*40))
         self.assertFalse((Path(self.config["state_dir"]) / "current").exists())
 
-    def test_packaged_release_serves_ceremony_ics_from_extracted_copy(self):
+    def test_packaged_release_serves_calendar_and_private_pages_from_extracted_copy(self):
         # The archive must include wedding/calendar.py, and the extracted release
         # must serve /ceremony.ics without importing anything from the source repo.
         payload = self.payload("a" * 40)
@@ -175,14 +175,30 @@ class DeploymentTests(unittest.TestCase):
         probe = Path(self.temp.name) / "probe.py"
         probe.write_text(
             "import os\n"
+            "import re\n"
             "import sys\n"
             "sys.path.insert(0, os.getcwd())\n"
             "from app import create_app\n"
-            "app = create_app()\n"
-            "response = app.test_client().get('/ceremony.ics')\n"
+            "from wedding.store import connect, invitation\n"
+            "app = create_app({'TESTING': True, 'TRUSTED_HOSTS': ['localhost'], 'TRUST_PROXY': False})\n"
+            "client = app.test_client()\n"
+            "base = 'https://localhost'\n"
+            "response = client.get('/ceremony.ics', base_url=base)\n"
             "body = response.get_data().decode('utf-8')\n"
             "assert response.status_code == 200\n"
             "assert 'DTSTART:20270827T120000Z' in body\n"
+            "for path in ('/schedule', '/tables'):\n"
+            "    assert client.get(path, base_url=base).status_code == 303\n"
+            "with connect(app.config['DATABASE']) as db:\n"
+            "    _, code = invitation(db, 'Guest fixture')\n"
+            "login = client.get('/login', base_url=base).text\n"
+            "token = re.search(r'name=\"csrf_token\" value=\"([^\"]+)\"', login).group(1)\n"
+            "assert client.post('/login', base_url=base, data={'csrf_token': token, 'code': code}, headers={'Referer': base + '/login', 'Origin': base}).status_code == 303\n"
+            "for path in ('/schedule', '/tables'):\n"
+            "    page = client.get(path, base_url=base)\n"
+            "    assert page.status_code == 200\n"
+            "    assert 'data-theme-toggle' in page.text\n"
+            "    assert 'noindex' in page.headers['X-Robots-Tag']\n"
             "print('OK')\n")
         env = dict(os.environ)
         env.pop("PYTHONPATH", None)
@@ -190,7 +206,8 @@ class DeploymentTests(unittest.TestCase):
         env.update(WEDDING_SECRET_KEY="k" * 32, WEDDING_DATA_DIR=str(data_dir))
         result = subprocess.run([sys.executable, str(probe)], cwd=extracted, env=env,
                               capture_output=True, text=True, timeout=60)
-        self.assertEqual((result.stdout, result.returncode), ("OK\n", 0))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout, "OK\n")
 
 
 if __name__ == "__main__":
