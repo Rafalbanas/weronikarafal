@@ -88,3 +88,31 @@ panel pary młodej i komunikaty formularzy. Wybór jest zapamiętywany w osobnym
 bezpiecznym cookie przez rok, także po wylogowaniu. Domyślny język to polski;
 link `/?lang=en` otwiera wersję angielską. Treści wpisane przez gości oraz dane
 wydarzenia zachowują oryginalną treść.
+
+## Kalendarz (`/ceremony.ics`)
+
+Przycisk „Dodaj do kalendarza” w karcie ceremonii pobiera publiczny wpis ICS.
+Zawiera wyłącznie `ceremony.name` i `ceremony.address` z danych publicznych
+(puste pola nie generują `LOCATION`); miejsce przyjęcia, kontakty, harmonogram
+oraz goście nigdy się w nim nie pojawiają, także po zalogowaniu. `UID` i
+`DTSTART` (`20270827T120000Z`, czyli 14:00 Europe/Warsaw) są stałe;
+`DTSTAMP` to bieżący czas UTC. Wartości tekstowe są escapowane, a linie
+zawijane do najwyżej 75 oktetów UTF-8 bez dzielenia sekwencji. Typ
+zawartości to `text/calendar; charset=utf-8` ze stałą, czysto ASCII nazwą
+załącznika. Sam endpoint ma nagłówek noindex; polityka indeksowania strony
+głównej nie uległa zmianie.
+
+## Przeglądanie biblioteki
+
+Formularz filtrów działa również bez JavaScript. Parametry `/media`:
+`kind=all|image|video`, `owner=all|mine`, `page=N` (domyślnie `all`, `all`, `1`).
+Widok pokazuje do 24 plików na stronę, z liczbą wszystkich dopasowań.
+Filtrowanie, zliczanie i stronicowanie odbywają się w SQL, w kolejności
+od najnowszych, z ID jako rozstrzygnięciem przy tej samej dacie. Za wysoki
+numer strony jest ograniczany do ostatniej; błędne i powielone parametry
+filtrów oraz niepoprawny numer strony zwracają 400.
+
+„Tylko przeze mnie” korzysta z tożsamości zalogowanego gościa lub administratora.
+Nie zmienia uprawnień: gość może usuwać wyłącznie własne pliki, administrator
+wszystkie. ZIP zawsze zawiera cały album, niezależnie od aktywnych filtrów
+i wyświetlanej strony. Interfejs dostępny jest w PL i EN.
