@@ -185,6 +185,18 @@ zmiany zależności ani odbiornika ZIP.
 
 ## Biblioteka mediów
 
+### Kalendarz ICS i stronicowanie biblioteki
+
+Wydanie z kalendarzem dodaje `wedding/calendar.py` do paczki. Przed jego
+pierwszym wdrożeniem należy zaktualizować root-owned odbiornik z przejrzanego
+commita (`deploy/deploy.py` → `/usr/local/sbin/weronikarafal-deploy`, tryb 755).
+Starszy odbiornik odrzuci nowy plik jako „Unexpected archive entries”,
+pozostawiając dotychczasowe wydanie. Samo utworzenie PR nie aktualizuje
+odbiornika. Kalendarz i filtry nie wymagają nowych zależności ani zmian
+schematu bazy. Aktualizacji odbiornika nie należy wykonywać z nieprzejrzanej gałęzi.
+
+### Wymagania biblioteki mediów
+
 Rozpoznawanie formatów wymaga systemowej komendy `file` i jej bazy libmagic
 (Debian/Ubuntu: `apt-get install file`). Nie dochodzą zależności pip.
 

@@ -22,7 +22,7 @@ from werkzeug.exceptions import RequestedRangeNotSatisfiable, SecurityError
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from wedding.store import allow_request, connect, details, digest, initialize, normalize_code, invitation, revoke, authenticate_invitation
-from wedding.store import media_count, media_list, media_record, record_media_batch, remove_media, MediaLimitExceeded
+from wedding.store import media_count, media_list, media_record, record_media_batch, remove_media, MediaLimitExceeded, media_page
 from wedding import translate
 from wedding.store import issue_admin_recovery, recovery_code
 from wedding.store import validate_household
@@ -465,6 +465,15 @@ def create_app(config=None):
             map_url="https://www.google.com/maps/search/?"+urlencode({"api": 1, "query": map_query}),
             map_embed_url="https://www.google.com/maps?"+urlencode({"q": map_query, "output": "embed", "z": 16}))
 
+    @app.get("/ceremony.ics")
+    def ceremony_ics():
+        from wedding.calendar import DOWNLOAD_NAME, build_ics
+        ceremony = details(app.config["DETAILS"])["ceremony"]
+        # ASCII-safe filename: constant across language and host.
+        body = build_ics(ceremony, g.get("language", "pl"), int(time.time()))
+        return Response(body, content_type="text/calendar; charset=utf-8",
+            headers={"Content-Disposition": 'attachment; filename="%s"' % DOWNLOAD_NAME})
+
     @app.route("/login", methods=["GET", "POST"])
     def login():
         if g.guest:
@@ -547,9 +556,9 @@ def create_app(config=None):
         return render_template("templates/error.html", title=translate("Nie udało się dodać pliku"),
                                message=translate(message)), status
 
-    def visible_media(owner_id, owner_kind, administrator):
+    def visible_media(rows, owner_id, administrator):
         items = []
-        for row in media_list(db()):
+        for row in rows:
             item = dict(row)
             item["is_video"] = row["content_type"].startswith("video/")
             item["can_manage"] = can_manage_upload(row, owner_id, administrator)
@@ -563,9 +572,25 @@ def create_app(config=None):
     @app.get("/media")
     @require_user
     def media():
+        # Duplicate, unknown or malformed selectors fail before any store access.
+        if any(len(request.args.getlist(name)) > 1 for name in ("kind", "owner", "page")):
+            abort(400)
+        kind = request.args.get("kind", "all")
+        owner = request.args.get("owner", "all")
+        if kind not in {"all", "image", "video"} or owner not in {"all", "mine"}:
+            abort(400)
+        page_raw = request.args.get("page", "1")
+        if not page_raw.isascii() or not page_raw.isdecimal() or len(page_raw) > 9 or int(page_raw) < 1:
+            abort(400)
         owner_id, owner_kind, administrator = media_identity()
-        return render_template("templates/media.html", items=visible_media(owner_id, owner_kind, administrator),
-            is_admin=administrator, max_bytes=app.config["MAX_UPLOAD_BYTES"],
+        # "mine" is derived from the session identity, never from client IDs.
+        filter_id = owner_id if owner == "mine" else None
+        filter_kind = owner_kind if owner == "mine" else None
+        items, total, page, pages = media_page(db(), kind, filter_id, filter_kind, int(page_raw))
+        derived = visible_media(items, owner_id, administrator)
+        return render_template("templates/media.html", items=derived, total=total, page=page,
+            pages=pages, kind=kind, owner=owner, is_admin=administrator,
+            max_bytes=app.config["MAX_UPLOAD_BYTES"],
             max_files=app.config["MAX_UPLOAD_FILES"],
             accept="image/*,video/*,.heic,.heif,.avif,.dng,.cr2,.cr3,.nef,.nrw,.arw,.raf,.orf,.rw2,.pef,.srw,.raw,.mkv,.mts,.m2ts,.mxf")
 

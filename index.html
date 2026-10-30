@@ -31,6 +31,7 @@
     <a class="button button-outline" href="{{ map_url }}" target="_blank" rel="noopener noreferrer">{{ _('Sprawdź dojazd ↗') }}</a>
     {% endif %}
     {% else %}<p class="muted">{{ _('Nazwę i adres kościoła podamy tutaj wkrótce.') }}</p>{% endif %}
+    <a class="button button-outline" href="{{ url_for('ceremony_ics') }}" download>{{ _('Dodaj do kalendarza') }}</a>
   </div>
   <div class="private-invitation"><span class="eyebrow">{{ _('Masz już zaproszenie?') }}</span><h2>{{ _('Twoje miejsce z nami') }}</h2><p class="muted">{{ _('Potwierdzenie obecności, lista gości i szczegóły przyjęcia czekają w strefie dla zaproszonych.') }}</p><a class="button" href="{{ url_for('guest') if g.guest else url_for('login') }}">{{ _('Przejdź do strefy gości') if g.guest else _('Zaloguj się kodem z zaproszenia') }} <span aria-hidden="true">→</span></a></div>
 </section>

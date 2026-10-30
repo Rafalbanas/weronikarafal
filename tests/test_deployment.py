@@ -4,6 +4,8 @@ import io
 import json
 import os
 from pathlib import Path
+import subprocess
+import sys
 import tempfile
 import threading
 import unittest
@@ -156,6 +158,39 @@ class DeploymentTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Dependencies changed"):
             self.send("a"*40, self.payload("a"*40))
         self.assertFalse((Path(self.config["state_dir"]) / "current").exists())
+
+    def test_packaged_release_serves_ceremony_ics_from_extracted_copy(self):
+        # The archive must include wedding/calendar.py, and the extracted release
+        # must serve /ceremony.ics without importing anything from the source repo.
+        payload = self.payload("a" * 40)
+        extracted = Path(self.temp.name) / "release"
+        with zipfile.ZipFile(io.BytesIO(payload)) as archive:
+            self.assertIn("wedding/calendar.py", {entry.filename for entry in archive.infolist()})
+            for entry in archive.infolist():
+                target = extracted / entry.filename
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(archive.read(entry))
+        data_dir = Path(self.temp.name) / "data"
+        data_dir.mkdir()
+        probe = Path(self.temp.name) / "probe.py"
+        probe.write_text(
+            "import os\n"
+            "import sys\n"
+            "sys.path.insert(0, os.getcwd())\n"
+            "from app import create_app\n"
+            "app = create_app()\n"
+            "response = app.test_client().get('/ceremony.ics')\n"
+            "body = response.get_data().decode('utf-8')\n"
+            "assert response.status_code == 200\n"
+            "assert 'DTSTART:20270827T120000Z' in body\n"
+            "print('OK')\n")
+        env = dict(os.environ)
+        env.pop("PYTHONPATH", None)
+        env.pop("PYTHONDATADIR", None)
+        env.update(WEDDING_SECRET_KEY="k" * 32, WEDDING_DATA_DIR=str(data_dir))
+        result = subprocess.run([sys.executable, str(probe)], cwd=extracted, env=env,
+                              capture_output=True, text=True, timeout=60)
+        self.assertEqual((result.stdout, result.returncode), ("OK\n", 0))
 
 
 if __name__ == "__main__":

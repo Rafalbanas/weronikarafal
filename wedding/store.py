@@ -203,6 +203,28 @@ def media_count(db, owner_id, owner_kind):
                       (owner_id, owner_kind)).fetchone()[0]
 
 
+def media_page(db, kind, owner_id=None, owner_kind=None, page=1, per_page=24):
+    """Paginated gallery: one predicate drives both the count and the fetch."""
+    where = []
+    params = []
+    if kind in {"image", "video"}:
+        where.append("content_type LIKE ?")
+        params.append(kind + "/%")
+    if owner_id is not None and owner_kind is not None:
+        where.append("owner_id=? AND owner_kind=?")
+        params.extend((owner_id, owner_kind))
+    predicate = (" WHERE " + " AND ".join(where)) if where else ""
+    total = db.execute("SELECT count(*) FROM uploads" + predicate, params).fetchone()[0]
+    pages = max(1, (total + per_page - 1) // per_page)
+    page = min(max(page, 1), pages)
+    items = db.execute(
+        "SELECT uploads.*, guests.name AS owner_name FROM uploads"
+        " LEFT JOIN guests ON uploads.owner_kind='guest' AND guests.id=uploads.owner_id"
+        + predicate + " ORDER BY uploads.created_at DESC, uploads.id LIMIT ? OFFSET ?",
+        (*params, per_page, (page - 1) * per_page)).fetchall()
+    return items, total, page, pages
+
+
 def remove_media(db, upload_id):
     with db:
         return db.execute("DELETE FROM uploads WHERE id=?", (upload_id,)).rowcount

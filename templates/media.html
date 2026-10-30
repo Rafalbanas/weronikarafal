@@ -49,9 +49,27 @@
         <span class="eyebrow">{{ _('Wasze wspomnienia') }}</span>
         <h2>{{ _('Wszystkie media') }}</h2>
       </div>
-      <p class="muted small">{{ _('Liczba plików:') }} {{ items|length }}</p>
-      {% if items %}<a class="button button-outline" href="{{ url_for('media_download_all') }}">{{ _('Pobierz wszystkie (ZIP)') }}</a>{% endif %}
+      <p class="muted small">{{ _('Liczba plików:') }} {{ total }}</p>
+      <div><a class="button button-outline" href="{{ url_for('media_download_all') }}">{{ _('Pobierz wszystkie (ZIP)') }}</a><p class="muted small">{{ _('ZIP zawiera cały album, niezależnie od filtrów i strony.') }}</p></div>
     </div>
+    <form method="get" action="{{ url_for('media') }}" class="media-filters">
+      <input type="hidden" name="lang" value="{{ language }}">
+      <div><label for="media-kind">{{ _('Rodzaj pliku') }}</label>
+        <select id="media-kind" name="kind">
+          <option value="all" {% if kind == 'all' %}selected{% endif %}>{{ _('Wszystkie rodzaje') }}</option>
+          <option value="image" {% if kind == 'image' %}selected{% endif %}>{{ _('Zdjęcia') }}</option>
+          <option value="video" {% if kind == 'video' %}selected{% endif %}>{{ _('Filmy') }}</option>
+        </select>
+      </div>
+      <div><label for="media-owner">{{ _('Dodane przez') }}</label>
+        <select id="media-owner" name="owner">
+          <option value="all" {% if owner == 'all' %}selected{% endif %}>{{ _('Wszystkich') }}</option>
+          <option value="mine" {% if owner == 'mine' %}selected{% endif %}>{{ _('Tylko przeze mnie') }}</option>
+        </select>
+      </div>
+      <button class="button button-small" type="submit">{{ _('Filtruj') }}</button>
+      <a href="{{ url_for('media', lang=language) }}">{{ _('Wyczyść filtry') }}</a>
+    </form>
     {% if items %}
     <div class="media-grid">
       {% for item in items %}
@@ -93,10 +111,20 @@
     {% else %}
     <div class="card media-empty">
       <span class="media-dropzone-mark" aria-hidden="true">✧</span>
+      {% if kind != 'all' or owner != 'all' %}
+      <h3>{{ _('Brak plików pasujących do filtrów') }}</h3>
+      <p><a href="{{ url_for('media', lang=language) }}">{{ _('Wyczyść filtry') }}</a></p>
+      {% else %}
       <h3>{{ _('Jeszcze tu pusto') }}</h3>
       <p class="muted">{{ _('Dodaj pierwsze zdjęcie lub film, aby zachować wspomnienia z naszego dnia.') }}</p>
+      {% endif %}
     </div>
     {% endif %}
+    <nav class="media-pagination" aria-label="{{ _('Strony biblioteki') }}">
+      {% if page > 1 %}<a class="button button-small button-outline" rel="prev" href="{{ url_for('media', kind=kind, owner=owner, page=page-1, lang=language, _anchor='biblioteka') }}">{{ _('Poprzednia strona') }}</a>{% endif %}
+      <span class="muted small">{{ _('Strona') }} {{ page }} {{ _('z') }} {{ pages }}</span>
+      {% if page < pages %}<a class="button button-small button-outline" rel="next" href="{{ url_for('media', kind=kind, owner=owner, page=page+1, lang=language, _anchor='biblioteka') }}">{{ _('Następna strona') }}</a>{% endif %}
+    </nav>
   </section>
 </div>
 
