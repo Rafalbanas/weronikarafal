@@ -324,17 +324,60 @@ if (mediaConfirm) {
   });
 }
 
-const mediaLightbox = document.querySelector('[data-media-lightbox]');
-if (mediaLightbox) {
-  const image = mediaLightbox.querySelector('[data-media-lightbox-image]');
-  document.querySelectorAll('[data-media-open]').forEach((button) => {
+function setupMediaLightbox() {
+  const dialog = document.querySelector('[data-media-lightbox]');
+  if (!dialog || typeof dialog.showModal !== 'function') return;
+  // Only previewable photos on this rendered page; videos and downloads are excluded.
+  const photos = [...document.querySelectorAll('[data-media-open]')];
+  if (!photos.length) return;
+  const image = dialog.querySelector('[data-media-lightbox-image]');
+  const caption = dialog.querySelector('[data-media-caption]');
+  const counter = dialog.querySelector('[data-media-counter]');
+  const navigation = dialog.querySelector('[data-media-navigation]');
+  let current = -1;
+  let opener = null;
+
+  const showPhoto = (index) => {
+    current = (index + photos.length) % photos.length;
+    const photo = photos[current];
+    image.src = photo.dataset.mediaSrc;
+    image.alt = photo.dataset.mediaAlt || '';
+    caption.textContent = image.alt;
+    counter.textContent = dialog.dataset.counterTemplate
+      .replace('{current}', String(current + 1)).replace('{total}', String(photos.length));
+  };
+  const move = (delta) => {
+    if (dialog.open && current >= 0 && photos.length > 1) showPhoto(current + delta);
+  };
+  navigation.hidden = photos.length < 2;
+  dialog.querySelector('[data-media-prev]').addEventListener('click', () => move(-1));
+  dialog.querySelector('[data-media-next]').addEventListener('click', () => move(1));
+  photos.forEach((button, index) => {
     button.addEventListener('click', () => {
-      image.src = button.dataset.mediaSrc;
-      image.alt = button.dataset.mediaAlt || '';
-      mediaLightbox.showModal();
+      opener = button;
+      showPhoto(index);
+      if (!dialog.open) dialog.showModal();
     });
   });
-  mediaLightbox.addEventListener('click', (event) => {
-    if (event.target === mediaLightbox) mediaLightbox.close();
+  dialog.addEventListener('keydown', (event) => {
+    if (!dialog.open || photos.length < 2 || event.altKey || event.ctrlKey || event.metaKey) return;
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+      event.preventDefault();
+      move(event.key === 'ArrowLeft' ? -1 : 1);
+    }
+    // Escape is deliberately left to the native dialog's cancel/close behavior.
+  });
+  dialog.addEventListener('click', (event) => {
+    if (event.target === dialog) dialog.close();
+  });
+  dialog.addEventListener('close', () => {
+    image.removeAttribute('src');
+    image.alt = '';
+    caption.textContent = '';
+    counter.textContent = '';
+    current = -1;
+    if (opener?.isConnected) opener.focus();
+    opener = null;
   });
 }
+setupMediaLightbox();
