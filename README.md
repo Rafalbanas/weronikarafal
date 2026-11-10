@@ -105,7 +105,11 @@ Przycisk „Ciemny motyw” w nagłówku pozwala przełączać jasny i ciemny wy
 Wybór jest zapamiętywany lokalnie w przeglądarce (`wedding-theme` w
 `localStorage`), bez danych konta ani zaproszenia. Jeśli zapis ustawień jest
 zablokowany, przełącznik nadal działa na bieżącej stronie. Bez JavaScript
-pozostaje jasny wygląd i pełna obsługa zwykłych formularzy oraz nawigacji.
+pozostaje ciemny wygląd i pełna obsługa zwykłych formularzy oraz nawigacji.
+Domyślny motyw jest ciemny; zapisany wybór jasnego motywu jest respektowany.
+Strona główna ma geometryczny znak obrączek, nowy układ oraz dwie drobne
+niespodzianki pod gwiazdką i sercem w stopce. Działają kliknięciem lub klawiaturą,
+bez dźwięku, śledzenia i przechwytywania skrótów. Bez JavaScript są ukryte.
 
 Po zalogowaniu kodem zaproszenia lub kontem pary młodej dostępne są:
 - `/schedule` — osobna rozpiska godzinowa. Dopóki `schedule` w prywatnym

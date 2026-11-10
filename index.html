@@ -1,10 +1,21 @@
 {% extends 'templates/base.html' %}
 {% block content %}
-<section class="hero">
+<div class="home-page">
+<section class="hero" aria-labelledby="hero-title">
+  <div class="hero-copy">
   <span class="eyebrow">{{ _('Zaczynamy naszą wspólną historię') }}</span>
-  <h1>Weronika <i>&amp;</i> Rafał</h1>
-  <div class="ornament" aria-hidden="true">✧</div>
+  <h1 id="hero-title">Weronika <i>&amp;</i> Rafał<span class="hero-period" aria-hidden="true">.</span></h1>
   <p class="hero-date">{{ _('27 sierpnia 2027') }}</p>
+  <p class="hero-intro">{{ _('Jeden dzień, tyle wspomnień przed nami.') }}<br>{{ _('Nie możemy się doczekać, aż powiemy sobie „tak”.') }}</p>
+  <div class="hero-actions">
+    <a class="button" href="#ceremonia">{{ _('Gdzie się spotkamy') }} <span aria-hidden="true">↓</span></a>
+    <a class="hero-link" href="#pytania">{{ _('Pytania i odpowiedzi') }}</a>
+  </div>
+  </div>
+  <div class="hero-aside">
+  <div class="orbit-art" aria-hidden="true"><span></span><span></span></div>
+  <button class="secret-star" type="button" data-surprise="star-secret" aria-controls="star-secret" aria-expanded="false" aria-label="{{ 'A little sparkle' if language == 'en' else 'Odrobina blasku' }}" hidden>✧</button>
+  <p class="secret-message" id="star-secret" hidden>{{ 'You found our lucky star. Make a wish!' if language == 'en' else 'To nasza szczęśliwa gwiazda. Pomyśl życzenie!' }}</p>
   <div class="countdown-card">
     <span class="eyebrow">{{ _('Do naszego ślubu zostało') }}</span>
     <div class="countdown" data-countdown="2027-08-27T14:00:00+02:00" aria-label="{{ _('Odliczanie do ślubu') }}">
@@ -15,10 +26,6 @@
     </div>
     <p class="countdown-note">{{ _('27.08.2027 · 14:00 · czas polski') }}</p>
   </div>
-  <p class="hero-intro">{{ _('Jeden dzień, tyle wspomnień przed nami.') }}<br>{{ _('Nie możemy się doczekać, aż powiemy sobie „tak”.') }}</p>
-  <div class="hero-actions">
-    <a class="button button-outline" href="#ceremonia">{{ _('Gdzie się spotkamy') }} <span aria-hidden="true">↓</span></a>
-    <a class="hero-link" href="#pytania">{{ _('Pytania i odpowiedzi') }}</a>
   </div>
 </section>
 <section class="public-details" id="ceremonia">
@@ -56,10 +63,6 @@
     <p>{{ _('Dajcie nam znać do 1 lipca 2027 r. Odpowiedź możecie później zaktualizować.') }}</p>
   </details>
   <details>
-    <summary>{{ _('Gdzie podać dietę i nocleg?') }}</summary>
-    <p>{{ _('Preferencje żywieniowe i zapotrzebowanie na nocleg możecie podać w formularzu potwierdzenia obecności w strefie gości.') }}</p>
-  </details>
-  <details>
     <summary>{{ _('Gdzie znajdę szczegóły przyjęcia?') }}</summary>
     <p>{{ _('Szczegóły przyjęcia są widoczne tylko zalogowanym gościom w sekcji „Szczegóły dnia”.') }}</p>
   </details>
@@ -68,4 +71,5 @@
     <p>{{ _('Zdjęcia i filmy są dostępne dla wszystkich zalogowanych gości. Możesz usuwać tylko własne pliki.') }}</p>
   </details>
 </section>
+</div>
 {% endblock %}

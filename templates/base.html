@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="{{ language }}">
+<html lang="{{ language }}" data-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   {% if request.endpoint != 'index' %}
   <meta name="robots" content="noindex, nofollow, noarchive">
   {% endif %}
-  <meta name="theme-color" content="#faf7f2">
+  <meta name="theme-color" content="#141c18">
   <meta name="description" content="{{ _('Weronika i Rafał — 27 sierpnia 2027. Informacje o ceremonii i strefa gości.') }}">
   <title>{% block title %}Weronika & Rafał · 27.08.2027{% endblock %}</title>
   <link rel="stylesheet" href="{{ asset_url('site.css') }}">
@@ -14,11 +14,14 @@
   <script src="{{ asset_url('site.js') }}" defer></script>
 </head>
 <body>
+  {% macro wedding_mark() -%}
+  <svg class="wedding-mark" viewBox="0 0 64 64" fill="none" aria-hidden="true"><rect x="10" y="18" width="28" height="36" rx="14" stroke="currentColor" stroke-width="2" transform="rotate(-24 24 36)"/><rect x="27" y="18" width="28" height="36" rx="14" stroke="currentColor" stroke-width="2" transform="rotate(24 41 36)"/><path d="M32 3v10M27 8h10" stroke="currentColor" stroke-width="1.5"/></svg>
+  {%- endmacro %}
   <a class="skip-link" href="#main">{{ _('Przejdź do treści') }}</a>
   <header class="site-header">
-    <a class="brand" href="{{ url_for('index') }}" aria-label="{{ _('Weronika i Rafał — strona główna') }}"><span class="monogram">W&R</span><span>Weronika <i>&</i> Rafał</span></a>
+    <a class="brand" href="{{ url_for('index') }}" aria-label="{{ _('Weronika i Rafał — strona główna') }}">{{ wedding_mark() }}<span class="wordmark">Weronika <i>&</i> Rafał<small>27 / 08 / 2027</small></span></a>
     <nav aria-label="{{ _('Nawigacja') }}">
-      <button type="button" class="button button-small button-outline" data-theme-toggle aria-pressed="false" hidden>{{ _('Ciemny motyw') }}</button>
+      <button type="button" class="button button-small button-outline" data-theme-toggle aria-pressed="true" hidden>{{ _('Ciemny motyw') }}</button>
       {% if not ((code is defined or issued_recovery is defined) and request.method == 'POST') %}
       <div class="language-switch" role="group" aria-label="{{ 'Language' if language == 'en' else 'Język' }}">
         <a href="{{ language_urls.pl }}" lang="pl" hreflang="pl" aria-label="Polski" {% if language == 'pl' %}aria-current="true"{% endif %}>PL</a>
@@ -46,6 +49,9 @@
     </nav>
   </header>
   <main id="main">{% block content %}{% endblock %}</main>
-  <footer class="site-footer"><span class="monogram">W&R</span><p>{{ _('Z miłością, Weronika i Rafał') }}</p><span>27 · 08 · 2027</span><p class="credit">{{ _('Realizacja:') }} <a href="https://banas.dev" target="_blank" rel="noopener noreferrer nofollow">banas.dev</a></p></footer>
+  <footer class="site-footer">{{ wedding_mark() }}<p>{{ _('Z miłością, Weronika i Rafał') }}</p><span>27 · 08 · 2027</span>
+    <button class="secret-heart" type="button" data-surprise="heart-secret" aria-controls="heart-secret" aria-expanded="false" aria-label="{{ 'A little love' if language == 'en' else 'Odrobina miłości' }}" hidden>♡</button>
+    <p class="secret-message" id="heart-secret" hidden>{{ 'Good things come in pairs. So do we.' if language == 'en' else 'Najlepsze rzeczy chodzą parami. My też.' }}</p>
+    <p class="credit">{{ _('Realizacja:') }} <a href="https://banas.dev" target="_blank" rel="noopener noreferrer nofollow">banas.dev</a></p></footer>
 </body>
 </html>

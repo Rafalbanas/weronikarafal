@@ -34,11 +34,17 @@ class ThemeTests(unittest.TestCase):
                 controls = ThemeMarkup(page.text).controls
                 self.assertEqual(len(controls), 1)
                 tag, attrs = controls[0]
-                self.assertEqual((tag, attrs['type'], attrs['aria-pressed']), ('button', 'button', 'false'))
+                self.assertEqual((tag, attrs['type'], attrs['aria-pressed']), ('button', 'button', 'true'))
+                self.assertIn('data-theme="dark"', page.text)
                 self.assertIn('hidden', attrs)
                 self.assertIn(label, page.text)
 
     def test_preference_javascript(self):
         root = Path(__file__).resolve().parents[1]
         subprocess.run(['node', str(root / 'tests/theme_preference.cjs')],
+                       cwd=root, check=True, timeout=30)
+
+    def test_surprise_javascript(self):
+        root = Path(__file__).resolve().parents[1]
+        subprocess.run(['node', str(root / 'tests/surprises.cjs')],
                        cwd=root, check=True, timeout=30)

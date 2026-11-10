@@ -15,12 +15,14 @@ class SiteContentTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         for fragment in ('id="pytania"', 'id="guest-steps-title"', 'id="faq-title"'):
             self.assertEqual(response.text.count(fragment), 1)
-        self.assertEqual(response.text.count('<details>'), 5)
-        self.assertEqual(response.text.count('<summary>'), 5)
+        self.assertEqual(response.text.count('<details>'), 4)
+        self.assertEqual(response.text.count('<summary>'), 4)
+        self.assertNotIn('Gdzie podać dietę i nocleg?', response.text)
+        self.assertNotIn('Preferencje żywieniowe i zapotrzebowanie na nocleg możecie podać w formularzu potwierdzenia obecności w strefie gości.', response.text)
         self.assertIn('href="#pytania"', response.text)
         for label in ('Trzy kroki do naszego dnia', 'Pytania i odpowiedzi',
                     'Jak wpisać kod z zaproszenia?', 'Do kiedy potwierdzić obecność?',
-                    'Gdzie podać dietę i nocleg?', 'Gdzie znajdę szczegóły przyjęcia?',
+                    'Gdzie znajdę szczegóły przyjęcia?',
                     'Kto może widzieć zdjęcia i filmy?', 'Potwierdź obecność do 1 lipca 2027 r.',
                     'Wróć po szczegóły i wspomnienia'):
             self.assertIn(label, response.text)
@@ -34,11 +36,13 @@ class SiteContentTests(unittest.TestCase):
         self.assertEqual(page.headers['Content-Language'], 'en')
         for fragment in ('id="pytania"', 'id="guest-steps-title"', 'id="faq-title"'):
             self.assertEqual(page.text.count(fragment), 1)
-        self.assertEqual(page.text.count('<details>'), 5)
-        self.assertEqual(page.text.count('<summary>'), 5)
+        self.assertEqual(page.text.count('<details>'), 4)
+        self.assertEqual(page.text.count('<summary>'), 4)
+        self.assertNotIn('Where do I enter diet and lodging?', page.text)
+        self.assertNotIn('Dietary preferences and lodging needs can be given in the RSVP form in the guest area.', page.text)
         for label in ('Three steps to our day', 'Questions and answers',
                     'How do I enter the invitation code?', 'When is the RSVP deadline?',
-                    'Where do I enter diet and lodging?', 'Where can I find reception details?',
+                    'Where can I find reception details?',
                     'Who can see the photos and videos?',
                     'Confirm attendance by 1 July 2027.', 'Come back for details and memories'):
             self.assertIn(label, page.text)

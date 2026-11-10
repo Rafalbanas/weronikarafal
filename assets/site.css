@@ -76,7 +76,7 @@
 .media-card .button{margin-top:.85rem}
 @media(max-width:700px){.steps-list{grid-template-columns:1fr}.guest-steps p{max-width:none}.faq p{padding:0 .95rem 1rem}}
 
-/* Optional display preference; the light palette remains the default. */
+/* The HTML defaults to dark; an explicit saved light preference overrides it. */
 :root{color-scheme:light}
 :root[data-theme=dark]{color-scheme:dark;--paper:#141c18;--ink:#edf3ee;--muted:#b2bfb5;--sage:#b3d3b6;--sage-light:#25392c;--line:#415047;--gold:#e0bd7e;--white:#202b24}
 .site-header nav{flex-wrap:wrap;justify-content:flex-end;min-width:0}
@@ -95,3 +95,68 @@
 :root[data-theme=dark] .media-dropzone{background:linear-gradient(180deg,#202b24,#25392c);border-color:var(--line)}
 :root[data-theme=dark] .media-dropzone:hover,:root[data-theme=dark] .media-dropzone.is-dragging{background:var(--sage-light);border-color:var(--sage)}
 :root[data-theme=dark] .media-visual{background:#26332b}
+
+/* Contemporary stationery: generous space and the geometry of two rings. */
+.site-header{max-width:1440px;margin:auto;border-bottom:0;padding-block:1.4rem}
+.wedding-mark{width:52px;height:52px;color:var(--sage);flex-shrink:0}
+.wordmark{font:1.05rem var(--sans);letter-spacing:-.035em;font-weight:500}
+.wordmark small{display:block;font-size:.55rem;letter-spacing:.22em;margin-top:.35rem;color:var(--muted)}
+.wordmark i{font-family:var(--serif);padding:0 .1rem}
+.home-page{max-width:1280px;margin:auto}
+.home-page .hero{display:grid;grid-template-columns:1.15fr 1fr;align-items:center;gap:3rem;padding:5rem max(4vw,1.25rem) 6rem;text-align:left;overflow:visible}
+.home-page .hero::before,.home-page .hero::after{display:none}
+.hero-copy{min-width:0}
+.home-page .hero h1{font-size:clamp(4rem,7.6vw,7rem);line-height:.98;letter-spacing:-.065em;margin:1.8rem 0}
+.home-page .hero h1 i{display:block;font-size:.6em;line-height:1.1;margin-left:.07em}
+.hero-period{color:var(--sage)}
+.home-page .hero-date{font:.78rem var(--sans);letter-spacing:.22em;text-transform:uppercase;margin:2rem 0}
+.home-page .hero-intro{margin:0 0 2rem;line-height:1.9}
+.home-page .hero-actions{justify-content:flex-start;gap:1.4rem}
+.hero-aside{position:relative;min-width:0;padding-top:240px}
+.orbit-art{position:absolute;inset:0 0 auto;height:300px;overflow:hidden}
+.orbit-art span{position:absolute;width:180px;height:235px;border:1px solid var(--gold);border-radius:100px;left:calc(50% - 135px);top:25px;transform:rotate(-28deg)}
+.orbit-art span+span{left:calc(50% - 45px);transform:rotate(28deg);border-color:var(--sage)}
+.home-page .countdown-card{position:relative;margin:0;padding:1.8rem 1rem 1.3rem;text-align:center;border-radius:8px;background:var(--paper);border:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.home-page .countdown>div{background:none;border:0;border-radius:0;padding:.5rem .2rem}
+.home-page .countdown>div+div{border-left:1px solid var(--line)}
+.home-page .countdown strong{font-family:var(--sans);font-weight:300;font-variant-numeric:tabular-nums;font-size:clamp(1.8rem,3.5vw,3rem);letter-spacing:-.06em}
+.home-page .public-details{max-width:none;display:grid;grid-template-columns:1.2fr 1fr;gap:2rem;padding:2rem max(4vw,1.25rem) 5rem;text-align:left;align-items:center}
+.home-page .ceremony-card{width:100%;max-width:none;border-radius:12px;box-shadow:none;padding:2.5rem}
+.home-page .ceremony-card .button{margin:.4rem .25rem .4rem 0}
+.home-page .private-invitation{border:0;margin:0;padding:2rem}
+.home-page .private-invitation p{margin-left:0}
+.home-page .guest-steps{max-width:none;text-align:left;padding:2rem max(4vw,1.25rem) 5rem}
+.home-page .guest-steps>p{max-width:none;margin-left:0}
+.home-page .steps-list{gap:2rem;margin-top:2rem}
+.home-page .steps-list li{display:block;background:none;border:0;border-radius:0;border-top:1px solid var(--line);padding:1.5rem 0}
+.home-page .steps-list li::before{border:0;width:auto;height:auto;display:block;text-align:left;content:'0' counter(step);font:.75rem var(--sans);margin-bottom:1.2rem}
+.home-page .steps-list h3{font-size:1.5rem;margin-bottom:.8rem}
+.home-page .steps-list p{font-size:.85rem}
+.home-page .faq{max-width:none;margin:0 max(4vw,1.25rem) 5rem;padding:2rem 0;border-top:1px solid var(--line)}
+.home-page .faq details{border:0;border-bottom:1px solid var(--line);border-radius:0;background:none;margin:0;padding:.5rem 0}
+.home-page .faq summary{padding:1rem 0;font-weight:500;font-size:.95rem}
+.home-page .faq p{padding:0 0 1rem;max-width:720px;color:var(--muted)}
+.site-footer{padding:3rem 1rem;background:var(--sage-light)}
+.site-footer>.wedding-mark{display:block;margin:auto}
+.secret-star,.secret-heart{border:0;background:none;color:var(--gold);cursor:pointer;min-width:44px;min-height:44px;line-height:1;padding:.5rem;font-size:1.7rem;border-radius:50%}
+.secret-star{position:absolute;right:14%;top:5px;transform:rotate(12deg);transition:transform .3s}
+.secret-star:hover,.secret-star[aria-expanded=true]{transform:rotate(100deg)}
+.secret-heart{display:block;margin:.5rem auto 0;font-size:1.2rem}
+.secret-heart:hover,.secret-heart[aria-expanded=true]{color:var(--sage)}
+.site-footer .secret-message,.secret-message{font:.8rem/1.6 var(--sans);color:var(--sage);text-align:center;margin:0 auto 1rem;max-width:300px}
+.hero-aside .secret-message{position:absolute;top:150px;left:10%;right:10%;padding:.6rem;background:var(--paper);border:1px solid var(--line);border-radius:8px;z-index:1}
+@media(max-width:800px){
+  .home-page .hero{grid-template-columns:1fr;gap:2rem;padding-top:2.5rem;padding-bottom:3rem}
+  .home-page .hero h1{font-size:clamp(4rem,13vw,6rem)}
+  .home-page .hero h1 i{display:inline;font-size:.65em;margin:0 .05em}
+  .hero-aside{padding-top:200px;max-width:500px;width:100%;margin:auto}
+  .orbit-art{height:230px}.orbit-art span{width:145px;height:185px;left:calc(50% - 110px);top:15px}.orbit-art span+span{left:calc(50% - 35px)}
+  .hero-aside .secret-message{top:110px}
+  .home-page .public-details{grid-template-columns:1fr;gap:1rem;padding-bottom:2rem}
+  .home-page .ceremony-card{padding:1.5rem}.home-page .private-invitation{padding:1.5rem .5rem}
+  .home-page .steps-list{grid-template-columns:1fr;gap:0}.home-page .guest-steps{padding-bottom:2rem}
+  .home-page .steps-list li{display:grid;grid-template-columns:32px 1fr;gap:0 .75rem}
+  .home-page .steps-list li::before{grid-row:1/3;margin:.25rem 0 0}
+}
+@media(max-width:380px){.site-header{gap:.5rem;padding-inline:.75rem}.wedding-mark{width:40px;height:44px}.home-page .hero-actions{gap:1rem}.home-page .hero h1{font-size:3.7rem}}
+@media(prefers-reduced-motion:reduce){.secret-star{transition:none}}
