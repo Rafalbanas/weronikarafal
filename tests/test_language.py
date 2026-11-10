@@ -105,9 +105,9 @@ class LanguageTests(unittest.TestCase):
                            [("pl", "/media?lang=pl"), ("en", "/media?lang=en")])
 
     def test_default_polish_switch_and_cookie_persistence(self):
-        self.assertIn('<html lang="pl">', self.get('/').text)
+        self.assertRegex(self.get('/').text, r'<html\b[^>]*\blang="pl"(?:\s[^>]*)?>')
         page = self.get('/?lang=en')
-        self.assertIn('<html lang="en">', page.text)
+        self.assertRegex(page.text, r'<html\b[^>]*\blang="en"(?:\s[^>]*)?>')
         self.assertIn('Wedding ceremony', page.text)
         self.assertIn('27 August 2027', page.text)
         self.assertEqual(page.headers['Content-Language'], 'en')
@@ -117,15 +117,15 @@ class LanguageTests(unittest.TestCase):
             self.assertIn(flag, page.headers['Set-Cookie'])
         self.assertIn('Invitation code', self.get('/login').text)
         self.assertIn('Couple’s dashboard', self.get('/admin/login').text)
-        self.assertIn('<html lang="pl">', self.get('/?lang=pl').text)
+        self.assertRegex(self.get('/?lang=pl').text, r'<html\b[^>]*\blang="pl"(?:\s[^>]*)?>')
 
     def test_preferences_are_independent_and_invalid_language_is_ignored(self):
         self.get('/?lang=en')
-        self.assertIn('<html lang="pl">', self.get('/', self.app.test_client()).text)
+        self.assertRegex(self.get('/', self.app.test_client()).text, r'<html\b[^>]*\blang="pl"(?:\s[^>]*)?>')
         page = self.get('/?lang=%3Cscript%3E')
-        self.assertIn('<html lang="en">', page.text)
+        self.assertRegex(page.text, r'<html\b[^>]*\blang="en"(?:\s[^>]*)?>')
         self.assertNotIn('<script>', page.text)
-        self.assertIn('<html lang="en">', self.get('/?lang=fr').text)
+        self.assertRegex(self.get('/?lang=fr').text, r'<html\b[^>]*\blang="en"(?:\s[^>]*)?>')
 
     def test_guest_rsvp_and_logout_keep_language_and_database_values(self):
         self.get('/?lang=en')
@@ -142,7 +142,7 @@ class LanguageTests(unittest.TestCase):
             row = db.execute('SELECT * FROM rsvps WHERE guest_id=?', (self.alice,)).fetchone()
             self.assertEqual((row['attendance'], row['diet'], row['lodging']), ('yes', 'vegan', 'yes'))
         self.post('/logout', {'csrf_token': self.token('/guest')})
-        self.assertIn('<html lang="en">', self.get('/').text)
+        self.assertRegex(self.get('/').text, r'<html\b[^>]*\blang="en"(?:\s[^>]*)?>')
 
     def test_english_errors_and_validation_messages(self):
         self.get('/?lang=en')

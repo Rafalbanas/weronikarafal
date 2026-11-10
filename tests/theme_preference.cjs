@@ -29,9 +29,9 @@ function fixture(saved, blocked = false) {
 
 for (const saved of [null, '', 'invalid', '<script>']) {
   const f = fixture(saved);
-  assert.equal(f.root.dataset.theme, 'light');
+  assert.equal(f.root.dataset.theme, 'dark');
   assert.equal(f.button.hidden, false);
-  assert.equal(f.attributes['aria-pressed'], 'false');
+  assert.equal(f.attributes['aria-pressed'], 'true');
   assert.deepEqual(f.writes, []);
 }
 const f = fixture('dark');
@@ -47,7 +47,10 @@ assert.equal(f.root.dataset.theme, 'dark');
 assert.deepEqual(f.writes, [['wedding-theme', 'light'], ['wedding-theme', 'dark']]);
 const unavailable = fixture(null, true);
 unavailable.click();
-assert.equal(unavailable.root.dataset.theme, 'dark');
-unavailable.click();
 assert.equal(unavailable.root.dataset.theme, 'light');
-console.log('Theme preference: default, restore, toggle, safe storage fallback OK');
+unavailable.click();
+assert.equal(unavailable.root.dataset.theme, 'dark');
+const light = fixture('light');
+assert.equal(light.root.dataset.theme, 'light');
+assert.equal(light.attributes['aria-pressed'], 'false');
+console.log('Theme preference: dark default, light/dark restore, toggle, safe storage fallback OK');

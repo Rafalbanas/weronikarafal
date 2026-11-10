@@ -9,9 +9,10 @@ if (themeToggle) {
     const color = document.querySelector('meta[name="theme-color"]');
     if (color) color.setAttribute('content', theme === 'dark' ? '#141c18' : '#faf7f2');
   };
-  let savedTheme = 'light';
+  let savedTheme = 'dark';
   try {
-    if (window.localStorage.getItem('wedding-theme') === 'dark') savedTheme = 'dark';
+    const preference = window.localStorage.getItem('wedding-theme');
+    if (preference === 'light' || preference === 'dark') savedTheme = preference;
   } catch { /* Storage can be disabled; the toggle still works on this page. */ }
   applyTheme(savedTheme);
   themeToggle.hidden = false;
@@ -403,3 +404,14 @@ function setupMediaLightbox() {
   });
 }
 setupMediaLightbox();
+
+// Opt-in discoveries: no global shortcuts, tracking or stored state.
+document.querySelectorAll('[data-surprise]').forEach((button) => {
+  const message = document.getElementById(button.dataset.surprise);
+  if (!message) return;
+  button.hidden = false;
+  button.addEventListener('click', () => {
+    message.hidden = !message.hidden;
+    button.setAttribute('aria-expanded', String(!message.hidden));
+  });
+});
