@@ -107,7 +107,11 @@ Wybór jest zapamiętywany lokalnie w przeglądarce (`wedding-theme` w
 zablokowany, przełącznik nadal działa na bieżącej stronie. Bez JavaScript
 pozostaje ciemny wygląd i pełna obsługa zwykłych formularzy oraz nawigacji.
 Domyślny motyw jest ciemny; zapisany wybór jasnego motywu jest respektowany.
-Strona główna ma geometryczny znak obrączek, nowy układ oraz dwie drobne
+Strona główna ma autorski, geometryczny monogram W/R (także w faviconie),
+dużą bezszeryfową typografię, kontrastowy plakat z datą i osobny pas odliczania.
+Układ jest responsywny, a jasny wariant pozostaje dostępny jako opcja.
+Wszystkie elementy graficzne są lokalnymi SVG lub CSS — bez zewnętrznych fontów,
+zdjęć i dodatkowych żądań do usług graficznych. Zachowano dwie drobne
 niespodzianki pod gwiazdką i sercem w stopce. Działają kliknięciem lub klawiaturą,
 bez dźwięku, śledzenia i przechwytywania skrótów. Bez JavaScript są ukryte.
 
