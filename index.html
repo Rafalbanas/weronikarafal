@@ -3,34 +3,41 @@
 <div class="home-page">
 <section class="hero" aria-labelledby="hero-title">
   <div class="hero-copy">
-  <span class="eyebrow">{{ _('Zaczynamy naszą wspólną historię') }}</span>
-  <h1 id="hero-title">Weronika <i>&amp;</i> Rafał<span class="hero-period" aria-hidden="true">.</span></h1>
-  <p class="hero-date">{{ _('27 sierpnia 2027') }}</p>
+  <div class="hero-kicker"><span class="status-dot" aria-hidden="true"></span><span>{{ 'WE ARE GETTING MARRIED' if language == 'en' else 'BIERZEMY ŚLUB' }}</span><span class="kicker-year">/ 2027</span></div>
+  <h1 id="hero-title"><span class="name-first">Weronika</span><span class="name-last"><i>&amp;</i> Rafał<span class="hero-period" aria-hidden="true">.</span></span></h1>
+  <p class="hero-date">{{ _('Zaczynamy naszą wspólną historię') }}</p>
   <p class="hero-intro">{{ _('Jeden dzień, tyle wspomnień przed nami.') }}<br>{{ _('Nie możemy się doczekać, aż powiemy sobie „tak”.') }}</p>
   <div class="hero-actions">
-    <a class="button" href="#ceremonia">{{ _('Gdzie się spotkamy') }} <span aria-hidden="true">↓</span></a>
-    <a class="hero-link" href="#pytania">{{ _('Pytania i odpowiedzi') }}</a>
+    <a class="button" href="#ceremonia">{{ _('Gdzie się spotkamy') }} <span class="button-arrow" aria-hidden="true">↗</span></a>
+    <a class="hero-link" href="#pytania">{{ _('Pytania i odpowiedzi') }} <span aria-hidden="true">↓</span></a>
   </div>
   </div>
   <div class="hero-aside">
-  <div class="orbit-art" aria-hidden="true"><span></span><span></span></div>
+  <div class="date-poster">
+    <div class="poster-top"><span>{{ 'OUR DAY' if language == 'en' else 'NASZ DZIEŃ' }}</span><span aria-hidden="true">W / R</span></div>
+    <time class="poster-date" datetime="2027-08-27" aria-label="{{ _('27 sierpnia 2027') }}"><span>27</span><span>08<span class="poster-spark" aria-hidden="true">✳</span></span><span class="poster-year">2027</span></time>
+    <div class="poster-bottom"><span>{{ 'FRIDAY' if language == 'en' else 'PIĄTEK' }}<br>14:00</span><span>{{ 'BE THERE.' if language == 'en' else 'BĄDŹCIE Z NAMI.' }}<br><span aria-hidden="true">↙</span></span></div>
+  </div>
   <button class="secret-star" type="button" data-surprise="star-secret" aria-controls="star-secret" aria-expanded="false" aria-label="{{ 'A little sparkle' if language == 'en' else 'Odrobina blasku' }}" hidden>✧</button>
   <p class="secret-message" id="star-secret" hidden>{{ 'You found our lucky star. Make a wish!' if language == 'en' else 'To nasza szczęśliwa gwiazda. Pomyśl życzenie!' }}</p>
-  <div class="countdown-card">
+  </div>
+</section>
+<section class="countdown-card" aria-label="{{ _('Odliczanie do ślubu') }}">
+  <div class="countdown-heading"><span class="countdown-symbol" aria-hidden="true">↘</span>
     <span class="eyebrow">{{ _('Do naszego ślubu zostało') }}</span>
+    <p class="countdown-note">{{ _('27.08.2027 · 14:00 · czas polski') }}</p>
+  </div>
     <div class="countdown" data-countdown="2027-08-27T14:00:00+02:00" aria-label="{{ _('Odliczanie do ślubu') }}">
       <div><strong data-unit="days">—</strong><span>{{ _('dni') }}</span></div>
       <div><strong data-unit="hours">—</strong><span>{{ _('godzin') }}</span></div>
       <div><strong data-unit="minutes">—</strong><span>{{ _('minut') }}</span></div>
       <div><strong data-unit="seconds">—</strong><span>{{ _('sekund') }}</span></div>
     </div>
-    <p class="countdown-note">{{ _('27.08.2027 · 14:00 · czas polski') }}</p>
-  </div>
-  </div>
 </section>
 <section class="public-details" id="ceremonia">
   <div class="card ceremony-card">
-    <span class="eyebrow">{{ _('Początek naszego dnia') }}</span><h2>{{ _('Ceremonia ślubna') }}</h2>
+    <span class="section-index">01 / {{ 'THE BEGINNING' if language == 'en' else 'POCZĄTEK' }}</span>
+    <span class="eyebrow">{{ _('Początek naszego dnia') }}</span><h2>{{ _('Ceremonia ślubna') }}<span class="heading-dot" aria-hidden="true">.</span></h2>
     <p class="ceremony-time">14:00</p><p class="muted small">{{ _('Piątek, 27 sierpnia 2027 r.') }}</p>
     {% if ceremony.name %}<h3>{{ ceremony.name }}</h3><p class="muted pre-line">{{ ceremony.address }}</p>
     {% if ceremony.address %}
@@ -40,9 +47,10 @@
     {% else %}<p class="muted">{{ _('Nazwę i adres kościoła podamy tutaj wkrótce.') }}</p>{% endif %}
     <a class="button button-outline" href="{{ url_for('ceremony_ics') }}" download>{{ _('Dodaj do kalendarza') }}</a>
   </div>
-  <div class="private-invitation"><span class="eyebrow">{{ _('Masz już zaproszenie?') }}</span><h2>{{ _('Twoje miejsce z nami') }}</h2><p class="muted">{{ _('Potwierdzenie obecności, lista gości i szczegóły przyjęcia czekają w strefie dla zaproszonych.') }}</p><a class="button" href="{{ url_for('guest') if g.guest else url_for('login') }}">{{ _('Przejdź do strefy gości') if g.guest else _('Zaloguj się kodem z zaproszenia') }} <span aria-hidden="true">→</span></a></div>
+  <div class="private-invitation"><span class="invitation-icon" aria-hidden="true">↗</span><span class="eyebrow">{{ _('Masz już zaproszenie?') }}</span><h2>{{ _('Twoje miejsce z nami') }}<span class="heading-dot" aria-hidden="true">.</span></h2><p class="muted">{{ _('Potwierdzenie obecności, lista gości i szczegóły przyjęcia czekają w strefie dla zaproszonych.') }}</p><a class="button" href="{{ url_for('guest') if g.guest else url_for('login') }}">{{ _('Przejdź do strefy gości') if g.guest else _('Zaloguj się kodem z zaproszenia') }} <span aria-hidden="true">→</span></a><span class="invitation-signature" aria-hidden="true">W + R</span></div>
 </section>
 <section class="guest-steps" aria-labelledby="guest-steps-title">
+  <span class="section-index">02 / {{ 'BEFORE WE MEET' if language == 'en' else 'ZANIM SIĘ SPOTKAMY' }}</span>
   <span class="eyebrow">{{ _('Dla zaproszonych') }}</span><h2 id="guest-steps-title">{{ _('Trzy kroki do naszego dnia') }}</h2>
   <p class="muted">{{ _('Wszystko, co warto zrobić przed naszym wspólnym świętowaniem.') }}</p>
   <ol class="steps-list">
@@ -52,7 +60,9 @@
   </ol>
 </section>
 <section class="faq" id="pytania" aria-labelledby="faq-title">
+  <div class="faq-heading"><span class="section-index">03 / {{ 'GOOD TO KNOW' if language == 'en' else 'WARTO WIEDZIEĆ' }}</span>
   <span class="eyebrow">{{ _('Praktyczne sprawy') }}</span><h2 id="faq-title">{{ _('Pytania i odpowiedzi') }}</h2>
+  </div><div class="faq-list">
   <details>
     <summary>{{ _('Jak wpisać kod z zaproszenia?') }}</summary>
     <p>{{ _('Wpisz indywidualny kod z zaproszenia, aby potwierdzić obecność i poznać szczegóły naszego dnia.') }}</p>
@@ -70,6 +80,7 @@
     <summary>{{ _('Kto może widzieć zdjęcia i filmy?') }}</summary>
     <p>{{ _('Zdjęcia i filmy są dostępne dla wszystkich zalogowanych gości. Możesz usuwać tylko własne pliki.') }}</p>
   </details>
+  </div>
 </section>
 </div>
 {% endblock %}
