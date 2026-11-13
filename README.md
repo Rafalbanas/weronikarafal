@@ -108,12 +108,19 @@ zablokowany, przełącznik nadal działa na bieżącej stronie. Bez JavaScript
 pozostaje ciemny wygląd i pełna obsługa zwykłych formularzy oraz nawigacji.
 Domyślny motyw jest ciemny; zapisany wybór jasnego motywu jest respektowany.
 Strona główna ma autorski, geometryczny monogram W/R (także w faviconie),
-dużą bezszeryfową typografię, kontrastowy plakat z datą i osobny pas odliczania.
+dużą szeryfową typografię editorial, botaniczny plakat „27 · 08 · 27”
+i osobny pas odliczania. Pełny rok 2027 pozostaje w SEO, semantycznych datach,
+opisach ceremonii i kalendarzu; ślub to niezmiennie 27 sierpnia 2027, 14:00 Europe/Warsaw.
 Układ jest responsywny, a jasny wariant pozostaje dostępny jako opcja.
 Wszystkie elementy graficzne są lokalnymi SVG lub CSS — bez zewnętrznych fontów,
 zdjęć i dodatkowych żądań do usług graficznych. Zachowano dwie drobne
-niespodzianki pod gwiazdką i sercem w stopce. Działają kliknięciem lub klawiaturą,
+niespodzianki pod gwiazdką i sercem w stopce: kot wyglądający zza plakatu
+oraz dwa koty tworzące serce ogonami. Działają kliknięciem lub klawiaturą,
 bez dźwięku, śledzenia i przechwytywania skrótów. Bez JavaScript są ukryte.
+Ponowne zamknięcie i otwarcie uruchamia krótką animację od początku.
+Ruch jest wyłączany przez `prefers-reduced-motion`; sekcje pozostają widoczne
+bez JavaScript i bez IntersectionObserver. Szczegóły audytu i opcjonalna
+kontrola przeglądarkowa: [docs/redesign.md](docs/redesign.md).
 
 Po zalogowaniu kodem zaproszenia lub kontem pary młodej dostępne są:
 - `/schedule` — osobna rozpiska godzinowa. Dopóki `schedule` w prywatnym

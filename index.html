@@ -3,9 +3,9 @@
 <div class="home-page">
 <section class="hero" aria-labelledby="hero-title">
   <div class="hero-copy">
-  <div class="hero-kicker"><span class="status-dot" aria-hidden="true"></span><span>{{ 'WE ARE GETTING MARRIED' if language == 'en' else 'BIERZEMY ŚLUB' }}</span><span class="kicker-year">/ 2027</span></div>
+  <div class="hero-kicker"><span class="status-dot" aria-hidden="true"></span><span>{{ 'WE ARE GETTING MARRIED' if language == 'en' else 'BIERZEMY ŚLUB' }}</span><span class="kicker-year">W / R</span></div>
   <h1 id="hero-title"><span class="name-first">Weronika</span><span class="name-last"><i>&amp;</i> Rafał<span class="hero-period" aria-hidden="true">.</span></span></h1>
-  <p class="hero-date">{{ _('Zaczynamy naszą wspólną historię') }}</p>
+  <p class="hero-date"><span>27 · 08 · 27</span> <span class="date-caption">{{ _('Zaczynamy naszą wspólną historię') }}</span></p>
   <p class="hero-intro">{{ _('Jeden dzień, tyle wspomnień przed nami.') }}<br>{{ _('Nie możemy się doczekać, aż powiemy sobie „tak”.') }}</p>
   <div class="hero-actions">
     <a class="button" href="#ceremonia">{{ _('Gdzie się spotkamy') }} <span class="button-arrow" aria-hidden="true">↗</span></a>
@@ -13,28 +13,35 @@
   </div>
   </div>
   <div class="hero-aside">
+  <svg class="botanical" viewBox="0 0 300 520" fill="none" aria-hidden="true"><path d="M130 500C235 345 70 236 227 15M168 398C75 380 32 328 35 280c73 6 122 54 133 118ZM163 310c70-12 110-55 111-107-66 10-106 45-111 107ZM164 209C102 193 82 156 88 113c50 15 77 46 76 96ZM193 100c47-2 75-24 91-61-43-3-77 20-91 61Z" stroke="currentColor" stroke-width="1.2"/></svg>
   <div class="date-poster">
     <div class="poster-top"><span>{{ 'OUR DAY' if language == 'en' else 'NASZ DZIEŃ' }}</span><span aria-hidden="true">W / R</span></div>
-    <time class="poster-date" datetime="2027-08-27" aria-label="{{ _('27 sierpnia 2027') }}"><span>27</span><span>08<span class="poster-spark" aria-hidden="true">✳</span></span><span class="poster-year">2027</span></time>
+    <time class="poster-date" datetime="2027-08-27" aria-label="{{ _('27 sierpnia 2027') }}"><span>27</span><span class="poster-divider" aria-hidden="true">·</span><span>08</span><span class="poster-divider" aria-hidden="true">·</span><span class="poster-year">27</span></time>
+    <div class="poster-caption">
+    <div class="secret-message star-scene" id="star-secret" hidden>
+    <svg class="peeking-cat" viewBox="0 0 160 150" fill="none" aria-hidden="true"><path class="cat-tail" d="M112 124c55-6 37-65 19-44-10 12 8 24 14 6" stroke="currentColor" stroke-width="7" stroke-linecap="round"/><path d="M38 146V74L32 24l34 19c12-4 22-4 34 0l28-19-3 52v70" fill="var(--paper)" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><g class="cat-eyes" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M56 68h6m34 0h6"/></g><path d="m76 79 4 4 4-4m-4 4v7m-11-2c4 6 8 5 11 2 4 4 8 4 12-2M43 81l-24-3m25 11-22 5m91-13 24-3m-24 11 22 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M45 139v-19c0-10 16-10 16 0v19m38 0v-19c0-10 16-10 16 0v19" fill="var(--paper)" stroke="currentColor" stroke-width="2"/></svg>
+    <p role="status">{{ 'You found our lucky star. Make a wish!' if language == 'en' else 'To nasza szczęśliwa gwiazda. Pomyśl życzenie!' }}<br><strong>{{ 'The rings? Under feline supervision.' if language == 'en' else 'Obrączki? Pod kocim nadzorem.' }}</strong></p>
+  </div>
+    <span class="poster-script" aria-hidden="true">{{ 'a day, a lifetime' if language == 'en' else 'jeden dzień, całe życie' }}</span>
+    </div>
     <div class="poster-bottom"><span>{{ 'FRIDAY' if language == 'en' else 'PIĄTEK' }}<br>14:00</span><span>{{ 'BE THERE.' if language == 'en' else 'BĄDŹCIE Z NAMI.' }}<br><span aria-hidden="true">↙</span></span></div>
   </div>
   <button class="secret-star" type="button" data-surprise="star-secret" aria-controls="star-secret" aria-expanded="false" aria-label="{{ 'A little sparkle' if language == 'en' else 'Odrobina blasku' }}" hidden>✧</button>
-  <p class="secret-message" id="star-secret" hidden>{{ 'You found our lucky star. Make a wish!' if language == 'en' else 'To nasza szczęśliwa gwiazda. Pomyśl życzenie!' }}</p>
   </div>
 </section>
 <section class="countdown-card" aria-label="{{ _('Odliczanie do ślubu') }}">
   <div class="countdown-heading"><span class="countdown-symbol" aria-hidden="true">↘</span>
     <span class="eyebrow">{{ _('Do naszego ślubu zostało') }}</span>
-    <p class="countdown-note">{{ _('27.08.2027 · 14:00 · czas polski') }}</p>
+    <p class="countdown-note">27 · 08 · 27 / 14:00 / {{ 'Warsaw time' if language == 'en' else 'czas polski' }}</p>
   </div>
-    <div class="countdown" data-countdown="2027-08-27T14:00:00+02:00" aria-label="{{ _('Odliczanie do ślubu') }}">
+    <div class="countdown" data-countdown="2027-08-27T14:00:00+02:00" role="timer" aria-live="off" aria-label="{{ _('Odliczanie do ślubu') }}">
       <div><strong data-unit="days">—</strong><span>{{ _('dni') }}</span></div>
       <div><strong data-unit="hours">—</strong><span>{{ _('godzin') }}</span></div>
       <div><strong data-unit="minutes">—</strong><span>{{ _('minut') }}</span></div>
       <div><strong data-unit="seconds">—</strong><span>{{ _('sekund') }}</span></div>
     </div>
 </section>
-<section class="public-details" id="ceremonia">
+<section class="public-details" id="ceremonia" data-reveal>
   <div class="card ceremony-card">
     <span class="section-index">01 / {{ 'THE BEGINNING' if language == 'en' else 'POCZĄTEK' }}</span>
     <span class="eyebrow">{{ _('Początek naszego dnia') }}</span><h2>{{ _('Ceremonia ślubna') }}<span class="heading-dot" aria-hidden="true">.</span></h2>
@@ -49,7 +56,7 @@
   </div>
   <div class="private-invitation"><span class="invitation-icon" aria-hidden="true">↗</span><span class="eyebrow">{{ _('Masz już zaproszenie?') }}</span><h2>{{ _('Twoje miejsce z nami') }}<span class="heading-dot" aria-hidden="true">.</span></h2><p class="muted">{{ _('Potwierdzenie obecności, lista gości i szczegóły przyjęcia czekają w strefie dla zaproszonych.') }}</p><a class="button" href="{{ url_for('guest') if g.guest else url_for('login') }}">{{ _('Przejdź do strefy gości') if g.guest else _('Zaloguj się kodem z zaproszenia') }} <span aria-hidden="true">→</span></a><span class="invitation-signature" aria-hidden="true">W + R</span></div>
 </section>
-<section class="guest-steps" aria-labelledby="guest-steps-title">
+<section class="guest-steps" aria-labelledby="guest-steps-title" data-reveal>
   <span class="section-index">02 / {{ 'BEFORE WE MEET' if language == 'en' else 'ZANIM SIĘ SPOTKAMY' }}</span>
   <span class="eyebrow">{{ _('Dla zaproszonych') }}</span><h2 id="guest-steps-title">{{ _('Trzy kroki do naszego dnia') }}</h2>
   <p class="muted">{{ _('Wszystko, co warto zrobić przed naszym wspólnym świętowaniem.') }}</p>
@@ -59,7 +66,7 @@
     <li><h3>{{ _('Wróć po szczegóły i wspomnienia') }}</h3><p class="muted">{{ _('Szczegóły przyjęcia, lista gości i wspomnienia czekają w strefie gości.') }}</p></li>
   </ol>
 </section>
-<section class="faq" id="pytania" aria-labelledby="faq-title">
+<section class="faq" id="pytania" aria-labelledby="faq-title" data-reveal>
   <div class="faq-heading"><span class="section-index">03 / {{ 'GOOD TO KNOW' if language == 'en' else 'WARTO WIEDZIEĆ' }}</span>
   <span class="eyebrow">{{ _('Praktyczne sprawy') }}</span><h2 id="faq-title">{{ _('Pytania i odpowiedzi') }}</h2>
   </div><div class="faq-list">
