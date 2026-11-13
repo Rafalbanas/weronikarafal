@@ -9,6 +9,19 @@
   <meta name="theme-color" content="#141c18">
   <meta name="description" content="{{ _('Weronika i Rafał — 27 sierpnia 2027. Informacje o ceremonii i strefa gości.') }}">
   <title>{% block title %}Weronika & Rafał · 27.08.2027{% endblock %}</title>
+  {% if request.endpoint == 'index' %}
+  {% set public_url = 'https://weronikarafal.com/?lang=' ~ language %}
+  <link rel="canonical" href="{{ public_url }}">
+  <link rel="alternate" hreflang="pl" href="https://weronikarafal.com/?lang=pl">
+  <link rel="alternate" hreflang="en" href="https://weronikarafal.com/?lang=en">
+  <link rel="alternate" hreflang="x-default" href="https://weronikarafal.com/?lang=pl">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Weronika &amp; Rafał · 27.08.2027">
+  <meta property="og:description" content="{{ _('Weronika i Rafał — 27 sierpnia 2027. Informacje o ceremonii i strefa gości.') }}">
+  <meta property="og:url" content="{{ public_url }}">
+  <meta property="og:locale" content="{{ 'en_GB' if language == 'en' else 'pl_PL' }}">
+  <meta name="twitter:card" content="summary">
+  {% endif %}
   <link rel="stylesheet" href="{{ asset_url('site.css') }}">
   <link rel="icon" href="{{ asset_url('favicon.svg') }}" type="image/svg+xml">
   <script src="{{ asset_url('site.js') }}" defer></script>
@@ -19,9 +32,9 @@
   {%- endmacro %}
   <a class="skip-link" href="#main">{{ _('Przejdź do treści') }}</a>
   <header class="site-header">
-    <a class="brand" href="{{ url_for('index') }}" aria-label="{{ _('Weronika i Rafał — strona główna') }}">{{ wedding_mark() }}<span class="wordmark">WERONIKA / RAFAŁ<small>27.08.2027</small></span></a>
+    <a class="brand" href="{{ url_for('index') }}" aria-label="{{ _('Weronika i Rafał — strona główna') }}">{{ wedding_mark() }}<span class="wordmark">WERONIKA / RAFAŁ<small>27 · 08 · 27</small></span></a>
     <nav aria-label="{{ _('Nawigacja') }}">
-      <button type="button" class="button button-small button-outline" data-theme-toggle aria-pressed="true" hidden>{{ _('Ciemny motyw') }}</button>
+      <span class="theme-slot"><span class="button button-small button-outline theme-placeholder" aria-hidden="true">{{ _('Ciemny motyw') }}</span><button type="button" class="button button-small button-outline" data-theme-toggle aria-pressed="true" hidden>{{ _('Ciemny motyw') }}</button></span>
       {% if not ((code is defined or issued_recovery is defined) and request.method == 'POST') %}
       <div class="language-switch" role="group" aria-label="{{ 'Language' if language == 'en' else 'Język' }}">
         <a href="{{ language_urls.pl }}" lang="pl" hreflang="pl" aria-label="Polski" {% if language == 'pl' %}aria-current="true"{% endif %}>PL</a>
@@ -49,9 +62,12 @@
     </nav>
   </header>
   <main id="main">{% block content %}{% endblock %}</main>
-  <footer class="site-footer"><div class="footer-lockup">{{ wedding_mark() }}<span class="footer-statement" aria-hidden="true">{{ 'BETTER' if language == 'en' else 'LEPIEJ' }}<br>{{ 'TOGETHER.' if language == 'en' else 'RAZEM.' }}</span></div><p>{{ _('Z miłością, Weronika i Rafał') }}</p><span>27 · 08 · 2027</span>
+  <footer class="site-footer"><div class="footer-lockup">{{ wedding_mark() }}<span class="footer-statement" aria-hidden="true">{{ 'BETTER' if language == 'en' else 'LEPIEJ' }}<br>{{ 'TOGETHER.' if language == 'en' else 'RAZEM.' }}</span></div><p>{{ _('Z miłością, Weronika i Rafał') }}</p><span>27 · 08 · 27</span>
     <button class="secret-heart" type="button" data-surprise="heart-secret" aria-controls="heart-secret" aria-expanded="false" aria-label="{{ 'A little love' if language == 'en' else 'Odrobina miłości' }}" hidden>♡</button>
-    <p class="secret-message" id="heart-secret" hidden>{{ 'Good things come in pairs. So do we.' if language == 'en' else 'Najlepsze rzeczy chodzą parami. My też.' }}</p>
+    <div class="heart-stage"><div class="secret-message heart-scene" id="heart-secret" hidden>
+      <svg class="cat-couple" viewBox="0 0 240 100" fill="none" aria-hidden="true"><g class="cat-left"><path d="M82 90c-24 0-30-15-26-35l-5-27 21 12 19-12-2 30c13 18 9 32-7 32Z" fill="var(--paper)" stroke="currentColor" stroke-width="2"/><path d="M80 61h2m-17 0h2m5 9 3 2 3-2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></g><g class="cat-right"><path d="M158 90c24 0 30-15 26-35l5-27-21 12-19-12 2 30c-13 18-9 32 7 32Z" fill="var(--paper)" stroke="currentColor" stroke-width="2"/><path d="M158 61h2m13 0h2m-13 9 3 2 3-2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></g><g class="heart-tails" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M87 87c14 0 31-10 33-20-45-26-25-60-9-43 5 5 8 12 9 15"/><path d="M153 87c-14 0-31-10-33-20 45-26 25-60 9-43-5 5-8 12-9 15"/></g></svg>
+      <p role="status">{{ 'Good things come in pairs. So do we.' if language == 'en' else 'Najlepsze rzeczy chodzą parami. My też.' }}<br><strong>{{ 'Two hearts. One favourite sunny spot.' if language == 'en' else 'Dwa serca. Jeden ulubiony parapet.' }}</strong></p>
+    </div></div>
     <p class="credit">{{ _('Realizacja:') }} <a href="https://banas.dev" target="_blank" rel="noopener noreferrer nofollow">banas.dev</a></p></footer>
 </body>
 </html>

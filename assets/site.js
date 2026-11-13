@@ -52,7 +52,15 @@ if (countdown) {
     });
   };
   update();
-  setInterval(update, 1000);
+  // No announcements every second; stop background work while the tab is hidden.
+  let ticker = setInterval(update, 1000);
+  document.addEventListener('visibilitychange', () => {
+    clearInterval(ticker);
+    if (!document.hidden) {
+      update();
+      ticker = setInterval(update, 1000);
+    }
+  });
 }
 
 // All authorization and RSVP validation live on the server. JavaScript is optional.
@@ -415,3 +423,20 @@ document.querySelectorAll('[data-surprise]').forEach((button) => {
     button.setAttribute('aria-expanded', String(!message.hidden));
   });
 });
+
+// Sections are visible by default, including when JS/observers are unavailable.
+// Only sections entering from below receive a one-shot, short reveal.
+const revealSections = [...document.querySelectorAll('[data-reveal]')];
+if (revealSections.length && 'IntersectionObserver' in window
+    && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      entry.target.classList.add('is-revealed');
+      observer.unobserve(entry.target);
+    });
+  }, { threshold: 0.08 });
+  revealSections.forEach((section) => {
+    if (section.getBoundingClientRect().top > window.innerHeight) observer.observe(section);
+  });
+}

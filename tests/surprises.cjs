@@ -25,6 +25,14 @@ for (const [index, id] of ['star', 'heart'].entries()) {
   button.click();
   assert.equal(messages[id].hidden, true);
   assert.equal(button.attributes['aria-expanded'], 'false');
+  // Reopening the hidden scene restarts its CSS animation without new handlers.
+  button.click();
+  assert.equal(messages[id].hidden, false);
+  assert.equal(button.attributes['aria-expanded'], 'true');
+  const other = id === 'star' ? 'heart' : 'star';
+  assert.equal(messages[other].hidden, true);
+  button.click();
+  assert.equal(messages[id].hidden, true);
 }
 assert.equal(buttons[2].hidden, true);
 assert.equal(buttons[2].click, undefined);
