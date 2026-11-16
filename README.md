@@ -1,171 +1,176 @@
-# Weronika i Rafał
+<div align="center">
 
-Strona ślubna z trzema poziomami dostępu:
+# Weronika & Rafał
+### A wedding website. Thoughtfully built.
 
-- **Publicznie:** data, odliczanie, godzina ceremonii i kościół po uzupełnieniu danych.
-- **Panel pary młodej (`/admin`):** osobny login i hasło, zarządzanie gośćmi, pełne RSVP i reset kodów.
-- **Po zalogowaniu kodem zaproszenia:** własne RSVP, lista zaproszeń ze statusami,
-  miejsce przyjęcia, harmonogram oraz kontakt do świadków.
+An elegant invitation on the outside.<br>
+Private RSVPs, useful guest tools and shared memories on the inside.
 
-Dieta, nocleg, osoba towarzysząca i uwagi są widoczne tylko autorowi odpowiedzi
-oraz organizatorom. Nie ma publicznej rejestracji. Kody, nazwiska gości,
-odpowiedzi i rzeczywiste kontakty są przechowywane poza repozytorium.
+[![CI](https://github.com/Rafalbanas/weronikarafal/actions/workflows/ci-cd.yml/badge.svg?branch=main)](https://github.com/Rafalbanas/weronikarafal/actions/workflows/ci-cd.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-d9c6a0)](LICENSE)
+![Python 3.12](https://img.shields.io/badge/python-3.12-405b49)
+![Languages: PL / EN](https://img.shields.io/badge/languages-PL%20%2F%20EN-405b49)
 
-Aplikacja korzysta z Flask, SQLite i lokalnych zasobów CSS/JS. Nowy kod zaproszenia
-zawiera publiczny identyfikator oraz losowy sekret 128-bitowy; w bazie zapisujemy
-wyłącznie hash scrypt z losową solą. Kod jest wyświetlany raz. Dostęp
-wymaga sesji sprawdzanej przez serwer, a zapisy RSVP mają ochronę CSRF i limity.
+**[View the public website](https://weronikarafal.com)** ·
+**[Get started](#quick-start)** ·
+**[Contribute](CONTRIBUTING.md)** ·
+**[Security](SECURITY.md)**
 
-## Uruchomienie lokalne
+![Desktop preview of the wedding invitation, with editorial typography, a champagne-coloured date card and a prominent RSVP button.](docs/images/wedding-desktop.png)
+
+[View the mobile layout →](docs/images/wedding-mobile.png)
+
+</div>
+
+**Built for a real celebration. Open for your next idea.**
+This is a self-hosted wedding website built with **Flask, SQLite and vanilla
+JavaScript**. No frontend build pipeline, no external font service, no account
+required on a wedding platform. You own the deployment and the data.
+
+🇵🇱 **Po polsku:** strona weselna z prywatnym RSVP, panelem organizatorów
+i wspólnym albumem. [Dokumentacja aplikacji →](docs/application.md)
+
+## A little beauty. A lot of useful details.
+
+| For your guests | For the organisers |
+| --- | --- |
+| A responsive invitation, countdown and ceremony calendar download | A separate dashboard for invitations and RSVPs |
+| Invitation-code sign-in — no public registration | Household invitations, partners and children |
+| RSVP with dietary preferences, accommodation needs and a note | Edit names without invalidating an invitation code |
+| Private reception details, schedule and wedding-party contacts | Rotate/revoke codes and manage attendance |
+| A shared photo/video album with filters, previews and ZIP download | Local RSVP export, backup commands and media moderation |
+| Polish/English, light/dark themes and keyboard-friendly controls | Server-side sessions, CSRF protection and request limits |
+
+The essentials work without JavaScript. JavaScript adds the countdown, theme
+switching, upload progress, photo previews and two small feline surprises.
+Reduced-motion preferences are respected.
+
+### Privacy, with clear boundaries
+
+- The public page shows the date and ceremony information, not the reception,
+  contact list or guest records.
+- Signed-in guests can see other invitations' adult names and attendance status.
+  Detailed RSVP answers are visible only to their author and the organisers.
+- **All signed-in guests can view and download the shared album.**
+  Guests can delete their own uploads; organisers can delete any upload.
+- Invitation secrets are hashed; private data and uploads stay outside Git
+  and the public asset directory.
+
+This is access control, **not end-to-end encryption**. Keep server backups private,
+agree on a retention policy and read the [security model](docs/security.md).
+
+## Quick start
+
+Use **Python 3.12**, `venv`, pip and OpenSSL. The media library also needs the
+system `file` command/libmagic. **Node.js is needed for tests**, not for serving
+the application.
 
 ```sh
+git clone https://github.com/Rafalbanas/weronikarafal.git
+cd weronikarafal
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
-export WEDDING_DATA_DIR=/tmp/wedding-dev
-export WEDDING_SECRET_KEY="$(python3 -c 'import secrets; print(secrets.token_urlsafe(48))')"
-.venv/bin/python manage.py invite 'Gość testowy'
+
+umask 077
+export WEDDING_DATA_DIR="$HOME/.local/share/wedding-dev"
+mkdir -p "$WEDDING_DATA_DIR"
+export WEDDING_SECRET_KEY="$(.venv/bin/python -c 'import secrets; print(secrets.token_urlsafe(48))')"
+.venv/bin/python manage.py invite 'Test guest'
 ```
 
-Kod jest wyświetlany raz. Uruchom aplikację przez WSGI z lokalną konfiguracją
-zaufanego hosta. Sesyjne cookies wymagają HTTPS również w podglądzie. Nie
-uruchamiaj serwera developerskiego jako publicznego serwera produkcyjnego.
+Keep the displayed invitation code — it is shown once. Use synthetic names
+while developing. The development secret above lasts for this shell; production
+needs a persistent secret, not a new key on every restart.
 
-### Poprawianie nazwisk bez zmiany kodu
+**HTTPS is required even locally** because session cookies are `Secure`.
+Create a short-lived local certificate and start a loopback-only preview:
 
-W panelu `/admin`, przy istniejącym zaproszeniu, wybierz „Edytuj dane — kod bez
-zmian”, popraw imiona/nazwiska i użyj „Zapisz dane”. Ta operacja zachowuje
-dotychczasowy kod zaproszenia i sesje gości. Wygenerowanie nowego kodu jest
-osobną operacją — nie służy do poprawiania nazwisk.
+```sh
+openssl req -x509 -newkey rsa:2048 -nodes -days 7 \
+  -keyout "$WEDDING_DATA_DIR/localhost.key" \
+  -out "$WEDDING_DATA_DIR/localhost.crt" \
+  -subj '/CN=localhost' \
+  -addext 'subjectAltName=DNS:localhost,IP:127.0.0.1'
 
-## Biblioteka mediów (`/media`)
+.venv/bin/python -m flask --app 'app:create_app()' run \
+  --host 127.0.0.1 --port 8443 \
+  --cert "$WEDDING_DATA_DIR/localhost.crt" \
+  --key "$WEDDING_DATA_DIR/localhost.key"
+```
 
-Po zalogowaniu kodem zaproszenia lub kontem pary młodej dostępna jest biblioteka
-zdjęć i filmów. Plik jest zapisywany na dysku pod losową, wewnętrzną nazwą,
-a metadane (oryginalna nazwa, typ, rozmiar, data i właściciel) trafiają do
-SQLite. Wszyscy zalogowani goście i administratorzy widzą oraz pobierają
-wszystkie pliki, także zbiorczo przyciskiem „Pobierz wszystkie (ZIP)”. Gość usuwa wyłącznie własne, a para młoda może usunąć każdy plik.
-Usuwanie jest weryfikowane po stronie serwera na podstawie sesji,
-nigdy na podstawie nazwy pliku przesłanej przez klienta.
+Open **https://localhost:8443**, accept the warning for your own local
+self-signed certificate, then use the invitation code. Do not disable secure
+cookies or expose this development server publicly.
 
-Domyślny katalog to `/var/lib/weronikarafal-data/uploads` — obok bazy danych,
-poza katalogiem publicznym i wydaniami. Konfiguracja:
+To create an organiser account, run `.venv/bin/python manage.py admin your-login`;
+the password is entered through a hidden prompt. For production, read the
+[deployment guide](deploy/README.md) before changing server configuration.
 
-| Zmienna | Domyślnie | Znaczenie |
-| --- | --- | --- |
-| `WEDDING_UPLOADS_DIR` | `<katalog danych>/uploads` | trwały katalog na pliki |
-| `WEDDING_MAX_UPLOAD_BYTES` | `33554432` (32 MiB) | limit pliku i łącznego rozmiaru plików w żądaniu |
-| `WEDDING_MAX_UPLOAD_FILES` | `5` | limit plików w jednym żądaniu |
-| `WEDDING_MAX_UPLOADS_PER_USER` | `100` | limit plików na konto |
+## Make it yours
 
-Formaty są rozpoznawane po zawartości przez systemowe `file`/libmagic, zamiast
-zamkniętej listy rozszerzeń. Przyjmowane są rozpoznane typy `image/*` i `video/*`,
-w tym HEIC/HEIF, AVIF, TIFF, RAW rozpoznawany przez libmagic, AVI i MKV.
-Zakres rozpoznawania zależy od wersji systemowej bazy libmagic; nie jest to
-obietnica obsługi każdego istniejącego formatu. HTML, archiwa i pliki wykonywalne
-są odrzucane niezależnie od nazwy. SVG i formaty bez podglądu są pobierane jako
-załącznik `application/octet-stream`; oryginalne bajty i nazwa są zachowane.
-Podgląd lub odtwarzanie zależy od formatów i kodeków obsługiwanych przez przeglądarkę.
-Wymagana jest komenda `file` (Debian/Ubuntu: `apt-get install file`).
-Zwiększając limit pliku, podnieś też `client_max_body_size` w Nginx oraz
-`--timeout` Gunicorna (patrz [deploy/README.md](deploy/README.md)).
-Plików z biblioteki nie dodawaj do Git; katalog `uploads/` jest ignorowany.
+Fork it, adapt it, celebrate with it. There is no licence subscription;
+hosting and maintenance are your responsibility.
 
-## Testy
+This repository is a **specific wedding site, not a configurable website builder**:
 
-Node.js musi być dostępny na `PATH` również dla testów zachowania podglądu zdjęć.
-Nie jest wymagany do uruchamiania aplikacji produkcyjnej.
+1. Update names, copy, event date and RSVP deadline in `index.html`,
+   `templates/` and `wedding/__init__.py`.
+2. Keep the calendar constants in `wedding/calendar.py` consistent with the
+   countdown, ceremony time and timezone.
+3. Replace the domain in SEO metadata, trusted hosts, deployment configuration
+   and documentation. Adapt the SVG monogram/favicon and CSS palette.
+4. Copy `deploy/details.example.json` **outside the repository**, edit it and
+   run `manage.py set-details /private/path/details.json`.
+   Only its `ceremony` section is public.
+5. Review and adapt tests before deploying your version.
+
+The table-plan page is currently a placeholder, not a seating-plan editor.
+There is no built-in email delivery service. Media playback depends on browser
+codecs, and file recognition depends on the system libmagic database.
+
+## Under the hood
+
+```text
+index.html + templates/   Server-rendered Jinja views
+assets/                  Local CSS, JavaScript and SVG
+app.py                   Flask routes and access control
+wedding/                 SQLite storage, translations and ICS
+tests/ + scripts/        Regression tests and optional browser audits
+deploy/                  Packaging, server setup and backup tooling
+```
 
 ```sh
 .venv/bin/python -m unittest discover -s tests -v
-.venv/bin/python scripts/check_site.py  # Node.js na PATH
+.venv/bin/python scripts/check_site.py
 .venv/bin/python -m compileall -q app.py manage.py wedding scripts deploy tests
 bash -n deploy/ssh-command.sh
 ```
 
-## CI/CD i pierwsza migracja
+CI checks pull requests. Dependabot proposes weekly Python and GitHub Actions
+updates; **there is no automatic merge**. A configured deployment workflow runs
+after successful tests on `main`. Dependency changes require a separate server
+update — see [automation and bot behaviour](docs/automation.md).
 
-GitHub Actions testuje push i PR. Po udanych testach zmiany na `main` wdrażają
-sprawdzoną paczkę. Instalacja serwera aplikacji wymaga **jednorazowej migracji**
-z opisanej wcześniej wersji statycznej; nie następuje przez samo wysłanie PR.
+## Explore further
 
-Instrukcje: [deploy/README.md](deploy/README.md).
-Ochrona dostępu i granice prywatności: [docs/security.md](docs/security.md).
+- [Application guide · PL](docs/application.md) — RSVP, media, languages and settings
+- [Design notes and checks · PL](docs/ui-ux.md) — inspiration, decisions and validation
+- [Independent audit · PL](docs/audit.md) — findings, fixes and release checks
+- [Production deployment · PL](deploy/README.md) — setup, migration and rollback
+- [Security model · PL](docs/security.md) — access boundaries and data handling
+- [Contributing](CONTRIBUTING.md) · [Report a vulnerability](SECURITY.md)
+- [GitHub automation & suggested About/topics · PL](docs/automation.md)
 
-## Język
+## Use it. Improve it. Pass it on.
 
-Przełącznik PL / EN w nagłówku tłumaczy publiczną stronę, strefę gości,
-panel pary młodej i komunikaty formularzy. Wybór jest zapamiętywany w osobnym
-bezpiecznym cookie przez rok, także po wylogowaniu. Domyślny język to polski;
-link `/?lang=en` otwiera wersję angielską. Treści wpisane przez gości oraz dane
-wydarzenia zachowują oryginalną treść.
+The code is released under the **[MIT License](LICENSE)**: use, modify and
+redistribute it, including commercially, while retaining the copyright and
+licence notice. The software comes without warranty.
 
-## Wygląd i prywatne strony dnia
+The licence does **not** grant rights to guests' personal data, private photos
+or other third-party material. Replace the couple's identity with your own
+when reusing the project; dependency licences still apply.
 
-Przycisk „Ciemny motyw” w nagłówku pozwala przełączać jasny i ciemny wygląd.
-Wybór jest zapamiętywany lokalnie w przeglądarce (`wedding-theme` w
-`localStorage`), bez danych konta ani zaproszenia. Jeśli zapis ustawień jest
-zablokowany, przełącznik nadal działa na bieżącej stronie. Bez JavaScript
-pozostaje ciemny wygląd i pełna obsługa zwykłych formularzy oraz nawigacji.
-Domyślny motyw jest ciemny; zapisany wybór jasnego motywu jest respektowany.
-Strona główna ma autorski, geometryczny monogram W/R (także w faviconie),
-dużą szeryfową typografię editorial, botaniczny plakat „27 · 08 · 27”
-i osobny pas odliczania. Pełny rok 2027 pozostaje w SEO, semantycznych datach,
-opisach ceremonii i kalendarzu; ślub to niezmiennie 27 sierpnia 2027, 14:00 Europe/Warsaw.
-Układ jest responsywny, a jasny wariant pozostaje dostępny jako opcja.
-Wszystkie elementy graficzne są lokalnymi SVG lub CSS — bez zewnętrznych fontów,
-zdjęć i dodatkowych żądań do usług graficznych. Zachowano dwie drobne
-niespodzianki pod gwiazdką i sercem w stopce: kot wyglądający zza plakatu
-oraz dwa koty tworzące serce ogonami. Działają kliknięciem lub klawiaturą,
-bez dźwięku, śledzenia i przechwytywania skrótów. Bez JavaScript są ukryte.
-Ponowne zamknięcie i otwarcie uruchamia krótką animację od początku.
-Ruch jest wyłączany przez `prefers-reduced-motion`; sekcje pozostają widoczne
-bez JavaScript i bez IntersectionObserver. Szczegóły audytu i opcjonalna
-kontrola przeglądarkowa: [docs/redesign.md](docs/redesign.md).
-
-Po zalogowaniu kodem zaproszenia lub kontem pary młodej dostępne są:
-- `/schedule` — osobna rozpiska godzinowa. Dopóki `schedule` w prywatnym
-  `details.json` jest puste, wyświetla komunikat „pojawi się wkrótce”. Później
-  można uzupełnić istniejącą konfigurację przez `manage.py set-details`.
-- `/tables` — osobna strona rozmieszczenia stołów, na razie z komunikatem
-  o późniejszym uzupełnieniu. Nie tworzy fikcyjnych miejsc ani przypisań gości;
-  edytor i właściwy plan stołów będą osobnym etapem.
-
-Obie strony wymagają aktywnej sesji na serwerze, mają `noindex` i `no-store`.
-Korzystają z istniejącego szablonu strefy gości, więc nie zmieniają listy
-plików paczki ani nie wymagają aktualizacji odbiornika wdrożeń.
-
-## Kalendarz (`/ceremony.ics`)
-
-Przycisk „Dodaj do kalendarza” w karcie ceremonii pobiera publiczny wpis ICS.
-Zawiera wyłącznie `ceremony.name` i `ceremony.address` z danych publicznych
-(puste pola nie generują `LOCATION`); miejsce przyjęcia, kontakty, harmonogram
-oraz goście nigdy się w nim nie pojawiają, także po zalogowaniu. `UID` i `DTSTART` (`20270827T120000Z`, czyli 14:00 Europe/Warsaw),
-oraz stałe `DTEND` (`20270827T130000Z`, czyli 15:00 Europe/Warsaw —
-orientacyjna, godzinowa rezerwacja kalendarza, nie gwarantowany koniec
-mszy) są stałe; `DTSTAMP` to bieżący czas UTC. Nie występuje `DURATION`. Wartości tekstowe są escapowane, a linie
-zawijane do najwyżej 75 oktetów UTF-8 bez dzielenia sekwencji. Typ
-zawartości to `text/calendar; charset=utf-8` ze stałą, czysto ASCII nazwą
-załącznika. Sam endpoint ma nagłówek noindex; polityka indeksowania strony
-głównej nie uległa zmianie.
-
-## Przeglądanie biblioteki
-
-Formularz filtrów działa również bez JavaScript. Parametry `/media`:
-`kind=all|image|video`, `owner=all|mine`, `page=N` (domyślnie `all`, `all`, `1`).
-Widok pokazuje do 24 plików na stronę, z liczbą wszystkich dopasowań.
-Filtrowanie, zliczanie i stronicowanie odbywają się w SQL, w kolejności
-od najnowszych, z ID jako rozstrzygnięciem przy tej samej dacie. Za wysoki
-numer strony jest ograniczany do ostatniej; błędne i powielone parametry
-filtrów oraz niepoprawny numer strony zwracają 400.
-
-„Tylko przeze mnie” korzysta z tożsamości zalogowanego gościa lub administratora.
-Nie zmienia uprawnień: gość może usuwać wyłącznie własne pliki, administrator
-wszystkie. ZIP zawsze zawiera cały album, niezależnie od aktywnych filtrów
-i wyświetlanej strony. Interfejs dostępny jest w PL i EN.
-
-Podgląd zdjęć pozwala przechodzić między zdjęciami na bieżącej stronie
-biblioteki przyciskami lub strzałkami klawiatury. Licznik wskazuje pozycję
-wśród tych zdjęć; filmy i formaty bez podglądu są pomijane. Po ostatnim zdjęciu
-nawigacja wraca do pierwszego. Escape, przycisk zamknięcia lub kliknięcie tła
-zamyka podgląd i przywraca fokus do zdjęcia, z którego go otwarto.
-Pobieranie oryginałów pozostaje dostępne bez JavaScript.
+If this project gives you a useful starting point, **a ⭐ is appreciated**.
+Found a rough edge or made a thoughtful improvement? We'd love a
+[focused pull request](CONTRIBUTING.md).

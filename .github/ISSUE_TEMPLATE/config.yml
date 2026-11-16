@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability privately
+    url: https://github.com/Rafalbanas/weronikarafal/security/policy
+    about: Read the reporting policy; never post invitation codes, guest data or vulnerability details in a public issue.

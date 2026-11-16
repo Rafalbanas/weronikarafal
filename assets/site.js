@@ -7,7 +7,7 @@ if (themeToggle) {
     document.documentElement.dataset.theme = theme;
     themeToggle.setAttribute('aria-pressed', String(theme === 'dark'));
     const color = document.querySelector('meta[name="theme-color"]');
-    if (color) color.setAttribute('content', theme === 'dark' ? '#141c18' : '#faf7f2');
+    if (color) color.setAttribute('content', theme === 'dark' ? '#141c18' : '#faf6ef');
   };
   let savedTheme = 'dark';
   try {
@@ -337,7 +337,7 @@ if (mediaUpload) {
 }
 
 const mediaConfirm = document.querySelector('[data-media-confirm]');
-if (mediaConfirm) {
+if (mediaConfirm && typeof mediaConfirm.showModal === 'function') {
   document.querySelectorAll('[data-media-delete]').forEach((form) => {
     form.addEventListener('submit', (event) => {
       if (form.dataset.confirmed === '1') return;

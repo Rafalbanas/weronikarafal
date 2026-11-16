@@ -40,7 +40,7 @@ assert.equal(f.colors.content, '#141c18');
 assert.equal(f.attributes['aria-pressed'], 'true');
 f.click();
 assert.equal(f.root.dataset.theme, 'light');
-assert.equal(f.colors.content, '#faf7f2');
+assert.equal(f.colors.content, '#faf6ef');
 assert.equal(f.attributes['aria-pressed'], 'false');
 f.click();
 assert.equal(f.root.dataset.theme, 'dark');
