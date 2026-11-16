@@ -12,6 +12,7 @@
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <label for="code">{{ _('Kod z zaproszenia') }}</label>
       <input id="code" name="code" type="password" autocomplete="current-password" autocapitalize="none" spellcheck="false" required maxlength="64" placeholder="{{ _('Wpisz swój kod') }}" aria-describedby="codeHelp">
+      <button class="button button-small button-outline password-toggle" type="button" data-password-toggle="code" data-show="{{ _('Pokaż kod') }}" data-hide="{{ _('Ukryj kod') }}" aria-controls="code" aria-pressed="false" hidden>{{ _('Pokaż kod') }}</button>
       <p id="codeHelp" class="field-help">{{ _('Kod jest przypisany do osoby lub pary. Nie masz kodu? Skontaktuj się z Weroniką lub Rafałem.') }}</p>
       <button class="button" type="submit">{{ _('Wejdź do strefy gości') }} <span aria-hidden="true">→</span></button>
     </form>

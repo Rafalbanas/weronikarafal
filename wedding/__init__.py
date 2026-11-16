@@ -2,6 +2,17 @@
 from flask import g
 
 EN = {
+'Potwierdź obecność': 'RSVP',
+'Przygotujcie kod z zaproszenia.': 'Have your invitation code ready.',
+'Wszystko o Waszym zaproszeniu w jednym miejscu.': 'Your invitation, all in one place.',
+'Nasz dzień w skrócie': 'Our day at a glance',
+'Data ślubu': 'Wedding date',
+'Piątek': 'Friday',
+'Początek ceremonii': 'Ceremony starts',
+'Odpowiedz do': 'Please reply by',
+'1 lipca 2027': '1 July 2027',
+'Pokaż kod': 'Show code',
+'Ukryj kod': 'Hide code',
 'Realizacja:': 'Built by:',
 'Dodaj do kalendarza': 'Add to calendar',
 'ZIP zawiera cały album, niezależnie od filtrów i strony.': 'The ZIP contains the whole album, regardless of filters and page.',

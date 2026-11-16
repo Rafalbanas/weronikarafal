@@ -203,7 +203,8 @@ class DeploymentTests(unittest.TestCase):
         env = dict(os.environ)
         env.pop("PYTHONPATH", None)
         env.pop("PYTHONDATADIR", None)
-        env.update(WEDDING_SECRET_KEY="k" * 32, WEDDING_DATA_DIR=str(data_dir))
+        env.update(WEDDING_SECRET_KEY="k" * 32, WEDDING_DATA_DIR=str(data_dir),
+                   WEDDING_UPLOADS_DIR=str(data_dir / 'uploads'))
         result = subprocess.run([sys.executable, str(probe)], cwd=extracted, env=env,
                               capture_output=True, text=True, timeout=60)
         self.assertEqual(result.returncode, 0, result.stderr)

@@ -1,5 +1,7 @@
 {% extends 'templates/base.html' %}
 {% block content %}
+{% set invitation_url = url_for('admin') if g.admin else (url_for('guest') ~ '#rsvp' if g.guest else url_for('login')) %}
+{% set invitation_label = _('Panel pary młodej') if g.admin else (_('Moja odpowiedź') if g.guest else _('Potwierdź obecność')) %}
 <div class="home-page">
 <section class="hero" aria-labelledby="hero-title">
   <div class="hero-copy">
@@ -8,7 +10,11 @@
   <p class="hero-date"><span>27 · 08 · 27</span> <span class="date-caption">{{ _('Zaczynamy naszą wspólną historię') }}</span></p>
   <p class="hero-intro">{{ _('Jeden dzień, tyle wspomnień przed nami.') }}<br>{{ _('Nie możemy się doczekać, aż powiemy sobie „tak”.') }}</p>
   <div class="hero-actions">
-    <a class="button" href="#ceremonia">{{ _('Gdzie się spotkamy') }} <span class="button-arrow" aria-hidden="true">↗</span></a>
+    <a class="button" href="{{ invitation_url }}">{{ invitation_label }} <span class="button-arrow" aria-hidden="true">↗</span></a>
+    <span class="hero-action-note">{{ _('Wszystko o Waszym zaproszeniu w jednym miejscu.') if g.guest or g.admin else _('Przygotujcie kod z zaproszenia.') }}</span>
+  </div>
+  <div class="hero-utility">
+    <a class="hero-link" href="#ceremonia">{{ _('Gdzie się spotkamy') }} <span aria-hidden="true">↘</span></a>
     <a class="hero-link" href="#pytania">{{ _('Pytania i odpowiedzi') }} <span aria-hidden="true">↓</span></a>
   </div>
   </div>
@@ -16,7 +22,7 @@
   <svg class="botanical" viewBox="0 0 300 520" fill="none" aria-hidden="true"><path d="M130 500C235 345 70 236 227 15M168 398C75 380 32 328 35 280c73 6 122 54 133 118ZM163 310c70-12 110-55 111-107-66 10-106 45-111 107ZM164 209C102 193 82 156 88 113c50 15 77 46 76 96ZM193 100c47-2 75-24 91-61-43-3-77 20-91 61Z" stroke="currentColor" stroke-width="1.2"/></svg>
   <div class="date-poster">
     <div class="poster-top"><span>{{ 'OUR DAY' if language == 'en' else 'NASZ DZIEŃ' }}</span><span aria-hidden="true">W / R</span></div>
-    <time class="poster-date" datetime="2027-08-27" aria-label="{{ _('27 sierpnia 2027') }}"><span>27</span><span class="poster-divider" aria-hidden="true">·</span><span>08</span><span class="poster-divider" aria-hidden="true">·</span><span class="poster-year">27</span></time>
+    <time class="poster-date" datetime="2027-08-27"><span class="sr-only">{{ _('27 sierpnia 2027') }}</span><span aria-hidden="true">27</span><span class="poster-divider" aria-hidden="true">·</span><span aria-hidden="true">08</span><span class="poster-divider" aria-hidden="true">·</span><span class="poster-year" aria-hidden="true">27</span></time>
     <div class="poster-caption">
     <div class="secret-message star-scene" id="star-secret" hidden>
     <svg class="peeking-cat" viewBox="0 0 160 150" fill="none" aria-hidden="true"><path class="cat-tail" d="M112 124c55-6 37-65 19-44-10 12 8 24 14 6" stroke="currentColor" stroke-width="7" stroke-linecap="round"/><path d="M38 146V74L32 24l34 19c12-4 22-4 34 0l28-19-3 52v70" fill="var(--paper)" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><g class="cat-eyes" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M56 68h6m34 0h6"/></g><path d="m76 79 4 4 4-4m-4 4v7m-11-2c4 6 8 5 11 2 4 4 8 4 12-2M43 81l-24-3m25 11-22 5m91-13 24-3m-24 11 22 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M45 139v-19c0-10 16-10 16 0v19m38 0v-19c0-10 16-10 16 0v19" fill="var(--paper)" stroke="currentColor" stroke-width="2"/></svg>
@@ -29,6 +35,11 @@
   <button class="secret-star" type="button" data-surprise="star-secret" aria-controls="star-secret" aria-expanded="false" aria-label="{{ 'A little sparkle' if language == 'en' else 'Odrobina blasku' }}" hidden>✧</button>
   </div>
 </section>
+<dl class="day-at-a-glance" aria-label="{{ _('Nasz dzień w skrócie') }}">
+  <div><dt>{{ _('Data ślubu') }}</dt><dd>{{ _('27 sierpnia 2027') }}<small>{{ _('Piątek') }}</small></dd></div>
+  <div><dt>{{ _('Początek ceremonii') }}</dt><dd>14:00<small>{{ 'Warsaw time · UTC+02:00' if language == 'en' else 'Czas polski · UTC+02:00' }}</small></dd></div>
+  <div><dt>{{ _('Odpowiedz do') }}</dt><dd><time datetime="2027-07-01">{{ _('1 lipca 2027') }}</time><small>{{ _('Potwierdzenie obecności') }}</small></dd></div>
+</dl>
 <section class="countdown-card" aria-label="{{ _('Odliczanie do ślubu') }}">
   <div class="countdown-heading"><span class="countdown-symbol" aria-hidden="true">↘</span>
     <span class="eyebrow">{{ _('Do naszego ślubu zostało') }}</span>
@@ -54,7 +65,7 @@
     {% else %}<p class="muted">{{ _('Nazwę i adres kościoła podamy tutaj wkrótce.') }}</p>{% endif %}
     <a class="button button-outline" href="{{ url_for('ceremony_ics') }}" download>{{ _('Dodaj do kalendarza') }}</a>
   </div>
-  <div class="private-invitation"><span class="invitation-icon" aria-hidden="true">↗</span><span class="eyebrow">{{ _('Masz już zaproszenie?') }}</span><h2>{{ _('Twoje miejsce z nami') }}<span class="heading-dot" aria-hidden="true">.</span></h2><p class="muted">{{ _('Potwierdzenie obecności, lista gości i szczegóły przyjęcia czekają w strefie dla zaproszonych.') }}</p><a class="button" href="{{ url_for('guest') if g.guest else url_for('login') }}">{{ _('Przejdź do strefy gości') if g.guest else _('Zaloguj się kodem z zaproszenia') }} <span aria-hidden="true">→</span></a><span class="invitation-signature" aria-hidden="true">W + R</span></div>
+  <div class="private-invitation"><span class="invitation-icon" aria-hidden="true">↗</span><span class="eyebrow">{{ _('Masz już zaproszenie?') }}</span><h2>{{ _('Twoje miejsce z nami') }}<span class="heading-dot" aria-hidden="true">.</span></h2><p class="muted">{{ _('Potwierdzenie obecności, lista gości i szczegóły przyjęcia czekają w strefie dla zaproszonych.') }}</p><a class="button" href="{{ invitation_url }}">{{ _('Panel pary młodej') if g.admin else (_('Przejdź do strefy gości') if g.guest else _('Zaloguj się kodem z zaproszenia')) }} <span aria-hidden="true">→</span></a><span class="invitation-signature" aria-hidden="true">W + R</span></div>
 </section>
 <section class="guest-steps" aria-labelledby="guest-steps-title" data-reveal>
   <span class="section-index">02 / {{ 'BEFORE WE MEET' if language == 'en' else 'ZANIM SIĘ SPOTKAMY' }}</span>

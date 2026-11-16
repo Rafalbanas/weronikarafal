@@ -32,7 +32,8 @@ def check(root):
     with tempfile.TemporaryDirectory() as directory:
         app = create_app({'TESTING': True, 'SECRET_KEY': 'test-only-'+'x'*40,
             'DATABASE': str(Path(directory)/'guests.sqlite3'),
-            'DETAILS': str(Path(directory)/'details.json'), 'TRUSTED_HOSTS': ['localhost'], 'TRUST_PROXY': False})
+            'DETAILS': str(Path(directory)/'details.json'),
+            'UPLOADS_DIR': str(Path(directory)/'uploads'), 'TRUSTED_HOSTS': ['localhost'], 'TRUST_PROXY': False})
         client = app.test_client()
         response = client.get('/', base_url='https://localhost')
         if response.status_code != 200:
@@ -44,9 +45,9 @@ def check(root):
             if parsed.scheme or parsed.netloc:
                 continue
             if parsed.path:
-                asset = client.get(parsed.path, base_url='https://localhost')
-                if asset.status_code != 200:
-                    raise ValueError('Missing local asset or route: '+url)
+                with client.get(parsed.path, base_url='https://localhost') as asset:
+                    if asset.status_code != 200:
+                        raise ValueError('Missing local asset or route: '+url)
             elif parsed.fragment and parsed.fragment not in site.ids:
                 raise ValueError('Missing fragment: '+url)
         for script in (root/'assets').glob('*.js'):

@@ -25,6 +25,7 @@ class GuestTests(unittest.TestCase):
         (self.root / "details.json").write_text(json.dumps(details))
         self.app = create_app({"TESTING": True, "SECRET_KEY": "test-only-"+"x"*40,
             "DATABASE": str(self.root / "guests.sqlite3"), "DETAILS": str(self.root / "details.json"),
+            "UPLOADS_DIR": str(self.root / 'uploads'),
             "TRUSTED_HOSTS": ["localhost"], "TRUST_PROXY": False, "LOGIN_LIMIT": 5})
         self.client = self.app.test_client()
         with connect(self.app.config["DATABASE"]) as db:
